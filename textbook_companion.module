@@ -1,0 +1,4473 @@
+<?php
+/*
+implementation of hook_menu().
+*/
+function textbook_companion_menu()
+{
+	$items = array();
+	/* users */
+	$items['textbook-companion/proposal'] = array(
+		'title' => 'Book Proposal Form',
+		'description' => 'Book Proposal Form.',
+		'page callback' => 'textbook_companion_proposal_all',
+		'access callback' => 'user_access',
+		'access arguments' => array(
+			'create book proposal'
+		),
+		'type' => MENU_CALLBACK
+	);
+	/*$items["aicte_proposal"] = array(
+	"title" => "AICTE Book Proposal",
+	"description" => "AICTE Book Proposal Form",
+	"page callback" => "textbook_companion_aicte_proposal_all",
+	'access arguments' => array('create book proposal'),
+	'type' => MENU_CALLBACK,
+	);*/
+	$items["textbook-companion/all_proposal"] = array(
+		"title" => "Book Proposal",
+		"description" => "Book Proposal Form",
+		"page callback" => "textbook_companion_aicte_proposal_all",
+		'access arguments' => array(
+			'create book proposal'
+		),
+		'type' => MENU_CALLBACK
+	);
+	/* for reviewers */
+	$items['textbook-companion/manage-proposal'] = array(
+		'title' => 'Manage Book Proposals',
+		'description' => 'Manage Book Proposals',
+		'page callback' => '_proposal_pending',
+		'access callback' => 'user_access',
+		'access arguments' => array(
+			'approve book proposal'
+		),
+		'file' => 'manage_proposal.inc'
+	);
+	$items['textbook-companion/manage-proposal/pending'] = array(
+		'title' => 'Pending Proposals',
+		'description' => 'Pending Proposals Queue',
+		'page callback' => '_proposal_pending',
+		'access callback' => 'user_access',
+		'access arguments' => array(
+			'approve book proposal'
+		),
+		'type' => MENU_DEFAULT_LOCAL_TASK,
+		'weight' => 1,
+		'file' => 'manage_proposal.inc'
+	);
+	$items['textbook-companion/manage-proposal/all'] = array(
+		'title' => 'All Proposals',
+		'description' => 'All Proposals',
+		'page callback' => '_proposal_all',
+		'access callback' => 'user_access',
+		'access arguments' => array(
+			'approve book proposal'
+		),
+		'type' => MENU_LOCAL_TASK,
+		'weight' => 2,
+		'file' => 'manage_proposal.inc'
+	);
+	/*$items['manage_proposal/category'] = array(
+	'title' => 'Categorize',
+	'description' => 'Categorize Books',
+	'page callback' => '_category_all',
+	'access callback' => 'user_access',
+	'access arguments' => array('approve book proposal'),
+	'type' => MENU_LOCAL_TASK,
+	'weight' => 2,
+	'file' => 'manage_proposal.inc',
+	);*/
+	$items['textbook-companion/manage-proposal/failed'] = array(
+		'title' => 'Failed Proposals',
+		'description' => 'Failed to submit code',
+		'page callback' => '_failed_all',
+		'access callback' => 'user_access',
+		'access arguments' => array(
+			'approve book proposal'
+		),
+		'type' => MENU_LOCAL_TASK,
+		'weight' => 3,
+		'file' => 'manage_proposal.inc'
+	);
+	$items['textbook-companion/manage-proposal/approve'] = array(
+		'title' => 'Proposal Approval',
+		'description' => 'Proposal Approval',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'proposal_approval_form'
+		),
+		'access arguments' => array(
+			'approve book proposal'
+		),
+		'type' => MENU_CALLBACK,
+		'file' => 'manage_proposal.inc'
+	);
+	$items['textbook-companion/manage-proposal/status'] = array(
+		'title' => 'Proposal Status',
+		'description' => 'Proposal Status',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'proposal_status_form'
+		),
+		'access arguments' => array(
+			'approve book proposal'
+		),
+		'type' => MENU_CALLBACK,
+		'file' => 'manage_proposal.inc'
+	);
+	$items['textbook-companion/manage-proposal/edit'] = array(
+		'title' => 'Edit Proposal',
+		'description' => 'Edit Proposal',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'proposal_edit_form'
+		),
+		'access arguments' => array(
+			'edit book proposal'
+		),
+		'type' => MENU_CALLBACK,
+		'file' => 'manage_proposal.inc'
+	);
+	/*$items['manage_proposal/category/edit'] = array(
+	'title' => 'Edit Category',
+	'description' => 'Edit category',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('category_edit_form'),
+	'access arguments' => array('edit book proposal'),
+	'type' => MENU_CALLBACK,
+	'file' => 'manage_proposal.inc',
+	);*/
+	$items['textbook-companion/code-approval'] = array(
+		'title' => 'Manage Code Approval',
+		'description' => 'Manage Code Approval',
+		'page callback' => 'code_approval',
+		'access arguments' => array(
+			'approve code'
+		),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'code_approval.inc'
+	);
+	$items['textbook-companion/code-approval/approve'] = array(
+		'title' => 'Code Approval',
+		'description' => 'Code Approval',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'code_approval_form'
+		),
+		'access arguments' => array(
+			'approve code'
+		),
+		'type' => MENU_DEFAULT_LOCAL_TASK,
+		'weight' => 1,
+		'file' => 'code_approval.inc'
+	);
+	$items['textbook-companion/code-approval/bulk'] = array(
+		'title' => 'Bulk Manage',
+		'description' => 'Bulk Mangage',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'bulk_approval_form'
+		),
+		'access arguments' => array(
+			'bulk manage code'
+		),
+		'type' => MENU_LOCAL_TASK,
+		'weight' => 2,
+		'file' => 'code_approval.inc'
+	);
+	/* $items['textbook-companion/code-approval/edit-code-submission'] = array(
+	'title' => 'Edit Code Submission',
+	'description' => 'Enable users code submission interface',
+	// 'page callback' => 'drupal_get_form',
+	'page callback' => 'edit_code_submission',
+	// 'page arguments' => array(
+	//     'edit_code_submission_form'
+	//  ),
+	'access arguments' => array(
+	'bulk manage code'
+	),
+	'type' => MENU_LOCAL_TASK,
+	'weight' => 3,
+	'file' => 'code_approval.inc'
+	);*/
+	$items['textbook-companion/code-approval/edit-code-submission/edit'] = array(
+		'title' => 'Edit Code Submission',
+		'description' => 'Enable users code submission interface',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'edit_code_submission_form'
+		),
+		'access arguments' => array(
+			'bulk manage code'
+		),
+		'file' => 'code_approval.inc'
+	);
+	$items['textbook-companion/code-approval/editcode'] = array(
+		'title' => 'Admin Edit Example',
+		'description' => 'Admin Edit Example',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'upload_examples_admin_edit_form'
+		),
+		'access arguments' => array(
+			'approve code'
+		),
+		'type' => MENU_CALLBACK,
+		'weight' => 3,
+		'file' => 'editcodeadmin.inc'
+	);
+	$items['textbook-companion/code-approval/notes'] = array(
+		'title' => 'Notes for Reviewers',
+		'description' => 'Notes for Reviewers',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'book_notes_form'
+		),
+		'access arguments' => array(
+			'bulk manage code'
+		),
+		'type' => MENU_CALLBACK,
+		'weight' => 4,
+		'file' => 'notes.inc'
+	);
+	/* $items['code_approval/dependency'] = array(
+	'title' => 'Dependency',
+	'description' => 'Dependency',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('textbook_companion_dependency_approval_form'),
+	'access arguments' => array('bulk manage code'),
+	'type' => MENU_LOCAL_TASK,
+	'weight' => 3,
+	'file' => 'dependency_approval.inc',
+	);*/
+	$items['textbook-companion/code'] = array(
+		'title' => 'Code Submission',
+		'description' => 'Code Submission',
+		'page callback' => 'list_chapters',
+		'access callback' => 'user_access',
+		'access arguments' => array(
+			'upload code'
+		),
+		'file' => 'general.inc'
+	);
+	$items['textbook-companion/code/list_chapters'] = array(
+		'title' => 'List Chapters',
+		'description' => 'List Chapters',
+		'page callback' => 'list_chapters',
+		'access arguments' => array(
+			'upload code'
+		),
+		'type' => MENU_DEFAULT_LOCAL_TASK,
+		'file' => 'general.inc',
+		'weight' => 1
+	);
+	$items['textbook-companion/code/upload'] = array(
+		'title' => 'Code Submission',
+		'description' => 'Code Submission',
+		'page callback' => 'upload_examples',
+		'access arguments' => array(
+			'upload code'
+		),
+		'type' => MENU_LOCAL_TASK,
+		'file' => 'code.inc',
+		'weight' => 2
+	);
+	/* $items['textbook_companion/code/upload_dep'] = array(
+	'title' => 'Upload Dependency',
+	'description' => 'Upload Dependency Files',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('upload_dependency_form'),
+	'access arguments' => array('upload code'),
+	'type' => MENU_LOCAL_TASK,
+	'file' => 'dependency.inc',
+	'weight' => 3,
+	);
+	$items['textbook_companion/code/edit_dep'] = array(
+	'title' => 'Edit Dependency',
+	'description' => 'Edit Dependency File',
+	'page callback' => 'edit_dependency',
+	'access arguments' => array('upload code'),
+	'type' => MENU_CALLBACK,
+	'file' => 'dependency.inc',
+	);
+	$items['textbook_companion/code/delete_dep'] = array(
+	'title' => 'Delete Dependency',
+	'description' => 'Delete Dependency File',
+	'page callback' => 'delete_dependency',
+	'access arguments' => array('upload code'),
+	'type' => MENU_CALLBACK,
+	'file' => 'dependency.inc',
+	);*/
+	$items['textbook-companion/code/edit'] = array(
+		'title' => 'Edit Example',
+		'description' => 'Edit Example',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'upload_examples_edit_form'
+		),
+		'access arguments' => array(
+			'edit uploaded code'
+		),
+		'type' => MENU_CALLBACK,
+		'file' => 'editcode.inc'
+	);
+	$items['textbook-companion/code/delete'] = array(
+		'title' => 'Delete Example',
+		'description' => 'Delete Example',
+		'page callback' => '_upload_examples_delete',
+		'access arguments' => array(
+			'upload code'
+		),
+		'type' => MENU_CALLBACK,
+		'file' => 'code.inc'
+	);
+	$items['textbook-companion/code/chapter/edit'] = array(
+		'title' => 'Edit Chapter Title',
+		'description' => 'Edit Chapter Title',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'edit_chapter_title_form'
+		),
+		'access arguments' => array(
+			'upload code'
+		),
+		'type' => MENU_CALLBACK,
+		'file' => 'editcode.inc'
+	);
+	$items['textbook-companion/code/list-examples'] = array(
+		'title' => 'List Examples',
+		'description' => 'List Examples',
+		'page callback' => 'list_examples',
+		'access arguments' => array(
+			'upload code'
+		),
+		'type' => MENU_CALLBACK,
+		'file' => 'general.inc',
+		'weight' => 3
+	);
+	$items['textbook-companion/textbook-search'] = array(
+		'title' => 'Book Search',
+		'description' => '',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'textbook_companion_search_form'
+		),
+		'access arguments' => array(
+			'access content'
+		),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'search.inc'
+	);
+	$items['textbook-companion/textbook-search/search'] = array(
+		'title' => 'Book Search',
+		'description' => '',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'textbook_companion_search_form'
+		),
+		'access arguments' => array(
+			'access content'
+		),
+		'type' => MENU_DEFAULT_LOCAL_TASK,
+		'file' => 'search.inc',
+		'weight' => 1
+	);
+	$items['textbook-companion/textbook-search/book'] = array(
+		'title' => 'By Book Title',
+		'description' => '',
+		'page callback' => 'textbook_companion_browse_book',
+		'access arguments' => array(
+			'access content'
+		),
+		'type' => MENU_LOCAL_TASK,
+		'file' => 'search.inc',
+		'weight' => 2
+	);
+	$items['textbook-companion/textbook-search/author'] = array(
+		'title' => 'By Author',
+		'description' => '',
+		'page callback' => 'textbook_companion_browse_author',
+		'access arguments' => array(
+			'access content'
+		),
+		'type' => MENU_LOCAL_TASK,
+		'file' => 'search.inc',
+		'weight' => 3
+	);
+	$items['textbook-companion/textbook-search/college'] = array(
+		'title' => 'By College',
+		'description' => '',
+		'page callback' => 'textbook_companion_browse_college',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'textbook_companion_browse_college_form'
+		),
+		'access arguments' => array(
+			'access content'
+		),
+		'type' => MENU_LOCAL_TASK,
+		'file' => 'search.inc',
+		'weight' => 4
+	);
+	$items['textbook-companion/textbook-search/student'] = array(
+		'title' => 'By Student',
+		'description' => '',
+		'page callback' => 'textbook_companion_browse_student',
+		'access arguments' => array(
+			'access content'
+		),
+		'type' => MENU_LOCAL_TASK,
+		'file' => 'search.inc',
+		'weight' => 5
+	);
+	/* $items['textbook_run'] = array(
+	'title' => 'Download Codes',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('textbook_companion_run_form_ajax'),
+	'access arguments' => array('access content'),
+	'type' => MENU_NORMAL_ITEM,
+	'file' => 'run.inc',
+	);*/
+	$items['textbook-companion/textbook-run'] = array(
+		'title' => 'Download Codes',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'textbook_companion_run_form'
+		),
+		'access arguments' => array(
+			'access content'
+		),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'run.inc'
+	);
+	/*$items['textbook_run_ajax'] = array(
+	'page callback' => 'textbook_run_ajax',
+	'access callback' => TRUE,
+	'file' => 'run.inc',
+	);*/
+	/*$items['download_codes'] = array(
+	'title' => 'Download Codes',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('textbook_companion_run_form_ajax'),
+	'access arguments' => array('access content'),
+	'type' => MENU_NORMAL_ITEM,
+	'file' => 'run.inc',
+	);*/
+	$items['textbook-companion/download-codes'] = array(
+		'title' => 'Download Codes',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'textbook_companion_run_form'
+		),
+		'access arguments' => array(
+			'access content'
+		),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'run.inc'
+	);
+	/* download callbacks */
+	$items['textbook-companion/download/file'] = array(
+		'title' => 'Code Download',
+		'description' => 'Code Download',
+		'page callback' => 'textbook_companion_download_example_file',
+		'access arguments' => array(
+			'download code'
+		),
+		'type' => MENU_CALLBACK,
+		'file' => 'download.inc'
+	);
+	$items['textbook-companion/download/samplecode'] = array(
+		'title' => 'Sample Code Download',
+		'description' => 'Sample Code Download',
+		'page callback' => 'textbook_companion_download_sample_code',
+		'access arguments' => array(
+			'download code'
+		),
+		'type' => MENU_CALLBACK,
+		'file' => 'download.inc'
+	);
+	/* $items['download/dependency'] = array(
+	'title' => 'Code Download',
+	'description' => 'Code Download', 
+	'page callback' => 'textbook_companion_download_dependency_file',
+	'access arguments' => array('download code'),
+	'type' => MENU_CALLBACK,
+	'file' => 'download.inc',
+	);*/
+	$items['textbook-companion/download/example'] = array(
+		'title' => 'Code Download',
+		'description' => 'Code Download',
+		'page callback' => 'textbook_companion_download_example',
+		'access arguments' => array(
+			'download code'
+		),
+		'type' => MENU_CALLBACK,
+		'file' => 'download.inc'
+	);
+	$items['textbook-companion/download/chapter'] = array(
+		'title' => 'Code Download',
+		'description' => 'Code Download',
+		'page callback' => 'textbook_companion_download_chapter',
+		'access arguments' => array(
+			'download code'
+		),
+		'type' => MENU_CALLBACK,
+		'file' => 'download.inc'
+	);
+	$items['textbook-companion/download/book'] = array(
+		'title' => 'Code Download',
+		'description' => 'Code Download',
+		'page callback' => 'textbook_companion_download_book',
+		'access arguments' => array(
+			'download code'
+		),
+		'type' => MENU_CALLBACK,
+		'file' => 'download.inc'
+	);
+	/* reviewer download */
+	$items['textbook-companion/full-download/chapter'] = array(
+		'title' => 'Code Download',
+		'description' => 'Code Download',
+		'page callback' => 'textbook_companion_download_full_chapter',
+		'access arguments' => array(
+			'approve code'
+		),
+		'type' => MENU_CALLBACK,
+		'file' => 'full_download.inc'
+	);
+	$items['textbook-companion/full-download/book'] = array(
+		'title' => 'Code Download',
+		'description' => 'Code Download',
+		'page callback' => 'textbook_companion_download_full_book',
+		'access arguments' => array(
+			'approve code'
+		),
+		'type' => MENU_CALLBACK,
+		'file' => 'full_download.inc'
+	);
+	/* external reviewer download */
+	$items['textbook-companion/full-download-external/chapter'] = array(
+		'title' => 'Code Download',
+		'description' => 'Code Download',
+		'page callback' => 'textbook_companion_download_full_chapter',
+		'access arguments' => array(
+			'download books to review'
+		),
+		'type' => MENU_CALLBACK,
+		'file' => 'full_download.inc'
+	);
+	$items['textbook-companion/full-download-external/book'] = array(
+		'title' => 'Code Download',
+		'description' => 'Code Download',
+		'page callback' => 'textbook_companion_download_full_book',
+		'access arguments' => array(
+			'download books to review'
+		),
+		'type' => MENU_CALLBACK,
+		'file' => 'full_download.inc'
+	);
+	/* latex script for book generation */
+	$items['textbook-companion/generate-book'] = array(
+		'title' => 'Generate Book',
+		'description' => 'Generate Book From Latex Script',
+		'page callback' => 'textbook_companion_download_book',
+		'access arguments' => array(
+			'generate book'
+		),
+		'type' => MENU_CALLBACK,
+		'file' => 'latex.inc'
+	);
+	$items['textbook-companion/delete-book'] = array(
+		'title' => 'Delete Book PDF',
+		'description' => 'Delete Book PDF',
+		'page callback' => 'textbook_companion_delete_book',
+		'access arguments' => array(
+			'approve code'
+		),
+		'type' => MENU_CALLBACK,
+		'file' => 'latex.inc'
+	);
+	/* general purpose callbacks */
+	$items['textbook-companion/ajax'] = array(
+		'title' => 'Ajax',
+		'description' => 'Ajax',
+		'page callback' => 'textbook_companion_ajax',
+		'access arguments' => array(
+			'access content'
+		),
+		'type' => MENU_CALLBACK
+	);
+	/* for admin */
+	$items['admin/settings/book_companion'] = array(
+		'title' => 'Book Companion Settings',
+		'description' => 'Textbook Companion Settings',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'textbook_companion_settings_form'
+		),
+		'access arguments' => array(
+			'administer book companion'
+		),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'settings.inc'
+	);
+	/* for data entry */
+	$items['textbook-companion/dataentry-book'] = array(
+		'title' => 'Approved books list',
+		'page callback' => '_data_entry_proposal_all',
+		'access callback' => 'user_access',
+		'access arguments' => array(
+			'dataentry book proposal'
+		),
+		'file' => 'manage_proposal.inc'
+	);
+	$items['textbook-companion/dataentry-edit'] = array(
+		'title' => 'Edit book details',
+		'page callback' => 'dataentry_edit',
+		'access callback' => 'user_access',
+		'access arguments' => array(
+			'dataentry book proposal'
+		),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'manage_proposal.inc'
+	);
+	/*Cheque Details and Contact Form */
+	$items['textbook-companion/cheque-manage/all'] = array(
+		'title' => 'Cheque Proposals',
+		'description' => 'Cheque Proposals',
+		'page callback' => 'cheque_proposal_all',
+		'access arguments' => array(
+			'cheque proposal'
+		),
+		'file' => 'cheque_manage.inc'
+	);
+	$items['textbook-companion/mycontact'] = array(
+		'title' => 'Update Contact Details',
+		'description' => 'Update Contact Details',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'contact_details'
+		),
+		'access arguments' => array(
+			'contact_details'
+		),
+		'file' => 'cheque_contact.inc'
+	);
+	$items['textbook-companion/cheque-contct'] = array(
+		'title' => 'Report',
+		'description' => 'Cheque Contact Form',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'cheque_contct_form'
+		),
+		'access arguments' => array(
+			'cheque contct form'
+		),
+		'file' => 'cheque_contact.inc'
+	);
+	$items['textbook-companion/cheque-contact/status'] = array(
+		'title' => 'Cheque Status',
+		'description' => 'Cheque Status',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'cheque_status_form'
+		),
+		'access' => 'user_is_logged_in',
+		'access arguments' => array(
+			'cheque status form'
+		),
+		'file' => 'cheque_contact.inc'
+	);
+	$items['textbook-companion/cheque-contct/report'] = array(
+		'title' => 'Report',
+		'description' => 'Report',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'cheque_report_form'
+		),
+		'access' => 'user_is_logged_in',
+		'access arguments' => array(
+			'cheque report form'
+		),
+		'file' => 'cheque_contact.inc'
+	);
+	$items['textbook-companion/certificate'] = array(
+		'title' => 'List Of All Certificates',
+		'description' => 'List Of All Certificates',
+		'page callback' => '_list_all_certificates',
+		'access arguments' => array(
+			'list all certificates'
+		),
+		'file' => 'pdf/list_all_certificates.inc'
+	);
+	$items['textbook-companion/certificate/generate-pdf'] = array(
+		'title' => 'Download Certificate',
+		'description' => 'Download Certificate',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'generate_pdf'
+		),
+		'access arguments' => array(
+			'generate pdf'
+		),
+		'file' => 'pdf/generate_pdf.inc'
+	);
+	$items['textbook-companion/manage-proposal/paper-submission'] = array(
+		'title' => 'Application Submission',
+		'description' => 'Application Submission',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array(
+			'paper_submission_form'
+		),
+		'access arguments' => array(
+			'paper submission form'
+		),
+		'type' => MENU_CALLBACK,
+		'file' => 'cheque_contact.inc'
+	);
+	$items["textbook-companion/nonaicte-proposal"] = array(
+		"title" => "Book Suggestion Form ",
+		"description" => "NON-AICTE Book Proposal Form",
+		'page callback' => 'textbook_companion_nonaicte_proposal_all',
+		'access arguments' => array(
+			'create book proposal'
+		),
+		'type' => MENU_CALLBACK
+	);
+	return $items;
+}
+/**
+ * Implementation of hook_perm().
+ */
+function textbook_companion_permission()
+{
+	return array(
+		"create book proposal" => array(
+			"title" => t("Book Proposal Form"),
+			"description" => t("Book Proposal Form.")
+		),
+		"approve book proposal" => array(
+			"title" => t("Approve book proposal"),
+			"description" => t("Allows users to approve book proposal.")
+		),
+		"approve code" => array(
+			"title" => t("Approve code"),
+			"description" => t("Allows users to approve code.")
+		),
+		"upload code" => array(
+			"title" => t("Upload code"),
+			"description" => t("Allows users to upload code.")
+		),
+		"edit uploaded code" => array(
+			"title" => t("Edit uploaded code"),
+			"description" => t("Allows users to edit uploaded code.")
+		),
+		"download code" => array(
+			"title" => t("Download code"),
+			"description" => t("Allows users to download code.")
+		),
+		"create feedback" => array(
+			"title" => t("Create feedback"),
+			"description" => t("Allows users to create feedback.")
+		),
+		"bulk manage code" => array(
+			"title" => t("Bulk manage code"),
+			"description" => t("Allows users to manage Bulk code.")
+		),
+		"bulk delete code" => array(
+			"title" => t("Bulk delete code"),
+			"description" => t("Allows users to delete bulk code.")
+		),
+		"edit book proposal" => array(
+			"title" => t("Edit book proposal"),
+			"description" => t("Allows users to edit book proposal.")
+		),
+		"administer book companion" => array(
+			"title" => t("Administer book companion"),
+			"description" => t("Allows users to administer book companion.")
+		),
+		"generate book" => array(
+			"title" => t("Generate book"),
+			"description" => t("Allows users to generate book.")
+		),
+		"cheque contct form" => array(
+			"title" => t("Cheque contact form"),
+			"description" => t("Cheque contct form.")
+		),
+		"contact_details" => array(
+			"title" => t("Contact_details"),
+			"description" => t("Contact_details.")
+		),
+		"comment cheque" => array(
+			"title" => t("Comment cheque"),
+			"description" => t("Comment cheque.")
+		),
+		"list all certificates" => array(
+			"title" => t("list all certificates"),
+			"description" => t("Allows users to list all certificates.")
+		),
+		"generate pdf" => array(
+			"title" => t("Generate pdf"),
+			"description" => t("Allows users to Generate pdf.")
+		),
+		"paper submission form" => array(
+			"title" => t("paper submission form"),
+			"description" => t("Paper submission form.")
+		),
+		"cheque status form" => array(
+			"title" => t("Cheque status form"),
+			"description" => t("Cheque status form.")
+		),
+		"cheque report form" => array(
+			"title" => t("Cheque report form"),
+			"description" => t("Cheque report form.")
+		),
+		"cheque proposal" => array(
+			"title" => t("Cheque proposal"),
+			"description" => t("Cheque proposal.")
+		),
+		"download books to review" => array(
+			"title" => t("download books to review"),
+			"description" => t("Download books to review.")
+		)
+	);
+}
+/* Aicte books pickup before the proposal form */
+/*function textbook_companion_aicte_proposal_form($form_state) {
+/* $query = "
+SELECT * FROM textbook_companion_aicte
+WHERE status = 0 AND selected = 0
+";
+$result = db_query($query);*/
+/* $query = "
+SELECT * FROM textbook_companion_aicte
+WHERE status = :status AND selected = :selected
+";
+$args = array(
+':status' => 0,
+':selected' => 0,
+);
+$result = db_query($query,$args); */
+/*	$query = db_select('textbook_companion_aicte');
+$query->fields('textbook_companion_aicte');
+$query->condition('status', 0);
+$query->condition('selected', 0);
+$result = $query->execute();
+
+$form = array();
+$form["wrapper"] = array(
+"#type" => "fieldset",
+"#prefix" => "<div id='aicte-form-wrapper'>",
+"#suffix" => "</div>",
+);
+// $num_rows = mysql_num_rows($result);
+$num_rows = $query->countQuery();
+if ($num_rows > 0) {
+while($row = $result->fetchObject()) {
+/* fixing title string */
+/*   $title = "";
+$edition = "";
+$year = "";
+$title = "{$row->book} by {$row->author}";
+if($row->edition) {
+$edition = "<i>ed</i>: {$row->edition}";
+}
+if($row->year) {
+if($row->edition) {
+$year = ", <i>pub</i>: {$row->year}";
+} else {
+$year = "<i>pub</i>: {$row->year}";
+}
+}
+if($edition or $year) {
+$title .= "({$edition} {$year})";
+}
+$form["wrapper"][$row->id] = array(
+"#type" => "checkbox",
+"#title" => $title,
+"#prefix" => "<div class='title'>",
+"#suffix" => "</div>",
+);
+}
+}
+$form["submit"] = array(
+"#type" => "submit",
+"#value" => "Submit Book Selections"
+);
+return $form;
+}*/
+/*function textbook_companion_aicte_proposal_form_validate($form, &$form_state) {
+/*$query = "
+SELECT * FROM textbook_companion_aicte
+WHERE status = 0 AND selected = 0
+";
+$result = db_query($query);*/
+/*$query = db_select('textbook_companion_aicte');
+$query->fields('textbook_companion_aicte');
+$query->condition('status', 0);
+$query->condition('selected', 0);
+$result = $query->execute();
+
+$count = 0;
+$selections = array();
+while($row = $result->fetchObject()) {
+if($form_state["values"][$row->id] == 1) {
+$count++;
+array_push($selections, $row->id);
+}
+}
+/* user can choose only 3 books to propose */
+/* if($count != 3) {
+form_set_error("", "Please select exactly <strong>3</strong> books. You currently selected <strong>{$count}</strong>");
+} else {
+$form_state["values"]["selections"] = $selections;
+}
+}*/
+/*function textbook_companion_aicte_proposal_form_submit($form, &$form_state) {
+global $user;
+$selections = $form_state["values"]["selections"];
+var_dump($selections);    
+variable_set("aicte_".$user->uid, $selections);
+drupal_goto("proposal");
+}*/
+/*function textbook_companion_aicte_report_form($form_state) {
+/*$query = "
+SELECT * FROM textbook_companion_aicte
+WHERE status = 0
+ORDER BY book
+";
+$result = db_query($query);*/
+/*$query = db_select('textbook_companion_aicte');
+$query->fields('textbook_companion_aicte');
+$query->condition('status', 0);
+$query->orderBy('book', 'ASC');
+$result = $query->execute();
+
+$books = array();
+$books[0] = "Please select a book";
+while($row = $result->fetchObject()) {
+$books[$row->id] = "{$row->book} ({$row->author})";
+}
+$form = array();
+$form["name"] = array(
+"#type" => "textfield",
+"#title" => "Name",
+"#description" => t("Please enter your name."),
+);
+$form["email"] = array(
+"#type" => "textfield",
+"#title" => "Email",
+"#description" => t("Please enter your valid email id."),
+);
+$form["number"] = array(
+"#type" => "textfield",
+"#title" => "Number",
+"#description" => t("Please enter your valid phone number."),
+);
+$form["book"] = array(
+"#type" => "select",
+"#title" => "AICTE Book",
+"#description" => t("Please select a book."),
+"#options" => $books
+);
+$form["comment"] = array(
+"#type" => "textarea",
+"#title" => "Any other comment?",
+"#description" => t("Please enter your query (if any)")
+);
+$form["submit"] = array(
+"#type" => "submit",
+"#value" => "Submit"
+);
+return $form;
+}
+*/
+/*function textbook_companion_aicte_report_form_submit($form, &$form_state) {
+$v = $form_state["values"];
+
+/*$query = "
+INSERT INTO textbook_companion_aicte_report
+(aicte_id, name, number, email, comment)
+VALUES
+(%d, '%s', '%s', '%s', '%s')
+";
+$result = db_query($query, 
+$v["book"], $v["name"], $v["number"], $v["email"], $v["comment"]
+);*/
+/*$query = "INSERT INTO textbook_companion_aicte_report
+(aicte_id, name, number, email, comment)
+VALUES (:aicte_id, :name, :number, :email, :comment)";
+$args = array(
+":aicte_id" => $v["book"],
+":name" => $v["name"],
+":number" => $v["number"],
+":email" =>$v["email"],
+":comment" => $v["comment"]
+);
+$result = db_query($query, $args, array('return' => Database::RETURN_INSERT_ID));
+
+drupal_set_message("Thank you for reporting.", "status");
+}
+*/
+function textbook_companion_aicte_proposal_all()
+{
+	global $user;
+	$page_content = "";
+	if (!$user->uid)
+	{
+		/*$query = "
+		SELECT * FROM textbook_companion_aicte
+		WHERE status = 0
+		";
+		$result = db_query($query);*/
+		$query = db_select('textbook_companion_aicte');
+		$query->fields('textbook_companion_aicte');
+		$query->condition('status', 0);
+		$result = $query->execute();
+		$page_content .= "<ul>";
+		$page_content .= "<li>These are the list of books available for <em>Textbook Companion</em> proposal.</li>";
+		$page_content .= "<li>Please <a href='/user'><b><u>Login</u></b></a> to create a proposal.</li>";
+		$page_content .= "</ul>";
+		$page_content .= "Search :  <input type='text' id='searchtext' style='width:82%'/>";
+		$page_content .= "<input type='button' value ='clear' id='search_clear'/>";
+		$page_content .= "<div id='aicte-list-wrapper'>";
+		$num_rows = $result->rowCount();
+		if ($num_rows > 0)
+		{
+			$i = 1;
+			while ($row = $result->fetchObject())
+			{
+				/* fixing title string */
+				$title = "";
+				$edition = "";
+				$year = "";
+				$title = "{$row->book} by {$row->author}";
+				if ($row->edition)
+				{
+					$edition = "<i>ed</i>: {$row->edition}";
+				} //$row->edition
+				if ($row->year)
+				{
+					if ($row->edition)
+					{
+						$year = ", <i>pub</i>: {$row->year}";
+					} //$row->edition
+					else
+					{
+						$year = "<i>pub</i>: {$row->year}";
+					}
+				} //$row->year
+				if ($edition or $year)
+				{
+					$title .= "({$edition} {$year})";
+				} //$edition or $year
+				$page_content .= "<div class='title'>{$i}) {$title}</div>";
+				$i++;
+			} //$row = $result->fetchObject()
+		} //$num_rows > 0
+		$page_content .= "</div>";
+		/* adding aicte report form */
+		//$page_content .= drupal_get_form("textbook_companion_aicte_report_form");
+		return $page_content;
+	} //!$user->uid
+	/* check if user has already submitted a proposal */
+	/* $proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE uid = %d ORDER BY id DESC LIMIT 1", $user->uid);*/
+	$query = db_select('textbook_companion_proposal');
+	$query->fields('textbook_companion_proposal');
+	$query->condition('uid', $user->uid);
+	$query->orderBy('id', 'DESC');
+	$query->range(0, 1);
+	$proposal_q = $query->execute();
+	if ($proposal_q)
+	{
+		if ($proposal_data = $proposal_q->fetchObject())
+		{
+			switch ($proposal_data->proposal_status)
+			{
+				case 0:
+					drupal_set_message(t('We have already received your proposal. We will get back to you soon.'), 'status');
+					drupal_goto('');
+					return;
+					break;
+				case 1:
+					drupal_set_message(t('Your proposal has been approved. Please go to ' . l('Code Submission', 'textbook-companion/code') . ' to upload your code'), 'status');
+					drupal_goto('');
+					return;
+					break;
+				case 2:
+					drupal_set_message(t('Your proposal has been dis-approved. Please create another proposal below.'), 'error');
+					break;
+				case 3:
+					drupal_set_message(t('Congratulations! You have completed your last book proposal. You can create another proposal below.'), 'status');
+					break;
+				default:
+					drupal_set_message(t('Invalid proposal state. Please contact site administrator for further information.'), 'error');
+					drupal_goto('');
+					return;
+					break;
+			} //$proposal_data->proposal_status
+		} //$proposal_data = $proposal_q->fetchObject()
+	} //$proposal_q
+	variable_del("aicte_" . $user->uid);
+	$page_content .= "<h5><b>* Please select any 3 books from the below list.</b></h5></br>";
+	$page_content .= "Search :  <input type='text' id='searchtext' style='width:82%'/>";
+	$page_content .= "<input type='button' value ='clear' id='search_clear'/>";
+	//$page_content .= drupal_get_form("textbook_companion_aicte_report_form");
+	$textbook_companion_aicte_proposal_form = drupal_get_form("textbook_companion_aicte_proposal_form");
+	$page_content .= drupal_render($textbook_companion_aicte_proposal_form);
+	return $page_content;
+}
+/*non aicte book proposal */
+function textbook_companion_nonaicte_proposal_all()
+{
+	global $user;
+	$page_content = "";
+	if (!$user->uid)
+	{
+		$page_content .= "<ul>";
+		$page_content .= "<li>Please <a href='/user'><b><u>Login</u></b></a> to create a proposal.</li>";
+		$page_content .= "</ul>";
+		return $page_content;
+	} //!$user->uid
+	/* check if user has already submitted a proposal */
+	/*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE uid = %d ORDER BY id DESC LIMIT 1", $user->uid);*/
+	$query = db_select('textbook_companion_proposal');
+	$query->fields('textbook_companion_proposal');
+	$query->condition('uid', $user->uid);
+	$query->orderBy('id', 'DESC');
+	$query->range(0, 1);
+	$proposal_q = $query->execute();
+	if ($proposal_q)
+	{
+		if ($proposal_data = $proposal_q->fetchObject())
+		{
+			switch ($proposal_data->proposal_status)
+			{
+				case 0:
+					drupal_set_message(t('We have already received your proposal. We will get back to you soon.'), 'status');
+					drupal_goto('');
+					return;
+					break;
+				case 1:
+					drupal_set_message(t('Your proposal has been approved. Please go to ' . l('Code Submission', 'textbook-companion/code') . ' to upload your code'), 'status');
+					drupal_goto('');
+					return;
+					break;
+				case 2:
+					drupal_set_message(t('Your proposal has been dis-approved. Please create another proposal below.'), 'error');
+					break;
+				case 3:
+					drupal_set_message(t('Congratulations! You have completed your last book proposal. You can create another proposal below.'), 'status');
+					break;
+				case 5:
+					drupal_set_message(t('You have submitted your all codes.'), 'status');
+					drupal_goto('');
+					return;
+					break;
+				default:
+					drupal_set_message(t('Invalid proposal state. Please contact site administrator for further information.'), 'error');
+					drupal_goto('');
+					return;
+					break;
+			} //$proposal_data->proposal_status
+		} //$proposal_data = $proposal_q->fetchObject()
+	} //$proposal_q
+	//variable_del("aicte_".$user->uid);
+	$book_proposal_nonaicte_form = drupal_get_form("book_proposal_nonaicte_form");
+	$page_content .= drupal_render($book_proposal_nonaicte_form);
+	return $page_content;
+}
+/* Textbook Companion Proposal */
+function textbook_companion_proposal_all()
+{
+	global $user;
+	$page_content = "";
+	if (!$user->uid)
+	{
+		drupal_set_message('It is mandatory to login on this website to access the proposal form', 'error');
+		drupal_goto('');
+		return;
+	} //!$user->uid
+	/* check if user has already submitted a proposal */
+	/*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE uid = %d ORDER BY id DESC LIMIT 1", $user->uid);*/
+	$query = db_select('textbook_companion_proposal');
+	$query->fields('textbook_companion_proposal');
+	$query->condition('uid', $user->uid);
+	$query->orderBy('id', 'DESC');
+	$query->range(0, 1);
+	$proposal_q = $query->execute();
+	if ($proposal_q)
+	{
+		if ($proposal_data = $proposal_q->fetchObject())
+		{
+			switch ($proposal_data->proposal_status)
+			{
+				case 0:
+					drupal_set_message(t('We have already received your proposal. We will get back to you soon.'), 'status');
+					drupal_goto('');
+					return;
+					break;
+				case 1:
+					drupal_set_message(t('Your proposal has been approved. Please go to ' . l('Code Submission', 'textbook-companion/code') . ' to upload your code'), 'status');
+					drupal_goto('');
+					return;
+					break;
+				case 2:
+					drupal_set_message(t('Your proposal has been dis-approved. Please create another proposal below.'), 'error');
+					break;
+				case 3:
+					drupal_set_message(t('Congratulations! You have completed your last book proposal. You can create another proposal below.'), 'status');
+					break;
+				default:
+					drupal_set_message(t('Invalid proposal state. Please contact site administrator for further information.'), 'error');
+					drupal_goto('');
+					return;
+					break;
+			} //$proposal_data->proposal_status
+		} //$proposal_data = $proposal_q->fetchObject()
+	} //$proposal_q
+	$book_proposal_form = drupal_get_form("book_proposal_form");
+	$page_content .= drupal_render($book_proposal_form);
+	// drupal_goto("aicte_proposal");
+	return $page_content;
+}
+/*function book_proposal_form($form, $form_state)
+{
+global $user;
+$form = array();
+$form['imp_notice'] = array(
+'#type' => 'item',
+'#markup' => '<font color="red"><b>Please fill up this form carefully as the details entered here will be exactly written in the Textbook Companion</b></font>'
+);
+$form['full_name'] = array(
+'#type' => 'textfield',
+'#title' => t('Full Name'),
+'#size' => 30,
+'#maxlength' => 50,
+'#required' => TRUE
+);
+$form['email_id'] = array(
+'#type' => 'textfield',
+'#title' => t('Email'),
+'#size' => 30,
+'#value' => $user->mail,
+'#disabled' => TRUE
+);
+$form['mobile'] = array(
+'#type' => 'textfield',
+'#title' => t('Mobile No.'),
+'#size' => 30,
+'#maxlength' => 15,
+'#required' => TRUE
+);
+$form['gender'] = array(
+'#type' => 'radios',
+'#title' => t('Gender'),
+'#options' => array(
+'M' => 'Male',
+'F' => 'Female'
+),
+'#required' => TRUE
+);
+$form['how_project'] = array(
+'#type' => 'select',
+'#title' => t('How did you come to know about this project'),
+'#options' => array(
+'openmodelica Website' => 'openmodelica Website',
+'Friend' => 'Friend',
+'Professor/Teacher' => 'Professor/Teacher',
+'Mailing List' => 'Mailing List',
+'Poster in my/other college' => 'Poster in my/other college',
+'Others' => 'Others'
+),
+'#required' => TRUE
+);
+$form['course'] = array(
+'#type' => 'textfield',
+'#title' => t('Course'),
+'#size' => 30,
+'#maxlength' => 50,
+'#required' => TRUE
+);
+$form['branch'] = array(
+'#type' => 'select',
+'#title' => t('Department/Branch'),
+'#options' => _list_of_departments(),
+'#required' => TRUE
+);
+$form['university'] = array(
+'#type' => 'textfield',
+'#title' => t('University/ Institute'),
+'#size' => 80,
+'#maxlength' => 200,
+'#required' => TRUE,
+'#attributes' => array(
+'placeholder' => 'Insert full name of your institute/ university.... '
+)
+);
+$form['country'] = array(
+'#type' => 'select',
+'#title' => t('Country'),
+'#options' => array(
+'India' => 'India',
+'Others' => 'Others'
+),
+'#required' => TRUE,
+'#tree' => TRUE,
+'#validated' => TRUE
+);
+$form['other_country'] = array(
+'#type' => 'textfield',
+'#title' => t('Other than India'),
+'#size' => 100,
+'#attributes' => array(
+'placeholder' => t('Enter your country name')
+),
+'#states' => array(
+'visible' => array(
+':input[name="country"]' => array(
+'value' => 'Others'
+)
+)
+)
+);
+$form['other_state'] = array(
+'#type' => 'textfield',
+'#title' => t('State other than India'),
+'#size' => 100,
+'#attributes' => array(
+'placeholder' => t('Enter your state/region name')
+),
+'#states' => array(
+'visible' => array(
+':input[name="country"]' => array(
+'value' => 'Others'
+)
+)
+)
+);
+$form['other_city'] = array(
+'#type' => 'textfield',
+'#title' => t('City other than India'),
+'#size' => 100,
+'#attributes' => array(
+'placeholder' => t('Enter your city name')
+),
+'#states' => array(
+'visible' => array(
+':input[name="country"]' => array(
+'value' => 'Others'
+)
+)
+)
+);
+$form['all_state'] = array(
+'#type' => 'select',
+'#title' => t('State'),
+'#selected' => array(
+'' => '-select-'
+),
+'#options' => _list_of_states(),
+'#validated' => TRUE,
+'#states' => array(
+'visible' => array(
+':input[name="country"]' => array(
+'value' => 'India'
+)
+)
+)
+);
+$form['city'] = array(
+'#type' => 'select',
+'#title' => t('City'),
+'#options' => _list_of_cities(),
+'#states' => array(
+'visible' => array(
+':input[name="country"]' => array(
+'value' => 'India'
+)
+)
+)
+);
+$form['pincode'] = array(
+'#type' => 'textfield',
+'#title' => t('Pincode'),
+'#size' => 30,
+'#maxlength' => 6,
+'#required' => False,
+'#attributes' => array(
+'placeholder' => 'Enter pincode....'
+)
+);
+/***************************************************************************/
+/*  $form['hr'] = array(
+'#type' => 'item',
+'#markup' => '<hr>'
+);
+$form['faculty'] = array(
+'#type' => 'hidden',
+'#value' => 'None',
+'#title' => t('College Teacher/Professor'),
+'#size' => 30,
+'#maxlength' => 50,
+'#required' => TRUE
+);
+$form['faculty_email'] = array(
+'#type' => 'hidden',
+'#value' => 'None',
+'#title' => t('Teacher/Professor Email Id'),
+'#value' => '@email.com',
+'#size' => 30,
+'#maxlength' => 50
+);
+$form['reviewer'] = array(
+'#type' => 'hidden',
+'#value' => 'None',
+'#title' => t('Reviewer'),
+'#size' => 30,
+'#maxlength' => 50
+);
+
+$form['version'] = array(
+'#type' => 'select',
+'#title' => t('Version'),
+'#options' => _list_of_software_version(),
+'#required' => TRUE
+);
+$form['older'] = array(
+'#type' => 'textfield',
+'#size' => 30,
+'#maxlength' => 50,
+//'#required' => TRUE,
+'#description' => t('Specify the Older version used'),
+'#states' => array(
+'visible' => array(
+':input[name="version"]' => array(
+'value' => 'olderversion'
+)
+)
+)
+);
+$form['completion_date'] = array(
+'#type' => 'textfield',
+'#title' => t('Expected Date of Completion'),
+'#description' => t('Input date format should be DD-MM-YYYY. Eg: 23-03-2011'),
+'#size' => 10,
+'#maxlength' => 10
+);
+$form['operating_system'] = array(
+'#type' => 'textfield',
+'#title' => t('Operating System'),
+'#required' => TRUE,
+'#size' => 30,
+'#maxlength' => 50
+);
+$reason = array(
+'Used in more than one University' => t('Used in more than one University'),
+'The book has multiple editions' => t('The book has multiple editions'),
+'Extremely useful' => t('Extremely useful'),
+'Other reason' => t('Any other reason state below')
+);
+$form['reason'] = array(
+'#type' => 'hidden',
+'#default_value' => 'Not available'        
+);
+/*$form['reason'] = array(
+'#type' => 'checkboxes',
+'#title' => t('Reasons'),
+'#options' => $reason,
+'#required' => TRUE
+);
+$form['other_reason'] = array(
+'#type' => 'textarea',
+'#size' => 300,
+'#maxlength' => 300,
+'#states' => array(
+'visible' => array(
+':input[name="reason[Other reason]"]' => array(
+'checked' => TRUE
+)
+)
+)
+//'#required' => FALSE,
+);*/
+/*$form['proposal_type'] = array(
+'#type' => 'hidden',
+'#default_value' => '0',
+'#required' => FALSE
+);
+$form['reference'] = array(
+'#type' => 'hidden',
+'#default_value' => 'Not available',
+);
+/*$form['reference'] = array(
+'#type' => 'textarea',
+'#title' => t('Reference'),
+'#required' => TRUE,
+'#size' => 500,
+'#maxlength' => 500,
+'#attributes' => array(
+'placeholder' => 'Links of the syllabus must be provided....'
+)
+);*/
+/*$form['scilab_version'] = array(
+'#type' => 'textfield',
+'#title' => t('Scilab Version'),
+'#required' => TRUE,
+'#size' => 10,
+'#maxlength' => 10,
+);*/
+/*$form['form_type'] = array(
+'#type' => 'hidden',
+'#value' => 1
+);
+$form['preference1'] = array(
+'#type' => 'fieldset',
+'#title' => t('Book Preference 1'),
+'#collapsible' => TRUE,
+'#collapsed' => FALSE
+);
+$form['preference1']['book1'] = array(
+'#type' => 'textfield',
+'#title' => t('Title of the book'),
+'#size' => 30,
+'#maxlength' => 100,
+'#required' => TRUE
+);
+$form['preference1']['author1'] = array(
+'#type' => 'textfield',
+'#title' => t('Author Name'),
+'#size' => 30,
+'#maxlength' => 100,
+'#required' => TRUE
+//'#value' => $row1->author,
+//'#disabled' => ($row1->author?TRUE:FALSE),
+);
+$form['preference1']['isbn1'] = array(
+'#type' => 'textfield',
+'#title' => t('ISBN No'),
+'#size' => 30,
+'#maxlength' => 25,
+'#required' => TRUE
+// '#value' => $row1->isbn,
+// '#disabled' => ($row1->isbn?TRUE:FALSE),
+);
+$form['preference1']['publisher1'] = array(
+'#type' => 'textfield',
+'#title' => t('Publisher & Place'),
+'#size' => 30,
+'#maxlength' => 50,
+'#required' => TRUE
+//'#value' => $row1->publisher,
+);
+$form['preference1']['edition1'] = array(
+'#type' => 'textfield',
+'#title' => t('Edition'),
+'#size' => 4,
+'#maxlength' => 2,
+'#required' => TRUE
+//'#value' => $row1->edition,
+);
+$form['preference1']['year1'] = array(
+'#type' => 'textfield',
+'#title' => t('Year of pulication'),
+'#size' => 4,
+'#maxlength' => 4,
+'#required' => TRUE
+//'#value' => $row1->year,
+);
+$form['preference2'] = array(
+'#type' => 'fieldset',
+'#title' => t('Book Preference 2'),
+'#collapsible' => TRUE,
+'#collapsed' => FALSE
+);
+$form['preference2']['book2'] = array(
+'#type' => 'textfield',
+'#title' => t('Title of the book'),
+'#size' => 30,
+'#maxlength' => 100,
+'#required' => TRUE
+//'#value' => $row2->book,
+//'#disabled' => ($row2->book?TRUE:FALSE),
+);
+$form['preference2']['author2'] = array(
+'#type' => 'textfield',
+'#title' => t('Author Name'),
+'#size' => 30,
+'#maxlength' => 100,
+'#required' => TRUE
+//'#value' => $row2->author,
+//'#disabled' => ($row2->author?TRUE:FALSE),
+);
+$form['preference2']['isbn2'] = array(
+'#type' => 'textfield',
+'#title' => t('ISBN No'),
+'#size' => 30,
+'#maxlength' => 25,
+'#required' => TRUE
+// '#value' => $row2->isbn,
+// '#disabled' => ($row2->isbn?TRUE:FALSE),
+);
+$form['preference2']['publisher2'] = array(
+'#type' => 'textfield',
+'#title' => t('Publisher & Place'),
+'#size' => 30,
+'#maxlength' => 50,
+'#required' => TRUE
+//'#value' => $row2->publisher,
+);
+$form['preference2']['edition2'] = array(
+'#type' => 'textfield',
+'#title' => t('Edition'),
+'#size' => 4,
+'#maxlength' => 2,
+'#required' => TRUE
+//'#value' => $row2->edition,
+);
+$form['preference2']['year2'] = array(
+'#type' => 'textfield',
+'#title' => t('Year of pulication'),
+'#size' => 4,
+'#maxlength' => 4,
+'#required' => TRUE
+//'#value' => $row2->year,
+);
+$form['preference3'] = array(
+'#type' => 'fieldset',
+'#title' => t('Book Preference 3'),
+'#collapsible' => TRUE,
+'#collapsed' => FALSE
+);
+$form['preference3']['book3'] = array(
+'#type' => 'textfield',
+'#title' => t('Title of the book'),
+'#size' => 30,
+'#maxlength' => 100,
+'#required' => TRUE
+//'#value' => $row3->book,
+//'#disabled' => ($row3->book?TRUE:FALSE),
+);
+$form['preference3']['author3'] = array(
+'#type' => 'textfield',
+'#title' => t('Author Name'),
+'#size' => 30,
+'#maxlength' => 100,
+'#required' => TRUE
+//'#value' => $row3->author,
+// '#disabled' => ($row3->author?TRUE:FALSE),
+);
+$form['preference3']['isbn3'] = array(
+'#type' => 'textfield',
+'#title' => t('ISBN No'),
+'#size' => 30,
+'#maxlength' => 25,
+'#required' => TRUE
+//'#value' => $row3->isbn,
+//'#disabled' => ($row3->isbn?TRUE:FALSE),
+);
+$form['preference3']['publisher3'] = array(
+'#type' => 'textfield',
+'#title' => t('Publisher & Place'),
+'#size' => 30,
+'#maxlength' => 50,
+'#required' => TRUE
+// '#value' => $row3->publisher,
+);
+$form['preference3']['edition3'] = array(
+'#type' => 'textfield',
+'#title' => t('Edition'),
+'#size' => 4,
+'#maxlength' => 2,
+'#required' => TRUE
+//'#value' => $row3->edition,
+);
+$form['preference3']['year3'] = array(
+'#type' => 'textfield',
+'#title' => t('Year of pulication'),
+'#size' => 4,
+'#maxlength' => 4,
+'#required' => TRUE
+//'#value' => $row3->year,
+);
+/*$form['termconditions'] = array(
+'#type' => 'checkboxes',
+'#title' => t('Terms And Conditions'),
+'#options' => array(
+'status' => t('<a href="term-and-conditions" target="_blank">I agree to the Terms and Conditions</a>'),),
+'#required' => TRUE,
+);*/
+/*$form['samplefile'] = array(
+'#type' => 'fieldset',
+'#title' => t('Sample Source Files'),
+'#collapsible' => FALSE,
+'#collapsed' => FALSE
+);*/
+/*$form['samplefile']['samplefile1'] = array(
+'#type' => 'file',
+'#title' => t('Upload sample source file'),
+'#size' => 48,
+'#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' . t('<span style="color:red;">Allowed file extensions : ') . variable_get('textbook_companion_source_extensions', '') . '</span>'
+);*/
+/*$form['submit'] = array(
+'#type' => 'submit',
+'#value' => t('Submit')
+);
+$form['dir_name1'] = array(
+'#type' => 'hidden',
+'#value' => 'None'
+);
+$form['dir_name2'] = array(
+'#type' => 'hidden',
+'#value' => 'None'
+);
+$form['dir_name3'] = array(
+'#type' => 'hidden',
+'#value' => 'None'
+);
+/* #value fix for #default_value bug drupal6  
+foreach(array("preference1", "preference2", "preference3") as $preference) {
+foreach($form[$preference] as $key => $value) {
+if(!$form[$preference][$key]["#value"]) {
+unset($form[$preference][$key]["#value"]);
+}
+}
+}*/
+/* return $form;
+}*/
+function book_proposal_form($form, &$form_state)
+{
+	global $user;
+	$form = array();
+	$form['imp_notice'] = array(
+		'#type' => 'item',
+		'#markup' => '<font color="red"><b>Please fill up this form carefully as the details entered here will be exactly written in the Textbook Companion</b></font>'
+	);
+	$form['full_name'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Full Name'),
+		'#size' => 30,
+		'#maxlength' => 50,
+		'#required' => TRUE
+	);
+	$form['email_id'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Email'),
+		'#size' => 30,
+		'#value' => $user->mail,
+		'#disabled' => TRUE
+	);
+	$form['mobile'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Mobile No.'),
+		'#size' => 30,
+		'#maxlength' => 15,
+		'#required' => TRUE
+	);
+	$form['gender'] = array(
+		'#type' => 'radios',
+		'#title' => t('Gender'),
+		'#options' => array(
+			'M' => 'Male',
+			'F' => 'Female'
+		),
+		'#required' => TRUE
+	);
+	$form['how_project'] = array(
+		'#type' => 'select',
+		'#title' => t('How did you come to know about this project'),
+		'#options' => array(
+			'OpenModelica Website' => 'OpenModelica Website',
+			'Friend' => 'Friend',
+			'Professor/Teacher' => 'Professor/Teacher',
+			'Mailing List' => 'Mailing List',
+			'Poster in my/other college' => 'Poster in my/other college',
+			'Others' => 'Others'
+		),
+		'#required' => TRUE
+	);
+	$form['course'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Course'),
+		'#size' => 30,
+		'#maxlength' => 50,
+		'#required' => TRUE
+	);
+	$form['branch'] = array(
+		'#type' => 'select',
+		'#title' => t('Department/Branch'),
+		'#options' => _list_of_departments(),
+		'#required' => TRUE
+	);
+	$form['university'] = array(
+		'#type' => 'textfield',
+		'#title' => t('University/ Institute'),
+		'#size' => 80,
+		'#maxlength' => 200,
+		'#required' => TRUE,
+		'#attributes' => array(
+			'placeholder' => 'Insert full name of your institute/ university.... '
+		)
+	);
+	$form['country'] = array(
+		'#type' => 'select',
+		'#title' => t('Country'),
+		'#options' => array(
+			'India' => 'India',
+			'Others' => 'Others'
+		),
+		'#required' => TRUE,
+		'#tree' => TRUE,
+		'#validated' => TRUE
+	);
+	$form['other_country'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Other than India'),
+		'#size' => 100,
+		'#attributes' => array(
+			'placeholder' => t('Enter your country name')
+		),
+		'#states' => array(
+			'visible' => array(
+				':input[name="country"]' => array(
+					'value' => 'Others'
+				)
+			)
+		)
+	);
+	$form['other_state'] = array(
+		'#type' => 'textfield',
+		'#title' => t('State other than India'),
+		'#size' => 100,
+		'#attributes' => array(
+			'placeholder' => t('Enter your state/region name')
+		),
+		'#states' => array(
+			'visible' => array(
+				':input[name="country"]' => array(
+					'value' => 'Others'
+				)
+			)
+		)
+	);
+	$form['other_city'] = array(
+		'#type' => 'textfield',
+		'#title' => t('City other than India'),
+		'#size' => 100,
+		'#attributes' => array(
+			'placeholder' => t('Enter your city name')
+		),
+		'#states' => array(
+			'visible' => array(
+				':input[name="country"]' => array(
+					'value' => 'Others'
+				)
+			)
+		)
+	);
+	$form['all_state'] = array(
+		'#type' => 'select',
+		'#title' => t('State'),
+		'#selected' => array(
+			'' => '-select-'
+		),
+		'#options' => _list_of_states(),
+		'#validated' => TRUE,
+		'#states' => array(
+			'visible' => array(
+				':input[name="country"]' => array(
+					'value' => 'India'
+				)
+			)
+		)
+	);
+	$form['city'] = array(
+		'#type' => 'select',
+		'#title' => t('City'),
+		'#options' => _list_of_cities(),
+		'#states' => array(
+			'visible' => array(
+				':input[name="country"]' => array(
+					'value' => 'India'
+				)
+			)
+		)
+	);
+	$form['pincode'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Pincode'),
+		'#size' => 30,
+		'#maxlength' => 6,
+		'#required' => False,
+		'#attributes' => array(
+			'placeholder' => 'Enter pincode....'
+		)
+	);
+	/***************************************************************************/
+	$form['hr'] = array(
+		'#type' => 'item',
+		'#markup' => '<hr>'
+	);
+	$form['faculty'] = array(
+		'#type' => 'hidden',
+		'#value' => 'None',
+		'#title' => t('College Teacher/Professor'),
+		'#size' => 30,
+		'#maxlength' => 50,
+		'#required' => TRUE
+	);
+	$form['faculty_email'] = array(
+		'#type' => 'hidden',
+		'#value' => 'None',
+		'#title' => t('Teacher/Professor Email Id'),
+		'#value' => '@email.com',
+		'#size' => 30,
+		'#maxlength' => 50
+	);
+	$form['reviewer'] = array(
+		'#type' => 'hidden',
+		'#value' => 'None',
+		'#title' => t('Reviewer'),
+		'#size' => 30,
+		'#maxlength' => 50
+	);
+	$form['version'] = array(
+		'#type' => 'select',
+		'#title' => t('Version'),
+		'#options' => _list_of_software_version(),
+		'#required' => TRUE
+	);
+	$form['older'] = array(
+		'#type' => 'textfield',
+		'#size' => 30,
+		'#maxlength' => 50,
+		//'#required' => TRUE,
+		'#description' => t('Specify the Older version used'),
+		'#states' => array(
+			'visible' => array(
+				':input[name="version"]' => array(
+					'value' => 'olderversion'
+				)
+			)
+		)
+	);
+	$form['completion_date'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Expected Date of Completion'),
+		'#description' => t('Input date format should be DD-MM-YYYY. Eg: 23-03-2011'),
+		'#size' => 10,
+		'#maxlength' => 10
+	);
+	$form['operating_system'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Operating System'),
+		'#required' => TRUE,
+		'#size' => 30,
+		'#maxlength' => 50
+	);
+	$reason = array(
+		'Used in more than one University' => t('Used in more than one University'),
+		'The book has multiple editions' => t('The book has multiple editions'),
+		'Extremely useful' => t('Extremely useful'),
+		'Other reason' => t('Any other reason state below')
+	);
+	$form['reason'] = array(
+		'#type' => 'checkboxes',
+		'#title' => t('Reasons'),
+		'#options' => $reason,
+		'#required' => TRUE
+	);
+	$form['other_reason'] = array(
+		'#type' => 'textarea',
+		'#size' => 300,
+		'#maxlength' => 300,
+		'#states' => array(
+			'visible' => array(
+				':input[name="reason[Other reason]"]' => array(
+					'checked' => TRUE
+				)
+			)
+		)
+		//'#required' => FALSE,
+	);
+	$form['proposal_type'] = array(
+		'#type' => 'hidden',
+		'#default_value' => '1',
+		'#required' => FALSE
+	);
+	$form['reference'] = array(
+		'#type' => 'textarea',
+		'#title' => t('Reference'),
+		'#required' => TRUE,
+		'#size' => 500,
+		'#maxlength' => 500,
+		'#attributes' => array(
+			'placeholder' => 'Links of the syllabus must be provided....'
+		)
+	);
+	$form['form_type'] = array(
+		'#type' => 'hidden',
+		'#value' => 1
+	);
+	$form['preference1'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('Book Preference'),
+		'#collapsible' => TRUE,
+		'#collapsed' => FALSE
+	);
+	$form['preference1']['book1'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Title of the book'),
+		'#size' => 30,
+		'#maxlength' => 100,
+		'#required' => TRUE
+	);
+	$form['preference1']['author1'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Author Name'),
+		'#size' => 30,
+		'#maxlength' => 100,
+		'#required' => TRUE
+		//'#value' => $row1->author,
+		//'#disabled' => ($row1->author?TRUE:FALSE),
+	);
+	$form['preference1']['isbn1'] = array(
+		'#type' => 'textfield',
+		'#title' => t('ISBN No'),
+		'#size' => 30,
+		'#maxlength' => 25,
+		'#required' => TRUE
+		// '#value' => $row1->isbn,
+		// '#disabled' => ($row1->isbn?TRUE:FALSE),
+	);
+	$form['preference1']['publisher1'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Publisher & Place'),
+		'#size' => 30,
+		'#maxlength' => 50,
+		'#required' => TRUE
+		//'#value' => $row1->publisher,
+	);
+	$form['preference1']['edition1'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Edition'),
+		'#size' => 4,
+		'#maxlength' => 2,
+		'#required' => TRUE
+		//'#value' => $row1->edition,
+	);
+	$form['preference1']['year1'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Year of publication'),
+		'#size' => 4,
+		'#maxlength' => 4,
+		'#required' => TRUE
+		//'#value' => $row1->year,
+	);
+	/*$form['preference2'] = array(
+	'#type' => 'fieldset',
+	'#title' => t('Book Preference 2'),
+	'#collapsible' => TRUE,
+	'#collapsed' => FALSE
+	);
+	$form['preference2']['book2'] = array(
+	'#type' => 'textfield',
+	'#title' => t('Title of the book'),
+	'#size' => 30,
+	'#maxlength' => 100,
+	'#required' => TRUE
+	//'#value' => $row2->book,
+	//'#disabled' => ($row2->book?TRUE:FALSE),
+	);
+	$form['preference2']['author2'] = array(
+	'#type' => 'textfield',
+	'#title' => t('Author Name'),
+	'#size' => 30,
+	'#maxlength' => 100,
+	'#required' => TRUE
+	//'#value' => $row2->author,
+	//'#disabled' => ($row2->author?TRUE:FALSE),
+	);
+	$form['preference2']['isbn2'] = array(
+	'#type' => 'textfield',
+	'#title' => t('ISBN No'),
+	'#size' => 30,
+	'#maxlength' => 25,
+	'#required' => TRUE
+	// '#value' => $row2->isbn,
+	// '#disabled' => ($row2->isbn?TRUE:FALSE),
+	);
+	$form['preference2']['publisher2'] = array(
+	'#type' => 'textfield',
+	'#title' => t('Publisher & Place'),
+	'#size' => 30,
+	'#maxlength' => 50,
+	'#required' => TRUE
+	//'#value' => $row2->publisher,
+	);
+	$form['preference2']['edition2'] = array(
+	'#type' => 'textfield',
+	'#title' => t('Edition'),
+	'#size' => 4,
+	'#maxlength' => 2,
+	'#required' => TRUE
+	//'#value' => $row2->edition,
+	);
+	$form['preference2']['year2'] = array(
+	'#type' => 'textfield',
+	'#title' => t('Year of pulication'),
+	'#size' => 4,
+	'#maxlength' => 4,
+	'#required' => TRUE
+	//'#value' => $row2->year,
+	);
+	$form['preference3'] = array(
+	'#type' => 'fieldset',
+	'#title' => t('Book Preference 3'),
+	'#collapsible' => TRUE,
+	'#collapsed' => FALSE
+	);
+	$form['preference3']['book3'] = array(
+	'#type' => 'textfield',
+	'#title' => t('Title of the book'),
+	'#size' => 30,
+	'#maxlength' => 100,
+	'#required' => TRUE
+	//'#value' => $row3->book,
+	//'#disabled' => ($row3->book?TRUE:FALSE),
+	);
+	$form['preference3']['author3'] = array(
+	'#type' => 'textfield',
+	'#title' => t('Author Name'),
+	'#size' => 30,
+	'#maxlength' => 100,
+	'#required' => TRUE
+	//'#value' => $row3->author,
+	// '#disabled' => ($row3->author?TRUE:FALSE),
+	);
+	$form['preference3']['isbn3'] = array(
+	'#type' => 'textfield',
+	'#title' => t('ISBN No'),
+	'#size' => 30,
+	'#maxlength' => 25,
+	'#required' => TRUE
+	//'#value' => $row3->isbn,
+	//'#disabled' => ($row3->isbn?TRUE:FALSE),
+	);
+	$form['preference3']['publisher3'] = array(
+	'#type' => 'textfield',
+	'#title' => t('Publisher & Place'),
+	'#size' => 30,
+	'#maxlength' => 50,
+	'#required' => TRUE
+	// '#value' => $row3->publisher,
+	);
+	$form['preference3']['edition3'] = array(
+	'#type' => 'textfield',
+	'#title' => t('Edition'),
+	'#size' => 4,
+	'#maxlength' => 2,
+	'#required' => TRUE
+	//'#value' => $row3->edition,
+	);
+	$form['preference3']['year3'] = array(
+	'#type' => 'textfield',
+	'#title' => t('Year of pulication'),
+	'#size' => 4,
+	'#maxlength' => 4,
+	'#required' => TRUE
+	//'#value' => $row3->year,
+	);
+	/*$form['termconditions'] = array(
+	'#type' => 'checkboxes',
+	'#title' => t('Terms And Conditions'),
+	'#options' => array(
+	'status' => t('<a href="term-and-conditions" target="_blank">I agree to the Terms and Conditions</a>'),),
+	'#required' => TRUE,
+	);*/
+	$form['samplefile'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('Sample Source Files'),
+		'#collapsible' => FALSE,
+		'#collapsed' => FALSE
+	);
+	$form['samplefile']['samplefile1'] = array(
+		'#type' => 'file',
+		'#title' => t('Upload sample source file'),
+		'#size' => 48,
+		'#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' . t('<span style="color:red;">Allowed file extensions : ') . variable_get('textbook_companion_sample_source_extensions', '') . '</span>'
+	);
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Submit')
+	);
+	$form['dir_name'] = array(
+		'#type' => 'hidden',
+		'#value' => 'None'
+	);
+	/* #value fix for #default_value bug drupal6  
+	foreach(array("preference1", "preference2", "preference3") as $preference) {
+	foreach($form[$preference] as $key => $value) {
+	if(!$form[$preference][$key]["#value"]) {
+	unset($form[$preference][$key]["#value"]);
+	}
+	}
+	}*/
+	return $form;
+}
+function book_proposal_form_validate($form, &$form_state)
+{
+	/* mobile */
+	if (!preg_match('/^[0-9\ \+]{0,15}$/', $form_state['values']['mobile']))
+		form_set_error('mobile', t('Invalid mobile number'));
+	/* date of completion */
+	if (!preg_match('/^[0-9]{1,2}-[0-9]{1,2}-[0-9]{4}$/', $form_state['values']['completion_date']))
+		form_set_error('completion_date', t('Invalid expected date of completion'));
+	list($d, $m, $y) = explode('-', $form_state['values']['completion_date']);
+	$d = (int) $d;
+	$m = (int) $m;
+	$y = (int) $y;
+	if (!checkdate($m, $d, $y))
+		form_set_error('completion_date', t('Invalid expected date of completion'));
+	if (mktime(0, 0, 0, $m, $d, $y) <= time())
+		form_set_error('completion_date', t('Expected date of completion should be in future'));
+	/* edition */
+	$cur_year = date('Y');
+	if (!preg_match('/^[A-Za-z]/', $form_state['values']['book1']))
+		form_set_error('book1', t('Invalid book name for Book Preference 1'));
+	if (!preg_match('/^[A-Za-z]/', $form_state['values']['author1']))
+		if (!preg_match('/^[0-9\-xX]+$/', $form_state['values']['isbn1']))
+			form_set_error('isbn1', t('Invalid ISBN for Book Preference 1'));
+	if (!preg_match('/^[1-9][0-9]{0,1}$/', $form_state['values']['edition1']))
+		form_set_error('edition1', t('Invalid edition for Book Preference 1'));
+	if (!preg_match('/^[1-3][0-9][0-9][0-9]$/', $form_state['values']['year1']))
+		form_set_error('year1', t('Invalid year of pulication for Book Preference 1'));
+	if ((int) $form_state['values']['year1'] > $cur_year)
+		form_set_error('year1', t('Year of pulication should be not in the future for Book Preference 1'));
+	if ($form_state['values']['book1'] && $form_state['values']['author1'])
+	{
+		$bk1 = trim($form_state['values']['book1']);
+		$auth1 = trim($form_state['values']['author1']);
+		//var_dump(_dir_name($bk1, $auth1))
+		$pref_id = NULL;
+		if (_dir_name($bk1, $auth1, $pref_id) != NULL)
+		{
+			$form_state['values']['dir_name1'] = _dir_name($bk1, $auth1, $pref_id);
+		} //_dir_name($bk1, $auth1, $pref_id) != NULL
+	} //$form_state['values']['book1'] && $form_state['values']['author1']
+	/*****************************************************************************
+	if (!preg_match('/^[0-9\-xX]+$/', $form_state['values']['isbn2']))
+	form_set_error('isbn2', t('Invalid ISBN for Book Preference 2'));
+	if (!preg_match('/^[1-9][0-9]{0,1}$/', $form_state['values']['edition2']))
+	form_set_error('edition2', t('Invalid edition for Book Preference 2'));
+	if (!preg_match('/^[1-3][0-9][0-9][0-9]$/', $form_state['values']['year2']))
+	form_set_error('year2', t('Invalid year of pulication for Book Preference 2'));
+	if ((int) $form_state['values']['year2'] > $cur_year)
+	form_set_error('year2', t('Year of pulication should be not in the future for Book Preference 2'));
+	if ($form_state['values']['book2'] && $form_state['values']['author2']) {
+	$bk2 = trim($form_state['values']['book2']);
+	$auth2 = trim($form_state['values']['author2']);
+	//var_dump(_dir_name($bk1, $auth1))
+	$pref_id = NULL;
+	if (_dir_name($bk2, $auth2, $pref_id) != NULL) {
+	$form_state['values']['dir_name2'] = _dir_name($bk2, $auth2, $pref_id);
+	}
+	/*****************************************************************************
+	}
+	if (!preg_match('/^[0-9\-xX]+$/', $form_state['values']['isbn3']))
+	form_set_error('isbn3', t('Invalid ISBN for Book Preference 3'));
+	if (!preg_match('/^[1-9][0-9]{0,1}$/', $form_state['values']['edition3']))
+	form_set_error('edition3', t('Invalid edition for Book Preference 3'));
+	if (!preg_match('/^[1-3][0-9][0-9][0-9]$/', $form_state['values']['year3']))
+	form_set_error('year3', t('Invalid year of pulication for Book Preference 3'));
+	if ((int) $form_state['values']['year3'] > $cur_year)
+	form_set_error('year3', t('Year of pulication should be not in the future for Book Preference 3'));
+	if ($form_state['values']['book3'] && $form_state['values']['author3']) {
+	$bk3 = trim($form_state['values']['book3']);
+	$auth3 = trim($form_state['values']['author3']);
+	//var_dump(_dir_name($bk1, $auth1))
+	$pref_id = NULL;
+	if (_dir_name($bk1, $auth1, $pref_id) != NULL) {
+	$form_state['values']['dir_name3'] = _dir_name($bk3, $auth3, $pref_id);
+	}
+	/*****************************************************************************
+	
+	}*/
+	if ($form_state['values']['version'] == 'olderversion')
+	{
+		if ($form_state['values']['older'] == '')
+		{
+			form_set_error('older', t('Please provide valid version'));
+		} //$form_state['values']['older'] == ''
+	} //$form_state['values']['version'] == 'olderversion'
+	if (isset($_FILES['files']))
+	{
+		/* check if atleast one source or result file is uploaded */
+		if (!($_FILES['files']['name']['samplefile1']))
+			form_set_error('samplefile1', t('Please upload sample code main or source file.'));
+		/* check for valid filename extensions */
+		foreach ($_FILES['files']['name'] as $file_form_name => $file_name)
+		{
+			if ($file_name)
+			{
+				/* checking file type */
+				if (strstr($file_form_name, 'sample'))
+					$file_type = 'S';
+				else
+					$file_type = 'U';
+				$allowed_extensions_str = '';
+				switch ($file_type)
+				{
+					case 'S':
+						$allowed_extensions_str = variable_get('textbook_companion_sample_source_extensions', '');
+						break;
+				} //$file_type
+				$allowed_extensions = explode(',', $allowed_extensions_str);
+				$fnames = explode('.', strtolower($_FILES['files']['name'][$file_form_name]));
+				$temp_extension = end($fnames);
+				if (!in_array($temp_extension, $allowed_extensions))
+					form_set_error($file_form_name, t('Only file with ' . $allowed_extensions_str . ' extensions can be uploaded.'));
+				if ($_FILES['files']['size'][$file_form_name] <= 0)
+					form_set_error($file_form_name, t('File size cannot be zero.'));
+				/* check if valid file name */
+				if (!textbook_companion_check_valid_filename($_FILES['files']['name'][$file_form_name]))
+					form_set_error($file_form_name, t('Invalid file name specified. Only alphabets and numbers are allowed as a valid filename.'));
+			} //$file_name
+		} //$_FILES['files']['name'] as $file_form_name => $file_name
+	} //isset($_FILES['files'])
+	if ($form_state['values']['version'] == 'olderversion')
+	{
+		if ($form_state['values']['older'] == '')
+		{
+			form_set_error('older', t('Please provide valid version'));
+		} //$form_state['values']['older'] == ''
+	} //$form_state['values']['version'] == 'olderversion'
+	return;
+}
+function book_proposal_form_submit($form, &$form_state, $directory_name = NULL)
+{
+	global $user;
+	$root_path = textbook_companion_samplecode_path();
+	$selections = variable_get("aicte_" . $user->uid, "");
+	if (!$user->uid)
+	{
+		drupal_set_message('It is mandatory to login on this website to access the proposal form', 'error');
+		return;
+	} //!$user->uid
+	/* completion date to timestamp */
+	list($d, $m, $y) = explode('-', $form_state['values']['completion_date']);
+	$completion_date_timestamp = mktime(0, 0, 0, $m, $d, $y);
+	$openmodelica_version = $form_state['values']['version'];
+	if ($form_state['values']['version'] == 'olderversion')
+	{
+		$form_state['values']['version'] = $form_state['values']['older'];
+	} //$form_state['values']['version'] == 'olderversion'
+	if ($form_state['values']['country'] == 'other')
+	{
+		$form_state['values']['country'] = trim($form_state['values']['other_country']);
+		$form_state['values']['all_state'] = trim($form_state['values']['other_state']);
+	} //$form_state['values']['country'] == 'other'
+	if (isset($_POST['reason']))
+	{
+		if (!($form_state['values']['other_reason']))
+		{
+			$my_reason = implode(", ", $_POST['reason']);
+		} //!($form_state['values']['other_reason'])
+		else
+		{
+			$my_reason = implode(", ", $_POST['reason']);
+			$my_reason = $my_reason . "-" . " " . $form_state['values']['other_reason'];
+		}
+		$form_state['values']['reason'] = $my_reason;
+	} //isset($_POST['reason'])
+	$query = "INSERT INTO {textbook_companion_proposal}
+    (uid, approver_uid, full_name, mobile, gender, how_project, course, branch, university,city,pincode,state,country, faculty, reviewer,reference, completion_date, creation_date, approval_date, proposal_status, openmodelica_version, operating_system, teacher_email,reason,samplefilepath,proposal_type,proposed_completion_date) VALUES (:uid, :approver_uid, :full_name, :mobile, :gender, :how_project, :course, :branch, :university, :city,:pincode,:state,:country, :faculty, :reviewer,:reference, :completion_date,
+ :creation_date, :approval_date, :proposal_status, :openmodelica_version, :operating_system,
+:teacher_email,:reason,:samplefilepath,:proposal_type, :proposed_completion_date)";
+	$args = array(
+		":uid" => $user->uid,
+		":approver_uid" => 0,
+		":full_name" => trim(ucwords(strtolower($form_state['values']['full_name']))),
+		":mobile" => trim($form_state['values']['mobile']),
+		":gender" => $form_state['values']['gender'],
+		":how_project" => $form_state['values']['how_project'],
+		":course" => trim($form_state['values']['course']),
+		":branch" => $form_state['values']['branch'],
+		":university" => trim($form_state['values']['university']),
+		":city" => trim($form_state['values']['city']),
+		":pincode" => $form_state['values']['pincode'],
+		":state" => trim($form_state['values']['all_state']),
+		":country" => $form_state['values']['country'],
+		":faculty" => ucwords(strtolower($form_state['values']['faculty'])),
+		":reviewer" => ucwords(strtolower($form_state['values']['reviewer'])),
+		":reference" => trim($form_state['values']['reference']),
+		":completion_date" => $completion_date_timestamp,
+		":creation_date" => time(),
+		":approval_date" => 0,
+		":proposal_status" => 0,
+		":openmodelica_version" => trim($form_state['values']['version']),
+		":operating_system" => trim($form_state['values']['operating_system']),
+		":teacher_email" => $form_state['values']['faculty_email'],
+		":reason" => $form_state['values']['reason'],
+		":samplefilepath" => "",
+		":proposal_type" => 0,
+		":proposed_completion_date" => $completion_date_timestamp
+	);
+	$result = db_query($query, $args, array(
+		'return' => Database::RETURN_INSERT_ID
+	));
+	$dest_path = $result . '/';
+	if (!is_dir($root_path . $dest_path))
+		mkdir($root_path . $dest_path);
+	/* uploading files */
+	foreach ($_FILES['files']['name'] as $file_form_name => $file_name)
+	{
+		if ($file_name)
+		{
+			/* checking file type */
+			$file_type = 'S';
+			if (file_exists($root_path . $dest_path . $_FILES['files']['name'][$file_form_name]))
+			{
+				// drupal_set_message(t("Error uploading file. File !filename already exists.", array('!filename' => $_FILES['files']['name'][$file_form_name])), 'error');
+				unlink($root_path . $dest_path . $_FILES['files']['name'][$file_form_name]);
+			} //file_exists($root_path . $dest_path . $_FILES['files']['name'][$file_form_name])
+			/* uploading file */
+			if (move_uploaded_file($_FILES['files']['tmp_name'][$file_form_name], $root_path . $dest_path . $_FILES['files']['name'][$file_form_name]))
+			{
+				$query = "UPDATE {textbook_companion_proposal} SET samplefilepath = :samplefilepath WHERE id = :id";
+				$args = array(
+					":samplefilepath" => $dest_path . $_FILES['files']['name'][$file_form_name],
+					":id" => $result
+				);
+				$updateresult = db_query($query, $args);
+				drupal_set_message($file_name . ' uploaded successfully.', 'status');
+			} //move_uploaded_file($_FILES['files']['tmp_name'][$file_form_name], $root_path . $dest_path . $_FILES['files']['name'][$file_form_name])
+			else
+			{
+				drupal_set_message('Error uploading file : ' . $dest_path . '/' . $file_name, 'error');
+			}
+		} //$file_name
+	} //$_FILES['files']['name'] as $file_form_name => $file_name
+	if (!$result)
+	{
+		drupal_set_message(t('Error receiving your proposal. Please try again.'), 'error');
+		return;
+	} //!$result
+	/* proposal id */
+	$proposal_id = $result;
+	/* inserting first book preference */
+	if ($form_state['values']['book1'])
+	{
+		/*$result = db_query("INSERT INTO {textbook_companion_preference}
+		(proposal_id, pref_number, book, author, isbn, publisher, edition, year, category, approval_status) VALUES
+		(%d, %d, '%s', '%s', '%s', '%s', '%s', '%s', %d, %d)",
+		$proposal_id,
+		1,
+		ucwords(strtolower($form_state['values']['book1'])),
+		ucwords(strtolower($form_state['values']['author1'])),
+		$form_state['values']['isbn1'],
+		ucwords(strtolower($form_state['values']['publisher1'])),
+		$form_state['values']['edition1'],
+		$form_state['values']['year1'],
+		0,
+		0
+		);*/
+		$bk1 = trim($form_state['values']['book1']);
+		$auth1 = trim($form_state['values']['author1']);
+		$pref_id = NULL;
+		$directory_name = _dir_name($bk1, $auth1, $pref_id);
+		$query = "INSERT INTO {textbook_companion_preference}
+      (proposal_id, pref_number, book, author, isbn, publisher, edition, year, category, approval_status, directory_name) VALUES (:proposal_id, :pref_number, :book, :author, :isbn, :publisher, :edition, :year, :category, :approval_status, :directory_name)
+	";
+		$args = array(
+			":proposal_id" => $proposal_id,
+			":pref_number" => 1,
+			":book" => trim(ucwords(strtolower($form_state['values']['book1']))),
+			":author" => trim(ucwords(strtolower($form_state['values']['author1']))),
+			":isbn" => trim($form_state['values']['isbn1']),
+			":publisher" => trim(ucwords(strtolower($form_state['values']['publisher1']))),
+			":edition" => trim($form_state['values']['edition1']),
+			":year" => trim($form_state['values']['year1']),
+			":category" => 0,
+			":approval_status" => 0,
+			":directory_name" => $form_state['values']['dir_name1']
+		);
+		$result = db_query($query, $args, array(
+			'return' => Database::RETURN_INSERT_ID
+		));
+		if (!$result)
+		{
+			drupal_set_message(t('Error receiving your first book preference.'), 'error');
+		} //!$result
+	} //$form_state['values']['book1']
+	/*******************************************************/
+	/* if ($form_state['values']['book2']) {
+	/*$result = db_query("INSERT INTO {textbook_companion_preference}
+	(proposal_id, pref_number, book, author, isbn, publisher, edition, year, category, approval_status) VALUES
+	(%d, %d, '%s', '%s', '%s', '%s', '%s', '%s', %d, %d)",
+	$proposal_id,
+	1,
+	ucwords(strtolower($form_state['values']['book1'])),
+	ucwords(strtolower($form_state['values']['author1'])),
+	$form_state['values']['isbn1'],
+	ucwords(strtolower($form_state['values']['publisher1'])),
+	$form_state['values']['edition1'],
+	$form_state['values']['year1'],
+	0,
+	0
+	);*/
+	/**$bk2 = trim($form_state['values']['book2']);
+	$auth2 = trim($form_state['values']['author2']);
+	$pref_id = NULL;
+	$directory_name = _dir_name($bk2, $auth2, $pref_id);
+	$query = "INSERT INTO {textbook_companion_preference}
+	(proposal_id, pref_number, book, author, isbn, publisher, edition, year, category, approval_status, directory_name) VALUES (:proposal_id, :pref_number, :book, :author, :isbn, :publisher, :edition, :year, :category, :approval_status, :directory_name)
+	";
+	$args = array(
+	":proposal_id" => $proposal_id,
+	
+	
+	":pref_number" => 2,
+	":book" => trim(ucwords(strtolower($form_state['values']['book2']))),
+	":author" => trim(ucwords(strtolower($form_state['values']['author2']))),
+	":isbn" => trim($form_state['values']['isbn2']),
+	":publisher" => trim(ucwords(strtolower($form_state['values']['publisher2']))),
+	":edition" => trim($form_state['values']['edition2']),
+	":year" => trim($form_state['values']['year2']),
+	":category" => 0,
+	":approval_status" => 0,
+	":directory_name" => $form_state['values']['dir_name2']
+	);
+	$result = db_query($query, $args, array(
+	'return' => Database::RETURN_INSERT_ID
+	));
+	if (!$result) {
+	drupal_set_message(t('Error receiving your second book preference.'), 'error');
+	}
+	}**/
+	/*******************************************************/
+	/**if ($form_state['values']['book3']) {
+	/*$result = db_query("INSERT INTO {textbook_companion_preference}
+	(proposal_id, pref_number, book, author, isbn, publisher, edition, year, category, approval_status) VALUES
+	(%d, %d, '%s', '%s', '%s', '%s', '%s', '%s', %d, %d)",
+	$proposal_id,
+	1,
+	ucwords(strtolower($form_state['values']['book1'])),
+	ucwords(strtolower($form_state['values']['author1'])),
+	$form_state['values']['isbn1'],
+	ucwords(strtolower($form_state['values']['publisher1'])),
+	$form_state['values']['edition1'],
+	$form_state['values']['year1'],
+	0,
+	0
+	);*/
+	/** $bk3 = trim($form_state['values']['book3']);
+	$auth3 = trim($form_state['values']['author3']);
+	$pref_id = NULL;
+	$directory_name = _dir_name($bk3, $auth3, $pref_id);
+	$query = "INSERT INTO {textbook_companion_preference}
+	(proposal_id, pref_number, book, author, isbn, publisher, edition, year, category, approval_status, directory_name) VALUES (:proposal_id, :pref_number, :book, :author, :isbn, :publisher, :edition, :year, :category, :approval_status, :directory_name)
+	";
+	$args = array(
+	":proposal_id" => $proposal_id,
+	":pref_number" => 3,
+	":book" => trim(ucwords(strtolower($form_state['values']['book3']))),
+	":author" => trim(ucwords(strtolower($form_state['values']['author3']))),
+	":isbn" => trim($form_state['values']['isbn3']),
+	":publisher" => trim(ucwords(strtolower($form_state['values']['publisher3']))),
+	":edition" => trim($form_state['values']['edition3']),
+	":year" => trim($form_state['values']['year3']),
+	":category" => 0,
+	":approval_status" => 0,
+	":directory_name" => $form_state['values']['dir_name3']
+	);
+	$result = db_query($query, $args, array(
+	'return' => Database::RETURN_INSERT_ID
+	));
+	if (!$result) {
+	drupal_set_message(t('Error receiving your third book preference.'), 'error');
+	}
+	
+	}**/
+	/*******************************************************/
+	/* sending email */
+	$email_to = $user->mail;
+	$from = variable_get('textbook_companion_from_email', '');
+	$bcc = variable_get('textbook_companion_emails', '');
+	$cc = variable_get('textbook_companion_cc_emails', '');
+	$params['proposal_received']['proposal_id'] = $proposal_id;
+	$params['proposal_received']['user_id'] = $user->uid;
+	$params['proposal_received']['headers'] = array(
+		'From' => $from,
+		'MIME-Version' => '1.0',
+		'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
+		'Content-Transfer-Encoding' => '8Bit',
+		'X-Mailer' => 'Drupal',
+		'Cc' => $cc,
+		'Bcc' => $bcc
+	);
+	if (!drupal_mail('textbook_companion', 'proposal_received', $email_to, language_default(), $params, $from, TRUE))
+		drupal_set_message('Error sending email message.', 'error');
+	drupal_set_message(t('We have received you book proposal. We will get back to you soon.'), 'status');
+	drupal_goto('');
+}
+/**
+ * Implementation of hook_mail().
+ */
+function textbook_companion_mail($key, &$message, $params)
+{
+	global $user;
+	// $language = $message['lianguage'];
+	$tbc_bcc_emails = array(
+		'Bcc' => variable_get('textbook_companion_emails', '')
+	);
+	switch ($key)
+	{
+		case 'proposal_received':
+
+			/* initializing data */
+			/*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d LIMIT 1", $params['proposal_received']['proposal_id']);
+			$proposal_data = db_fetch_object($proposal_q);*/
+			$query = db_select('textbook_companion_proposal');
+			$query->fields('textbook_companion_proposal');
+			$query->condition('id', $params['proposal_received']['proposal_id']);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$proposal_data = $result->fetchObject();
+			$samplecodefilename = "";
+			if (strlen($proposal_data->samplefilepath) >= 5)
+			{
+				$samplecodefilename = substr($proposal_data->samplefilepath, strrpos($proposal_data->samplefilepath, '/') + 1);
+			} //strlen($proposal_data->samplefilepath) >= 5
+			else
+			{
+				$samplecodefilename = "Not provided";
+			}
+			/*$preference1_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d AND pref_number = %d LIMIT 1", $params['proposal_received']['proposal_id'], 1);
+			$preference1_data = db_fetch_object($preference1_q);*/
+			$query = db_select('textbook_companion_preference');
+			$query->fields('textbook_companion_preference');
+			$query->condition('proposal_id', $params['proposal_received']['proposal_id']);
+			$query->condition('pref_number', 1);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$preference1_data = $result->fetchObject();
+			$query = db_select('textbook_companion_preference');
+			$query->fields('textbook_companion_preference');
+			$query->condition('proposal_id', $params['proposal_received']['proposal_id']);
+			$query->condition('pref_number', 2);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$preference2_data = $result->fetchObject();
+			$query = db_select('textbook_companion_preference');
+			$query->fields('textbook_companion_preference');
+			$query->condition('proposal_id', $params['proposal_received']['proposal_id']);
+			$query->condition('pref_number', 3);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$preference3_data = $result->fetchObject();
+			$user_data = user_load($params['proposal_received']['user_id']);
+			$message['headers'] = $params['proposal_received']['headers'];
+			$message['subject'] = t('[!site_name] Your textbook companion book proposal has been received', array(
+				'!site_name' => variable_get('site_name', '')
+			));
+			$message['body'] = array(
+				'body' => t('
+Dear !user_name,
+
+We have received your proposal for OpenModelica Textbook Companion with the following details:
+
+Full Name : ' . $proposal_data->full_name . '
+Email : ' . $user_data->mail . '
+Mobile : ' . $proposal_data->mobile . '
+Course : ' . $proposal_data->course . '
+Department/Branch : ' . $proposal_data->branch . '
+University/Institute : ' . $proposal_data->university . '
+City : ' . $proposal_data->city . '
+State : ' . $proposal_data->state . '
+Expected date of completion : ' . date('d-m-Y', $proposal_data->completion_date) . '
+
+
+Your Book Preferences :
+
+Book Preference :-
+Title of the book : ' . $preference1_data->book . '
+Author name : ' . $preference1_data->author . '
+ISBN No. : ' . $preference1_data->isbn . '
+Publisher and Place : ' . $preference1_data->publisher . '
+Edition : ' . $preference1_data->edition . '
+Year of publication : ' . $preference1_data->year . '
+
+
+
+
+Your proposal is under review. You will soon receive an email when your proposal has been approved/ disapproved. Thank you for your submission.
+
+Best Wishes,
+
+!site_name Team,
+FOSSEE,IIT Bombay', array(
+					'!site_name' => variable_get('site_name', ''),
+					'!user_name' => $user_data->name
+				))
+			);
+			break;
+			break;
+		case 'proposal_disapproved':
+
+			/* initializing data */
+			/*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d LIMIT 1", $params['proposal_disapproved']['proposal_id']);
+			$proposal_data = db_fetch_object($proposal_q);*/
+			$query = db_select('textbook_companion_proposal');
+			$query->fields('textbook_companion_proposal');
+			$query->condition('id', $params['proposal_disapproved']['proposal_id']);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$proposal_data = $result->fetchObject();
+			/*$preference1_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d AND pref_number = %d LIMIT 1", $params['proposal_disapproved']['proposal_id'], 1);
+			$preference1_data = db_fetch_object($preference1_q);*/
+			$query = db_select('textbook_companion_preference');
+			$query->fields('textbook_companion_preference');
+			$query->condition('proposal_id', $params['proposal_disapproved']['proposal_id']);
+			$query->condition('pref_number', 1);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$preference1_data = $result->fetchObject();
+			$user_data = user_load($params['proposal_disapproved']['user_id']);
+			$message['headers'] = $params['proposal_disapproved']['headers'];
+			$message['subject'] = t('[!site_name] Your textbook companion book proposal has been disapproved', array(
+				'!site_name' => variable_get('site_name', '')
+			));
+			$message['body'] = array(
+				'body' => t('
+Dear !user_name,
+
+We regret to inform you that all the uploaded examples including the book 
+with following details have been deleted permanently.
+
+Full Name : ' . $proposal_data->full_name . '
+Email : ' . $user_data->mail . '
+Mobile : ' . $proposal_data->mobile . '
+Course : ' . $proposal_data->course . '
+Department/Branch : ' . $proposal_data->branch . '
+University/Institute : ' . $proposal_data->university . '
+City : ' . $proposal_data->city . '
+State : ' . $proposal_data->state . '
+
+Expected date of completion : ' . date('d-m-Y', $proposal_data->completion_date) . '
+
+Reason : ' . $proposal_data->reason . '
+
+
+Reference : ' . $proposal_data->reference . '
+
+Your Book Preferences :
+
+Book Preference 1 :-
+Title of the book : ' . $preference1_data->book . '
+Author name : ' . $preference1_data->author . '
+ISBN No. : ' . $preference1_data->isbn . '
+Publisher and Place : ' . $preference1_data->publisher . '
+Edition : ' . $preference1_data->edition . '
+Year of publication : ' . $preference1_data->year . '
+
+Reason for disapproval: ' . $proposal_data->message . '
+
+You are welcome to submit a new proposal.
+
+Best Wishes,
+
+!site_name Team,
+FOSSEE,IIT Bombay', array(
+					'!site_name' => variable_get('site_name', ''),
+					'!user_name' => $user_data->name
+				))
+			);
+			break;
+		case 'proposal_approved':
+		
+			/*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d LIMIT 1", $params['proposal_approved']['proposal_id']);
+			$proposal_data = db_fetch_object($proposal_q);*/
+			$query = db_select('textbook_companion_proposal');
+			$query->fields('textbook_companion_proposal');
+			$query->condition('id', $params['proposal_approved']['proposal_id']);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$proposal_data = $result->fetchObject();
+			/* $approved_preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d AND approval_status = 1 LIMIT 1", $params['proposal_approved']['proposal_id']);
+			$approved_preference_data = db_fetch_object($approved_preference_q);*/
+			$query = db_select('textbook_companion_preference');
+			$query->fields('textbook_companion_preference');
+			$query->condition('proposal_id', $params['proposal_approved']['proposal_id']);
+			$query->condition('approval_status', 1);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$approved_preference_data = $result->fetchObject();
+			$user_data = user_load($params['proposal_approved']['user_id']);
+			$message['headers'] = $params['proposal_approved']['headers'];
+			$message['subject'] = t('[!site_name] Your book proposal has been approved', array(
+				'!site_name' => variable_get('site_name', '')
+			));
+			$message['body'] = array(
+				'body' => t('
+Dear !user_name,
+
+Congratulations! Your proposal for OpenModelica Textbook Companion with the following details is approved.
+
+Full Name : ' . $proposal_data->full_name . '
+Email : ' . $user_data->mail . '
+Mobile : ' . $proposal_data->mobile . '
+Course : ' . $proposal_data->course . '
+Department/Branch : ' . $proposal_data->branch . '
+University/Institute : ' . $proposal_data->university . '
+College Teacher / Professor : ' . $proposal_data->faculty . '
+Reviewer : ' . $proposal_data->reviewer . '
+Expected date of completion : ' . date('d-m-Y', $proposal_data->completion_date) . '
+
+Reason : ' . $proposal_data->reason . '
+
+Reference : ' . $proposal_data->reference . '
+
+Title of the book : ' . $approved_preference_data->book . '
+Author name : ' . $approved_preference_data->author . '
+ISBN No. : ' . $approved_preference_data->isbn . '
+Publisher and Place : ' . $approved_preference_data->publisher . '
+Edition : ' . $approved_preference_data->edition . '
+Year of publication : ' . $approved_preference_data->year . '
+
+Please ensure that ALL the guidelines for coding are strictly followed:
+
+http://openmodelica.fossee.in/textbook-companion/guidelines-coding
+
+
+Best Wishes,
+
+!site_name Team,
+FOSSEE,IIT Bombay', array(
+					'!site_name' => variable_get('site_name', ''),
+					'!user_name' => $user_data->name
+				))
+			);
+			break;
+		case 'proposal_completed':
+			
+			/*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d LIMIT 1", $params['proposal_completed']['proposal_id']);
+			$proposal_data = db_fetch_object($proposal_q);*/
+			$query = db_select('textbook_companion_proposal');
+			$query->fields('textbook_companion_proposal');
+			$query->condition('id', $params['proposal_completed']['proposal_id']);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$proposal_data = $result->fetchObject();
+			/*$approved_preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d AND approval_status = 1 LIMIT 1", $params['proposal_completed']['proposal_id']);
+			$approved_preference_data = db_fetch_object($approved_preference_q);*/
+			$query = db_select('textbook_companion_preference');
+			$query->fields('textbook_companion_preference');
+			$query->condition('proposal_id', $params['proposal_completed']['proposal_id']);
+			$query->condition('approval_status', 1);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$approved_preference_data = $result->fetchObject();
+			$user_data = user_load($params['proposal_completed']['user_id']);
+			$message['headers'] = $params['proposal_completed']['headers'];
+			$message['subject'] = t('[!site_name] Congratulations on the completion of the Textbook Companion.', array(
+				'!site_name' => variable_get('site_name', '')
+			));
+			$message['body'] = array(
+				'body' => t('
+Dear !user_name,
+
+The textbook companion on the following book has been completed successfully by you:
+
+Full Name : ' . $proposal_data->full_name . '
+Email : ' . $user_data->mail . '
+Mobile : ' . $proposal_data->mobile . '
+Course : ' . $proposal_data->course . '
+Department/Branch : ' . $proposal_data->branch . '
+University/Institute : ' . $proposal_data->university . '
+College Teacher / Professor : ' . $proposal_data->faculty . '
+Reviewer : ' . $proposal_data->reviewer . '
+Expected date of completion : ' . date('d-m-Y', $proposal_data->completion_date) . '
+
+
+Title of the book : ' . $approved_preference_data->book . '
+Author name : ' . $approved_preference_data->author . '
+ISBN No. : ' . $approved_preference_data->isbn . '
+Publisher and Place : ' . $approved_preference_data->publisher . '
+Edition : ' . $approved_preference_data->edition . '
+Year of publication : ' . $approved_preference_data->year . '
+
+Your book is now available at following link to download.
+
+http://openmodelica.fossee.in/textbook-companion/textbook-run/' . $approved_preference_data->id . '
+
+Now you should be able to propose a new book.
+
+Best Wishes,
+
+!site_name Team,
+FOSSEE,IIT Bombay', array(
+					'!site_name' => variable_get('site_name', ''),
+					'!user_name' => $user_data->name
+				))
+			);
+			break;
+		/***********************************************************************************************/
+		case 'all_code_submitted':
+			/*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d LIMIT 1", $params['proposal_completed']['proposal_id']);
+			$proposal_data = db_fetch_object($proposal_q);*/
+			$query = db_select('textbook_companion_proposal');
+			$query->fields('textbook_companion_proposal');
+			$query->condition('id', $params['all_code_submitted']['proposal_id']);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$proposal_data = $result->fetchObject();
+			/*$approved_preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d AND approval_status = 1 LIMIT 1", $params['proposal_completed']['proposal_id']);
+			$approved_preference_data = db_fetch_object($approved_preference_q);*/
+			$query = db_select('textbook_companion_preference');
+			$query->fields('textbook_companion_preference');
+			$query->condition('proposal_id', $params['all_code_submitted']['proposal_id']);
+			$query->condition('approval_status', 1);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$approved_preference_data = $result->fetchObject();
+			$user_data = user_load($params['all_code_submitted']['user_id']);
+			$message['headers'] = $params['all_code_submitted']['headers'];
+			$message['subject'] = t('[!site_name][Textbook Companion] You have marked to submited code for all examples.', array(
+				'!site_name' => variable_get('site_name', '')
+			));
+			$message['body'] = array(
+				'body' => t('
+Dear !user_name,
+
+You have submitted codes for all examples:
+
+Full Name : ' . $proposal_data->full_name . '
+Email : ' . $user_data->mail . '
+Mobile : ' . $proposal_data->mobile . '
+Course : ' . $proposal_data->course . '
+Department/Branch : ' . $proposal_data->branch . '
+University/Institute : ' . $proposal_data->university . '
+College Teacher / Professor : ' . $proposal_data->faculty . '
+Reviewer : ' . $proposal_data->reviewer . '
+Expected date of completion : ' . date('d-m-Y', $proposal_data->completion_date) . '
+
+
+Title of the book : ' . $approved_preference_data->book . '
+Author name : ' . $approved_preference_data->author . '
+ISBN No. : ' . $approved_preference_data->isbn . '
+Publisher and Place : ' . $approved_preference_data->publisher . '
+Edition : ' . $approved_preference_data->edition . '
+Year of publication : ' . $approved_preference_data->year . '
+
+You shall be notified after the code is reviewed.
+
+Best Wishes,
+
+!site_name Team,
+FOSSEE,IIT Bombay', array(
+					'!site_name' => variable_get('site_name', ''),
+					'!user_name' => $user_data->name
+				))
+			);
+			break;
+		case 'all_code_submitted_status_changed':
+
+			/*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d LIMIT 1", $params['proposal_completed']['proposal_id']);
+			$proposal_data = db_fetch_object($proposal_q);*/
+			$query = db_select('textbook_companion_proposal');
+			$query->fields('textbook_companion_proposal');
+			$query->condition('id', $params['all_code_submitted_status_changed']['proposal_id']);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$proposal_data = $result->fetchObject();
+			/*$approved_preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d AND approval_status = 1 LIMIT 1", $params['proposal_completed']['proposal_id']);
+			$approved_preference_data = db_fetch_object($approved_preference_q);*/
+			$query = db_select('textbook_companion_preference');
+			$query->fields('textbook_companion_preference');
+			$query->condition('proposal_id', $params['all_code_submitted_status_changed']['proposal_id']);
+			$query->condition('approval_status', 1);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$approved_preference_data = $result->fetchObject();
+			$user_data = user_load($params['all_code_submitted_status_changed']['user_id']);
+			$message['headers'] = $params['all_code_submitted_status_changed']['headers'];
+			$message['subject'] = t('[!site_name][Textbook Companion] Your interface for code submission has been enabled by the reviewer', array(
+				'!site_name' => variable_get('site_name', '')
+			));
+			$message['body'] = array(
+				'body' => t('
+Dear !user_name,
+
+Your interface for code submission has been enabled by the reviewer, you can now able to send more code for this book.
+
+Full Name : ' . $proposal_data->full_name . '
+Email : ' . $user_data->mail . '
+Mobile : ' . $proposal_data->mobile . '
+Course : ' . $proposal_data->course . '
+Department/Branch : ' . $proposal_data->branch . '
+University/Institute : ' . $proposal_data->university . '
+College Teacher / Professor : ' . $proposal_data->faculty . '
+Reviewer : ' . $proposal_data->reviewer . '
+Expected date of completion : ' . date('d-m-Y', $proposal_data->completion_date) . '
+
+
+Title of the book : ' . $approved_preference_data->book . '
+Author name : ' . $approved_preference_data->author . '
+ISBN No. : ' . $approved_preference_data->isbn . '
+Publisher and Place : ' . $approved_preference_data->publisher . '
+Edition : ' . $approved_preference_data->edition . '
+Year of publication : ' . $approved_preference_data->year . '
+ 
+Best Wishes,
+
+!site_name Team,
+FOSSEE,IIT Bombay', array(
+					'!site_name' => variable_get('site_name', ''),
+					'!user_name' => $user_data->name
+				))
+			);
+			break;
+		/*****************************************************************************************/
+		case 'example_uploaded':
+
+			/*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE id = %d LIMIT 1", $params['example_uploaded']['example_id']);
+			$example_data = db_fetch_object($example_q);*/
+			$query = db_select('textbook_companion_example');
+			$query->fields('textbook_companion_example');
+			$query->condition('id', $params['example_uploaded']['example_id']);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$example_data = $result->fetchObject();
+			$query = db_select('textbook_companion_chapter');
+			$query->fields('textbook_companion_chapter');
+			$query->condition('id', $example_data->chapter_id);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$chapter_data = $result->fetchObject();
+			$query = db_select('textbook_companion_preference');
+			$query->fields('textbook_companion_preference');
+			$query->condition('id', $chapter_data->preference_id);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$preference_data = $result->fetchObject();
+			$user_data = user_load($params['example_uploaded']['user_id']);
+			$message['headers'] = $params['example_uploaded']['headers'];
+			$message['subject'] = t('[!site_name] You have uploaded example for Textbook Companion', array(
+				'!site_name' => variable_get('site_name', '')
+			));
+			$message['body'] = array(
+				'body' => t('
+Dear !user_name,
+
+You have uploaded the following solution :
+
+Title of the book : ' . $preference_data->book . '
+Title of the chapter : ' . $chapter_data->name . '
+Example number : ' . $example_data->number . '
+Caption : ' . $example_data->caption . '
+
+You shall be notified after the solution is reviewed
+
+Best Wishes,
+
+!site_name Team,
+FOSSEE,IIT Bombay', array(
+					'!site_name' => variable_get('site_name', ''),
+					'!user_name' => $user_data->name
+				))
+			);
+			break;
+		case 'example_updated':
+			/*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE id = %d LIMIT 1", $params['example_updated']['example_id']);
+			$example_data = db_fetch_object($example_q);*/
+			$query = db_select('textbook_companion_example');
+			$query->fields('textbook_companion_example');
+			$query->condition('id', $params['example_updated']['example_id']);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$example_data = $result->fetchObject();
+			$query = db_select('textbook_companion_chapter');
+			$query->fields('textbook_companion_chapter');
+			$query->condition('id', $example_data->chapter_id);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$chapter_data = $result->fetchObject();
+			$query = db_select('textbook_companion_preference');
+			$query->fields('textbook_companion_preference');
+			$query->condition('id', $chapter_data->preference_id);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$preference_data = $result->fetchObject();
+			$user_data = user_load($params['example_updated']['user_id']);
+			$message['headers'] = $params['example_updated']['headers'];
+			$message['subject'] = t('[!site_name] You have updated example for Textbook Companion', array(
+				'!site_name' => variable_get('site_name', '')
+			));
+			$message['body'] = array(
+				'body' => t('
+Dear !user_name,
+
+You have updated the following example:
+
+Title of the book : ' . $preference_data->book . '
+Title of the chapter : ' . $chapter_data->name . '
+Example number : ' . $example_data->number . '
+Caption : ' . $example_data->caption . '
+
+The example is still under review. You will be notified when it has been approved.
+
+Best Wishes,
+
+!site_name Team,
+FOSSEE,IIT Bombay', array(
+					'!site_name' => variable_get('site_name', ''),
+					'!user_name' => $user_data->name
+				))
+			);
+			break;
+		case 'example_updated_admin':
+			/*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE id = %d LIMIT 1", $params['example_updated_admin']['example_id']);
+			$example_data = db_fetch_object($example_q);*/
+			$query = db_select('textbook_companion_example');
+			$query->fields('textbook_companion_example');
+			$query->condition('id', $params['example_updated_admin']['example_id']);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$example_data = $result->fetchObject();
+			$query = db_select('textbook_companion_chapter');
+			$query->fields('textbook_companion_chapter');
+			$query->condition('id', $example_data->chapter_id);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$chapter_data = $result->fetchObject();
+			$query = db_select('textbook_companion_preference');
+			$query->fields('textbook_companion_preference');
+			$query->condition('id', $chapter_data->preference_id);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$preference_data = $result->fetchObject();
+			$user_data = user_load($params['example_updated_admin']['user_id']);
+			$message['headers'] = $params['example_updated_admin']['headers'];
+			$message['subject'] = t('[!site_name] Reviewer have updated example for Textbook Companion ', array(
+				'!site_name' => variable_get('site_name', '')
+			));
+			$message['body'] = array(
+				'body' => t('
+Dear !user_name,
+
+Reviewer have updated the following example:
+
+Title of the book : ' . $preference_data->book . '
+Title of the chapter : ' . $chapter_data->name . '
+Example number : ' . $example_data->number . '
+Caption : ' . $example_data->caption . '
+
+Best Wishes,
+
+!site_name Team,
+FOSSEE,IIT Bombay', array(
+					'!site_name' => variable_get('site_name', ''),
+					'!user_name' => $user_data->name
+				))
+			);
+			break;
+		case 'example_approved':
+			
+			/*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE id = %d LIMIT 1", $params['example_approved']['example_id']);
+			$example_data = db_fetch_object($example_q);*/
+			$query = db_select('textbook_companion_example');
+			$query->fields('textbook_companion_example');
+			$query->condition('id', $params['example_approved']['example_id']);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$example_data = $result->fetchObject();
+			$query = db_select('textbook_companion_chapter');
+			$query->fields('textbook_companion_chapter');
+			$query->condition('id', $example_data->chapter_id);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$chapter_data = $result->fetchObject();
+			$query = db_select('textbook_companion_preference');
+			$query->fields('textbook_companion_preference');
+			$query->condition('id', $chapter_data->preference_id);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$preference_data = $result->fetchObject();
+			$user_data = user_load($params['example_approved']['user_id']);
+			$message['headers'] = $params['example_approved']['headers'];
+			$message['subject'] = t('[!site_name] Your uploaded example has been approved for Textbook Companion', array(
+				'!site_name' => variable_get('site_name', '')
+			));
+			$message['body'] = array(
+				'body' => t('
+Dear !user_name,
+
+Your example for OpenModelica Textbook Companion with the following details is approved.
+
+Title of the book : ' . $preference_data->book . '
+Title of the chapter : ' . $chapter_data->name . '
+Example number : ' . $example_data->number . '
+Caption : ' . $example_data->caption . '
+
+Best Wishes,
+
+!site_name Team,
+FOSSEE,IIT Bombay', array(
+					'!site_name' => variable_get('site_name', ''),
+					'!user_name' => $user_data->name
+				))
+			);
+			break;
+		case 'example_disapproved':
+			
+			$user_data = user_load($params['example_disapproved']['user_id']);
+			$preference_id = $params['example_disapproved']['preference_id'];
+			$chapter_id = $params['example_disapproved']['chapter_id'];
+			$query = db_select('textbook_companion_chapter');
+			$query->fields('textbook_companion_chapter');
+			$query->condition('id', $chapter_id);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$chapter_data = $result->fetchObject();
+			$query = db_select('textbook_companion_preference');
+			$query->fields('textbook_companion_preference');
+			$query->condition('id', $preference_id);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$preference_data = $result->fetchObject();
+			$message['headers'] = $params['example_disapproved']['headers'];
+			$message['subject'] = t('[!site_name] Your uploaded example has been disapproved for Textbook Companion', array(
+				'!site_name' => variable_get('site_name', '')
+			));
+			$message['body'] = array(
+				'body' => t('
+Dear !user_name,
+
+Your following example has been disapproved:
+
+Title of the book : ' . $preference_data->book . '
+Title of the chapter : ' . $chapter_data->name . '
+Example number : ' . $params['example_disapproved']['example_number'] . '
+Caption : ' . $params['example_disapproved']['example_caption'] . '
+
+Reason for dis-approval : ' . $params['example_disapproved']['message'] . '
+
+Best Wishes,
+
+!site_name Team,
+FOSSEE,IIT Bombay', array(
+					'!site_name' => variable_get('site_name', ''),
+					'!user_name' => $user_data->name
+				))
+			);
+			break;
+		case 'example_deleted_user':
+
+			$user_data = user_load($params['example_deleted_user']['user_id']);
+			$message['headers'] = $params['example_deleted_user']['headers'];
+			$message['subject'] = t('[!site_name] User has deleted pending example for Textbook Companion', array(
+				'!site_name' => variable_get('site_name', '')
+			));
+			$message['body'] = array(
+				'body' => t('
+Dear !user_name,
+
+Your following pending example has been deleted :
+
+Title of the Book : ' . $params['example_deleted_user']['book_title'] . '
+Title of the Chapter : ' . $params['example_deleted_user']['chapter_title'] . '
+Example number : ' . $params['example_deleted_user']['example_number'] . '
+Caption : ' . $params['example_deleted_user']['example_caption'] . '
+
+Best Wishes,
+
+!site_name Team,
+FOSSEE,IIT Bombay', array(
+					'!site_name' => variable_get('site_name', ''),
+					'!user_name' => $user_data->name
+				))
+			);
+			break;
+		case 'dependency_uploaded':
+			// bcc to textbook_companion_emails
+			$user_data = user_load($params['dependency_uploaded']['user_id']);
+			$message['headers'] = $params['dependency_uploaded']['headers'];
+			$dependency_files = implode(',', $params['dependency_uploaded']['dependency_names']);
+			$message['subject'] = t('[!site_name] You have uploaded dependency file', array(
+				'!site_name' => variable_get('site_name', '')
+			));
+			$message['body'] = array(
+				'body' => t('
+Dear !user_name,
+
+You have uploaded following dependency files :
+    ' . $dependency_files . '
+
+Best Wishes,
+
+!site_name Team,
+FOSSEE,IIT Bombay', array(
+					'!site_name' => variable_get('site_name', ''),
+					'!user_name' => $user_data->name
+				))
+			);
+			break;
+		case 'feedback_received':
+
+			$user_data = user_load($params['feedback_received']['user_id']);
+			$message['headers'] = $params['feedback_received']['headers'];
+			$message['subject'] = t('[!site_name] We have received your feedback', array(
+				'!site_name' => variable_get('site_name', '')
+			));
+			$message['body'] = array(
+				'body' => t('
+Dear !user_name,
+
+We have received your following feedback
+
+Title of the Book: ' . $params['feedback_received']['book_title'] . '
+Title of the Chapter: ' . $params['feedback_received']['chapter_number'] . ' ' . $params['feedback_received']['chapter_title'] . '
+Example No.: ' . $params['feedback_received']['example_no'] . '
+
+Your feedback :
+' . $params['feedback_received']['feedback'] . '
+
+Best Wishes,
+
+!site_name Team,
+FOSSEE,IIT Bombay', array(
+					'!site_name' => variable_get('site_name', ''),
+					'!user_name' => $user_data->name
+				))
+			);
+			break;
+		case 'internshipform':
+
+			$user_data = user_load($params['internshipform']['user_id']);
+			$message['headers'] = $params['internshipform']['headers'];
+			$message['subject'] = t('[!site_name] We have received your feedback', array(
+				'!site_name' => variable_get('site_name', '')
+			));
+			$message['body'] = array(
+				'body' => t('
+Dear !user_name,
+
+We have received your Internship Form Application for the book 
+
+Title of the Book: ' . $params['internshipform']['book_title'] . '
+Title of the Chapter: ' . $params['internshipform']['chapter_number'] . ' ' . $params['internshipform']['chapter_title'] . '
+Example No.: ' . $params['internshipform']['example_no'] . '
+
+Best Wishes,
+
+!site_name Team,
+FOSSEE,IIT Bombay', array(
+					'!site_name' => variable_get('site_name', ''),
+					'!user_name' => $user_data->name
+				))
+			);
+			break;
+		case 'copyrighttransferform':
+
+			$user_data = user_load($params['copyrighttransferform']['user_id']);
+			$message['headers'] = $params['copyrighttransferform']['headers'];
+			$message['subject'] = t('[!site_name] We have received your feedback', array(
+				'!site_name' => variable_get('site_name', '')
+			));
+			$message['body'] = array(
+				'body' => t('
+Dear !user_name,
+
+We have received your Copyright Form Application for the book 
+
+Title of the Book: ' . $params['copyrighttransferform']['book_title'] . '
+Title of the Chapter: ' . $params['copyrighttransferform']['chapter_number'] . ' ' . $params['copyrighttransferform']['chapter_title'] . '
+Example No.: ' . $params['copyrighttransferform']['example_no'] . '
+
+Best Wishes,
+
+!site_name Team,
+FOSSEE,IIT Bombay', array(
+					'!site_name' => variable_get('site_name', ''),
+					'!user_name' => $user_data->name
+				))
+			);
+			break;
+		case 'undertakingform':
+			$user_data = user_load($params['undertakingform']['user_id']);
+			$message['headers'] = $params['undertakingform']['headers'];
+			$message['subject'] = t('[!site_name] We have received your feedback', array(
+				'!site_name' => variable_get('site_name', '')
+			));
+			$message['body'] = array(
+				'body' => t('
+Dear !user_name,
+
+We have received your Undertaking Form Application for the book 
+
+Title of the Book: ' . $params['undertakingform']['book_title'] . '
+Title of the Chapter: ' . $params['undertakingform']['chapter_number'] . ' ' . $params['undertakingform']['chapter_title'] . '
+Example No.: ' . $params['undertakingform']['example_no'] . '
+
+Best Wishes,
+
+!site_name Team,
+FOSSEE,IIT Bombay', array(
+					'!site_name' => variable_get('site_name', ''),
+					'!user_name' => $user_data->name
+				))
+			);
+			break;
+		case 'remark':
+			$user_data = user_load($params['remark']['user_id']);
+			$message['headers'] = $params['remark']['headers'];
+			$message['subject'] = t('[!site_name] A remark has been given.Please check your contact detail form', array(
+				'!site_name' => variable_get('site_name', '')
+			));
+			$message['body'] = array(
+				'body' => t('
+Dear !user_name,
+
+A Remark has been given.Please check your Contact Detail Form
+
+Title of the Book: ' . $params['internshipform']['book_title'] . '
+Title of the Chapter: ' . $params['internshipform']['chapter_number'] . ' ' . $params['internshipform']['chapter_title'] . '
+Example No.: ' . $params['internshipform']['example_no'] . '
+
+Best Wishes,
+
+!site_name Team,
+FOSSEE,IIT Bombay', array(
+					'!site_name' => variable_get('site_name', ''),
+					'!user_name' => $user_data->name
+				))
+			);
+			break;
+		case 'cheque_sent':
+
+			$user_data = user_load($params['cheque_sent']['user_id']);
+			$message['headers'] = $params['cheque_sent']['headers'];
+			$message['subject'] = t('[!site_name] We have received your feedback', array(
+				'!site_name' => variable_get('site_name', '')
+			));
+			$message['body'] = array(
+				'body' => t('
+Dear !user_name,
+
+We have Sent Cheque for the following book proposed
+
+Title of the Book: ' . $params['cheque_sent']['book_title'] . '
+Title of the Chapter: ' . $params['cheque_sent']['chapter_number'] . ' ' . $params['cheque_sent']['chapter_title'] . '
+Example No.: ' . $params['cheque_sent']['example_no'] . '
+
+Best Wishes,
+
+!site_name Team,
+FOSSEE,IIT Bombay', array(
+					'!site_name' => variable_get('site_name', ''),
+					'!user_name' => $user_data->name
+				))
+			);
+			break;
+		case 'standard':
+			// bcc to textbook_companion_emails
+			$message['headers'] = $params['standard']['headers'];
+			$message['subject'] = $params['standard']['subject'];
+			$message['body'] = $params['standard']['body'];
+			break;
+	} //$key
+}
+/* AJAX CALLS */
+function textbook_companion_ajax()
+{
+	$query_type = arg(2);
+	if ($query_type == 'chapter_title')
+	{
+		$chapter_number = arg(3);
+		$preference_id = arg(4);
+		/*$chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE number = %d AND preference_id = %d LIMIT 1", $chapter_number, $preference_id);*/
+		$query = db_select('textbook_companion_chapter');
+		$query->fields('textbook_companion_chapter');
+		$query->condition('number', $chapter_number);
+		$query->condition('preference_id', $preference_id);
+		$query->range(0, 1);
+		$chapter_q = $query->execute();
+		if ($chapter_data = $chapter_q->fetchObject())
+		{
+			echo $chapter_data->name;
+			return;
+		} //$chapter_data = $chapter_q->fetchObject()
+	} //$query_type == 'chapter_title'
+	else if ($query_type == 'example_exists')
+	{
+		$chapter_number = arg(3);
+		$preference_id = arg(4);
+		$example_number = arg(5);
+		$chapter_id = 0;
+		/* $chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE number = %d AND preference_id = %d LIMIT 1", $chapter_number, $preference_id);*/
+		$query = db_select('textbook_companion_chapter');
+		$query->fields('textbook_companion_chapter');
+		$query->condition('number', $chapter_number);
+		$query->condition('preference_id', $preference_id);
+		$query->range(0, 1);
+		$chapter_q = $query->execute();
+		if (!$chapter_data = $chapter_q->fetchObject())
+		{
+			echo '';
+			return;
+		} //!$chapter_data = $chapter_q->fetchObject()
+		else
+		{
+			$chapter_id = $chapter_data->id;
+		}
+		/*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE chapter_id = %d AND number = '%s' LIMIT 1", $chapter_id, $example_number);*/
+		$query = db_select('textbook_companion_example');
+		$query->fields('textbook_companion_example');
+		$query->condition('chapter_id', $chapter_id);
+		$query->condition('number', $example_number);
+		$query->range(0, 1);
+		$example_q = $query->execute();
+		if ($example_data = $example_q->fetchObject())
+		{
+			if ($example_data->approval_status == 1)
+				echo 'Warning! Example already approved. You cannot upload the same example again.';
+			else
+				echo 'Warning! Example already uploaded. Delete the example and reupload it.';
+			return;
+		} //$example_data = $example_q->fetchObject()
+	} //$query_type == 'example_exists'
+	echo '';
+}
+/*************************** VALIDATION FUNCTIONS *****************************/
+function textbook_companion_check_valid_filename($file_name)
+{
+	if (!preg_match('/^[0-9a-zA-Z\_\.]+$/', $file_name))
+		return FALSE;
+	else if (substr_count($file_name, ".") > 1)
+		return FALSE;
+	else
+		return TRUE;
+}
+function check_name($name = '')
+{
+	if (!preg_match('/^[0-9a-zA-Z\ ]+$/', $name))
+		return FALSE;
+	else
+		return TRUE;
+}
+function check_chapter_number($name = '')
+{
+	if (!preg_match('/^([0-9])+(\.([0-9a-zA-Z])+)+$/', $name))
+		return FALSE;
+	else
+		return TRUE;
+}
+function textbook_companion_path()
+{
+	return $_SERVER['DOCUMENT_ROOT'] . base_path() . 'openmodelica_uploads/tbc_uploads/';
+}
+function textbook_companion_temp_path()
+{
+	return $_SERVER['DOCUMENT_ROOT'] . base_path() . 'openmodelica_uploads/';
+}
+function textbook_companion_samplecode_path()
+{
+	return $_SERVER['DOCUMENT_ROOT'] . base_path() . 'openmodelica_uploads/tbc_sample_code/';
+}
+/****************************** DELETION FUNCTIONS ****************************/
+function delete_example($example_id)
+{
+	global $user;
+	$root_path = textbook_companion_path();
+	$status = TRUE;
+	/*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE id = %d", $example_id);
+	$example_data = db_fetch_object($example_q);*/
+	$query = db_select('textbook_companion_example');
+	$query->fields('textbook_companion_example');
+	$query->condition('id', $example_id);
+	$example_q = $query->execute();
+	$example_data = $example_q->fetchObject();
+	if (!$example_data)
+	{
+		drupal_set_message(t('Invalid example.'), 'error');
+		return FALSE;
+	} //!$example_data
+	/*$chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE id = %d", $example_data->chapter_id);
+	$chapter_data = db_fetch_object($chapter_q);*/
+	$chapter_q = db_query("SELECT tcp.id as pref_id, tcp.directory_name, tcc.*
+FROM textbook_companion_preference tcp
+JOIN textbook_companion_chapter tcc
+ON tcp.id= tcc.preference_id
+WHERE  tcc.id = :chapter_id", array(
+		":chapter_id" => $example_data->chapter_id
+	));
+	/*$query = db_select('textbook_companion_chapter');
+	$query->fields('textbook_companion_chapter');
+	$query->condition('id', $example_data->chapter_id);
+	$chapter_q = $query->execute();*/
+	$chapter_data = $chapter_q->fetchObject();
+	if (!$chapter_data)
+	{
+		drupal_set_message(t('Invalid example chapter.'), 'error');
+		return FALSE;
+	} //!$chapter_data
+	/* deleting example files */
+	/*$examples_files_q = db_query("SELECT * FROM {textbook_companion_example_files} WHERE example_id = %d", $example_id);*/
+	$query = db_select('textbook_companion_example_files');
+	$query->fields('textbook_companion_example_files');
+	$query->condition('example_id', $example_id);
+	$examples_files_q = $query->execute();
+	while ($examples_files_data = $examples_files_q->fetchObject())
+	{
+		if (!file_exists($root_path . $chapter_data->directory_name . '/' . $examples_files_data->filepath))
+		{
+			$status = FALSE;
+			var_dump($root_path . $chapter_data->directory_name . '/' . $examples_files_data->filepath);
+			die;
+			drupal_set_message(t('Error deleting !file. File does not exists.', array(
+				'!file' => $examples_files_data->filepath
+			)), 'error');
+			continue;
+		} //!file_exists($root_path . $chapter_data->directory_name . '/' . $examples_files_data->filepath)
+		/* removing example file */
+		if (!unlink($root_path . $chapter_data->directory_name . '/' . $examples_files_data->filepath))
+		{
+			$status = FALSE;
+			drupal_set_message(t('Error deleting !file', array(
+				'!file' => $examples_files_data->filepath
+			)), 'error');
+			/* sending email to admins */
+			$email_to = variable_get('textbook_companion_emails', '');
+			$params['standard']['subject'] = "[ERROR] Error deleting example file";
+			$params['standard']['body'] = "Error deleting example files by " . $user->uid . " at " . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . " :
+        example id : " . $example_id . "
+        file id : " . $examples_files_data->id . "
+        file path : " . $examples_files_data->filepath;
+			if (!drupal_mail('textbook_companion', 'standard', $email_to, language_default(), $param, variable_get('textbook_companion_from_email', NULL), TRUE))
+				drupal_set_message('Error sending email message.', 'error');
+		} //!unlink($root_path . $chapter_data->directory_name . '/' . $examples_files_data->filepath)
+		else
+		{
+			/* deleting example files database entries */
+			/*db_query("DELETE FROM {textbook_companion_example_files} WHERE id = %d", $examples_files_data->id);*/
+			$query = db_delete('textbook_companion_example_files');
+			$query->condition('id', $examples_files_data->id);
+			$num_deleted = $query->execute();
+		}
+	} //$examples_files_data = $examples_files_q->fetchObject()
+	if (!$status)
+		return FALSE;
+	/* removing example folder */
+	$ex_path = $chapter_data->directory_name . '/' . 'CH' . $chapter_data->number . '/' . 'EX' . $example_data->number;
+	$dir_path = $root_path . $ex_path;
+	if (is_dir($dir_path))
+	{
+		if (!rmdir($dir_path))
+		{
+			drupal_set_message(t('Error deleting folder !folder', array(
+				'!folder' => $dir_path
+			)), 'error');
+			/* sending email to admins */
+			$email_to = variable_get('textbook_companion_emails', '');
+			$params['standard']['subject'] = "[ERROR] Error deleting folder";
+			$params['standard']['body'] = "Error deleting folder " . $dir_path . " by " . $user->uid . " at " . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+			if (!drupal_mail('textbook_companion', 'standard', $email_to, language_default(), $param, variable_get('textbook_companion_from_email', NULL), TRUE))
+				drupal_set_message('Error sending email message.', 'error');
+			return FALSE;
+		} //!rmdir($dir_path)
+	} //is_dir($dir_path)
+	else
+	{
+		drupal_set_message(t('Cannot delete example folder. !folder does not exists.', array(
+			'!folder' => $dir_path
+		)), 'error');
+		return FALSE;
+	}
+	/* deleting example dependency and exmaple database entries */
+	/*db_query("DELETE FROM {textbook_companion_example_dependency} WHERE example_id = %d", $example_id);*/
+	//$query = db_delete('textbook_companion_example_dependency');
+	//$query->condition('example_id', $example_id);
+	//$num_deleted = $query->execute();
+	/*db_query("DELETE FROM {textbook_companion_example} WHERE id = %d", $example_id);*/
+	$query = db_delete('textbook_companion_example');
+	$query->condition('id', $example_id);
+	$num_deleted = $query->execute();
+	return $status;
+}
+function delete_chapter($chapter_id)
+{
+	$status = TRUE;
+	$root_path = textbook_companion_path();
+	/*$chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE id = %d", $chapter_id);
+	$chapter_data = db_fetch_object($chapter_q);*/
+	/*$query = db_select('textbook_companion_chapter');
+	$query->fields('textbook_companion_chapter');
+	$query->condition('id', $chapter_id);
+	$chapter_q = $query->execute();
+	$chapter_data = $chapter_q->fetchObject();*/
+	$chapter_q = db_query("SELECT tcp.id as pref_id, tcp.directory_name, tcc.*
+FROM textbook_companion_preference tcp
+JOIN textbook_companion_chapter tcc
+ON tcp.id= tcc.preference_id
+WHERE  tcc.id = :chapter_id", array(
+		":chapter_id" => $chapter_id
+	));
+	$chapter_data = $chapter_q->fetchObject();
+	if (!$chapter_data)
+	{
+		drupal_set_message('Invalid chapter.', 'error');
+		return FALSE;
+	} //!$chapter_data
+	/* deleting examples */
+	/*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE chapter_id = %d", $chapter_id);*/
+	$query = db_select('textbook_companion_example');
+	$query->fields('textbook_companion_example');
+	$query->condition('chapter_id', $chapter_id);
+	$example_q = $query->execute();
+	while ($example_data = $example_q->fetchObject())
+	{
+		if (!delete_example($example_data->id))
+			$status = FALSE;
+	} //$example_data = $example_q->fetchObject()
+	if ($status)
+	{
+		$dir_path = $root_path . $chapter_data->directory_name . '/CH' . $chapter_data->number;
+		if (is_dir($dir_path))
+		{
+			$res = rmdir($dir_path);
+			if (!$res)
+			{
+				drupal_set_message(t('Error deleting chapter folder !folder', array(
+					'!folder' => $dir_path
+				)), 'error');
+				/* sending email to admins */
+				$email_to = variable_get('textbook_companion_emails', '');
+				$params['standard']['subject'] = "[ERROR] Error deleting folder";
+				$params['standard']['body'] = "Error deleting folder " . $dir_path;
+				if (!drupal_mail('textbook_companion', 'standard', $email_to, language_default(), $param, variable_get('textbook_companion_from_email', NULL), TRUE))
+					drupal_set_message('Error sending email message.', 'error');
+				return FALSE;
+			} //!$res
+			else
+			{
+				/* deleting chapter details from database */
+				/*db_query("DELETE FROM {textbook_companion_chapter} WHERE id = %d", $chapter_id);*/
+				$query = db_delete('textbook_companion_chapter');
+				$query->condition('id', $chapter_id);
+				$num_deleted = $query->execute();
+				return TRUE;
+			}
+		} //is_dir($dir_path)
+		else
+		{
+			drupal_set_message(t('Cannot delete chapter folder. !folder does not exists.', array(
+				'!folder' => $dir_path
+			)), 'error');
+			return FALSE;
+		}
+	} //$status
+	return FALSE;
+}
+function delete_book($book_id)
+{
+	$status = TRUE;
+	$root_path = textbook_companion_path();
+	/*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE id = %d", $book_id);
+	$preference_data = db_fetch_object($preference_q);*/
+	$query = db_select('textbook_companion_preference');
+	$query->fields('textbook_companion_preference');
+	$query->condition('id', $book_id);
+	$preference_q = $query->execute();
+	$preference_data = $preference_q->fetchObject();
+	if (!$preference_data)
+	{
+		drupal_set_message('Invalid book.', 'error');
+		return FALSE;
+	} //!$preference_data
+	/* delete chapters */
+	/*$chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE preference_id = %d", $preference_data->id);*/
+	$query = db_select('textbook_companion_chapter');
+	$query->fields('textbook_companion_chapter');
+	$query->condition('preference_id', $preference_data->id);
+	$chapter_q = $query->execute();
+	while ($chapter_data = $chapter_q->fetchObject())
+	{
+		if (!delete_chapter($chapter_data->id))
+		{
+			$status = FALSE;
+		} //!delete_chapter($chapter_data->id)
+	} //$chapter_data = $chapter_q->fetchObject()
+	return $status;
+}
+function delete_file($file_id)
+{
+	$root_path = textbook_companion_path();
+	/*$file_q = db_query("SELECT * FROM {textbook_companion_example_files} WHERE id = %d LIMIT 1", $file_id);*/
+	$file_q = db_query("SELECT * FROM textbook_companion_preference tcp JOIN textbook_companion_chapter tcc ON tcp.id = tcc.preference_id JOIN textbook_companion_example tce ON tcc.id=tce.chapter_id JOIN textbook_companion_example_files tcef on tce.id = tcef.example_id WHERE tcef.id = :example_id", array(
+		':example_id' => $file_id
+	));
+	/*$query = db_select('textbook_companion_example_files');
+	$query->fields('textbook_companion_example_files');
+	$query->condition('id', $file_id);
+	$query->range(0, 1);
+	$file_q = $query->execute();*/
+	$file_data = $file_q->fetchObject();
+	if (!$file_data)
+	{
+		drupal_set_message('Invalid file specified.', 'error');
+		return FALSE;
+	} //!$file_data
+	if (!file_exists($root_path . $file_data->directory_name . '/' . $file_data->filepath))
+	{
+		drupal_set_message(t('Error deleting !file. File does not exists.', array(
+			'!file' => $file_data->filepath
+		)), 'error');
+		return FALSE;
+	} //!file_exists($root_path . $file_data->directory_name . '/' . $file_data->filepath)
+	/* removing example file */
+	if (!unlink($root_path . $file_data->directory_name . '/' . $file_data->filepath))
+	{
+		drupal_set_message(t('Error deleting !file', array(
+			'!file' => $file_data->filepath
+		)), 'error');
+		/* sending email to admins */
+		$email_to = variable_get('textbook_companion_emails', '');
+		$params['standard']['subject'] = "[ERROR] Error deleting file";
+		$params['standard']['body'] = "Error deleting file by " . $user->uid . " at " . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . " :
+      file id : " . $file_id . "
+      file path : " . $file_data->directory_name . '/' . $file_data->filepath;
+		if (!drupal_mail('textbook_companion', 'standard', $email_to, language_default(), $param, variable_get('textbook_companion_from_email', NULL), TRUE))
+			drupal_set_message('Error sending email message.', 'error');
+		return FALSE;
+	} //!unlink($root_path . $file_data->directory_name . '/' . $file_data->filepath)
+	else
+	{
+		/* deleting example files database entries */
+		/*db_query("DELETE FROM {textbook_companion_example_files} WHERE id = %d", $file_id);*/
+		$query = db_delete('textbook_companion_example_files');
+		$query->condition('id', $file_id);
+		$num_deleted = $query->execute();
+		return TRUE;
+	}
+}
+//Non aicte book proposal form
+function book_proposal_nonaicte_form($form, &$form_state)
+{
+	global $user;
+	$form = array();
+	$form['imp_notice'] = array(
+		'#type' => 'item',
+		'#markup' => '<font color="red"><b>Please fill up this form carefully as the details entered here will be exactly written in the Textbook Companion and also follow the additional guidelines.</b></font>'
+	);
+	$form['guidelines'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('Guidelines'),
+		'#attributes' => array(
+			'style' => 'font-weight: bold'
+		),
+		'#collapsible' => TRUE,
+		'#collapsed' => FALSE
+	);
+	$form['guidelines']['book'] = array(
+		'#type' => 'item',
+		'#required' => TRUE,
+		'#markup' => '<ul style="list-style-type:disc;font-weight: normal">
+               <li>All the fields are compulsory</li>
+               <li>Proof (example: syllabus) to the usage/ popularity of the textbook must be provided in the references box below</li>
+               <li>Please make sure that the book proposed by you has <b>at least 80</b> examples which include numerical computations and which can be coded in OpenModelica</li>
+               <li>If the book has less than 80 examples the <a href="tbc_honorarium" target="_blank">honorarium</a> will be provided on a pro-rata basis </li>
+               <li>Make sure the book you propose is not already an <a href="aicte_proposal" target="_blank">AICTE recommended book</a>, <a href="Completed_Books" target="_blank">completed book</a> 
+                   or a <a href="Books_Progress" target="_blank">book in progress</a> </li>
+               <li>You will be intimated about the approval or rejection of your suggestion via e-mail</li>
+
+</ul> '
+	);
+	$form['full_name'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Full Name'),
+		'#size' => 30,
+		'#maxlength' => 50,
+		'#required' => TRUE
+	);
+	$form['email_id'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Email'),
+		'#size' => 30,
+		'#value' => $user->mail,
+		'#disabled' => TRUE
+	);
+	$form['mobile'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Mobile No.'),
+		'#size' => 30,
+		'#maxlength' => 15,
+		'#required' => TRUE
+	);
+	$form['gender'] = array(
+		'#type' => 'radios',
+		'#title' => t('Gender'),
+		'#options' => array(
+			'M' => 'Male',
+			'F' => 'Female'
+		),
+		'#required' => TRUE
+	);
+	$form['how_project'] = array(
+		'#type' => 'select',
+		'#title' => t('How did you come to know about this project'),
+		'#options' => array(
+			'OpenModelica Website' => 'OpenModelica Website',
+			'Friend' => 'Friend',
+			'Professor/Teacher' => 'Professor/Teacher',
+			'Mailing List' => 'Mailing List',
+			'Poster in my/other college' => 'Poster in my/other college',
+			'Others' => 'Others'
+		),
+		'#required' => TRUE
+	);
+	$form['course'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Course'),
+		'#size' => 30,
+		'#maxlength' => 50,
+		'#required' => TRUE
+	);
+	$form['department'] = array(
+		'#type' => 'select',
+		'#title' => t('Department/Branch'),
+		'#options' => _list_of_departments(),
+		'#required' => TRUE
+	);
+	$form['university'] = array(
+		'#type' => 'textfield',
+		'#title' => t('University/ Institute'),
+		'#size' => 80,
+		'#maxlength' => 200,
+		'#required' => TRUE,
+		'#attributes' => array(
+			'placeholder' => 'Insert full name of your institute/ university.... '
+		)
+	);
+	$form['country'] = array(
+		'#type' => 'select',
+		'#title' => t('Country'),
+		'#options' => array(
+			'India' => 'India',
+			'Others' => 'Others'
+		),
+		'#required' => TRUE
+		//'#tree' => TRUE,
+		// '#validated' => TRUE,
+	);
+	$form['other_country'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Other than India'),
+		'#size' => 100,
+		'#attributes' => array(
+			'placeholder' => t('Enter your country name')
+		),
+		'#states' => array(
+			'visible' => array(
+				':input[name="country"]' => array(
+					'value' => 'Others'
+				)
+			)
+		)
+	);
+	$form['other_state'] = array(
+		'#type' => 'textfield',
+		'#title' => t('State other than India'),
+		'#size' => 100,
+		'#attributes' => array(
+			'placeholder' => t('Enter your state/region name')
+		),
+		'#states' => array(
+			'visible' => array(
+				':input[name="country"]' => array(
+					'value' => 'Others'
+				)
+			)
+		)
+	);
+	$form['other_city'] = array(
+		'#type' => 'textfield',
+		'#title' => t('City other than India'),
+		'#size' => 100,
+		'#attributes' => array(
+			'placeholder' => t('Enter your city name')
+		),
+		'#states' => array(
+			'visible' => array(
+				':input[name="country"]' => array(
+					'value' => 'Others'
+				)
+			)
+		)
+	);
+	$form['all_state'] = array(
+		'#type' => 'select',
+		'#title' => t('State'),
+		'#options' => _list_of_states(),
+		'#validated' => TRUE,
+		'#states' => array(
+			'visible' => array(
+				':input[name="country"]' => array(
+					'value' => 'India'
+				)
+			)
+		)
+	);
+	$form['city'] = array(
+		'#type' => 'select',
+		'#title' => t('City'),
+		'#options' => _list_of_cities(),
+		'#states' => array(
+			'visible' => array(
+				':input[name="country"]' => array(
+					'value' => 'India'
+				)
+			)
+		)
+	);
+	$form['pincode'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Pincode'),
+		'#size' => 30,
+		'#maxlength' => 6,
+		'#required' => False,
+		'#attributes' => array(
+			'placeholder' => 'Enter pincode....'
+		)
+	);
+	/***************************************************************************/
+	$form['hr'] = array(
+		'#type' => 'item',
+		'#markup' => '<hr>'
+	);
+	$form['faculty'] = array(
+		'#type' => 'hidden',
+		'#value' => 'None',
+		'#title' => t('College Teacher/Professor'),
+		'#size' => 30,
+		'#maxlength' => 50,
+		'#required' => TRUE
+	);
+	$form['faculty_email'] = array(
+		'#type' => 'hidden',
+		'#value' => 'None',
+		'#title' => t('Teacher/Professor Email Id'),
+		'#value' => '@email.com',
+		'#size' => 30,
+		'#maxlength' => 50
+	);
+	$form['reviewer'] = array(
+		'#type' => 'hidden',
+		'#value' => 'OpenModelica TBC Team',
+		'#title' => t('Reviewer'),
+		'#size' => 30,
+		'#maxlength' => 50
+	);
+	$form['version'] = array(
+		'#type' => 'hidden',
+		'#default_value' => 'Not available'
+	);
+	$form['version'] = array(
+		'#type' => 'select',
+		'#title' => t('Version'),
+		'#options' => _list_of_software_version(),
+		'#required' => TRUE
+	);
+	$form['older'] = array(
+		'#type' => 'textfield',
+		'#size' => 30,
+		'#maxlength' => 50,
+		//'#required' => TRUE,
+		'#description' => t('Specify the Older version used')
+	);
+	$form['completion_date'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Expected Date of Completion'),
+		'#description' => t('Input date format should be DD-MM-YYYY. Eg: 23-03-2011'),
+		'#size' => 10,
+		'#maxlength' => 10,
+		'#required' => TRUE
+	);
+	$form['operating_system'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Operating System'),
+		'#required' => TRUE,
+		'#size' => 30,
+		'#maxlength' => 50
+	);
+	$reason = array(
+		'Used in more than one University' => t('Used in more than one University'),
+		'The book has multiple editions' => t('The book has multiple editions'),
+		'Extremely useful' => t('Extremely useful'),
+		'Other reason' => t('Any other reason state below')
+	);
+	$form['reason'] = array(
+		'#type' => 'checkboxes',
+		'#title' => t('Reasons'),
+		'#options' => $reason,
+		'#required' => TRUE
+	);
+	$form['other_reason'] = array(
+		'#type' => 'textarea',
+		'#size' => 300,
+		'#maxlength' => 300
+		//'#required' => FALSE,
+	);
+	$form['proposal_type'] = array(
+		'#type' => 'hidden',
+		'#value' => '1',
+		'#required' => FALSE
+	);
+	$form['reference'] = array(
+		'#type' => 'textarea',
+		'#title' => t('Reference'),
+		'#required' => TRUE,
+		'#size' => 500,
+		'#maxlength' => 500,
+		'#attributes' => array(
+			'placeholder' => 'Links of the syllabus must be provided....'
+		)
+	);
+	$form['preference1'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('Book Preference'),
+		'#collapsible' => TRUE,
+		'#collapsed' => FALSE
+	);
+	$form['preference1']['book1'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Title of the book'),
+		'#size' => 30,
+		'#maxlength' => 100,
+		'#required' => TRUE,
+		'#value' => $row1->book,
+		'#disabled' => ($row1->book ? TRUE : FALSE)
+	);
+	$form['preference1']['author1'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Author Name'),
+		'#size' => 30,
+		'#maxlength' => 100,
+		'#required' => TRUE,
+		'#value' => $row1->author,
+		'#disabled' => ($row1->author ? TRUE : FALSE)
+	);
+	$form['preference1']['isbn1'] = array(
+		'#type' => 'textfield',
+		'#title' => t('ISBN No'),
+		'#size' => 30,
+		'#maxlength' => 25,
+		'#required' => TRUE,
+		'#value' => $row1->isbn,
+		'#disabled' => ($row1->isbn ? TRUE : FALSE)
+	);
+	$form['preference1']['publisher1'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Publisher & Place'),
+		'#size' => 30,
+		'#maxlength' => 50,
+		'#required' => TRUE,
+		'#value' => $row1->publisher
+	);
+	$form['preference1']['edition1'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Edition'),
+		'#size' => 4,
+		'#maxlength' => 2,
+		'#required' => TRUE,
+		'#value' => $row1->edition
+	);
+	$form['preference1']['year1'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Year of publication'),
+		'#size' => 4,
+		'#maxlength' => 4,
+		'#required' => TRUE,
+		'#value' => $row1->year
+	);
+	/*$form['termconditions'] = array(
+	'#type' => 'checkboxes',
+	'#title' => t('Terms And Conditions'),
+	'#options' => array(
+	'status' => t('<a href="term-and-conditions" target="_blank">I agree to the Terms and Conditions</a>'),),
+	'#required' => TRUE,
+	);*/
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Submit')
+	);
+	/* #value fix for #default_value bug drupal6  
+	foreach(array("preference1") as $preference) {
+	foreach($form[$preference] as $key => $value) {
+	if(!$form[$preference][$key]["#value"]) {
+	unset($form[$preference][$key]["#value"]);
+	}
+	}
+	}*/
+	return $form;
+}
+function book_proposal_nonaicte_form_submit($form, &$form_state)
+{
+	global $user;
+	$selections = variable_get("aicte_" . $user->uid, "");
+	$tbc_to_emails = variable_get("textbook_companion_emails_all");
+	if (!$user->uid)
+	{
+		drupal_set_message('It is mandatory to login on this website to access the proposal form', 'error');
+		return;
+	} //!$user->uid
+	/* completion date to timestamp */
+	list($d, $m, $y) = explode('-', $form_state['values']['completion_date']);
+	$completion_date_timestamp = mktime(0, 0, 0, $m, $d, $y);
+	/* Reasons for suggesting a book*/
+	if (isset($_POST['reason']))
+	{
+		if (!($form_state['values']['other_reason']))
+		{
+			$my_reason = implode(", ", $_POST['reason']);
+		} //!($form_state['values']['other_reason'])
+		else
+		{
+			$my_reason = implode(", ", $_POST['reason']);
+			$my_reason = $my_reason . "-" . " " . $form_state['values']['other_reason'];
+		}
+		$form_state['values']['other_reason'] = $my_reason;
+	} //isset($_POST['reason'])
+	/************************************/
+	$openmodelica_version = $form_state['values']['version'];
+	if ($form_state['values']['version'] == 'olderversion')
+	{
+		$openmodelica_version = $form_state['values']['older'];
+	} //$form_state['values']['version'] == 'olderversion'
+	$form_state['values']['version'] = $openmodelica_version;
+	$query = "INSERT INTO {textbook_companion_proposal}
+    (uid, approver_uid, full_name, mobile, gender, how_project, course, branch, university,city,pincode,state,faculty, reviewer, reference, completion_date, creation_date,approval_date, proposal_status, version, operating_system, teacher_email, proposal_type, reason, proposed_completion_date) VALUES (:uid, :approver_uid, :full_name, :mobile, :gender, :how_project, :course, :branch, :university,:city,:pincode,:state, :faculty, :reviewer, :reference, 
+:expected_completion_date, :actual_completion_date,:creation_date,:message, :approval_date, :proposal_status, :openmodelica_version, :operating_system, :teacher_email, 
+:proposal_type, :reason, :proposed_completion_date)";
+	$args = array(
+		"uid" => $user->uid,
+		"approver_uid" => 0,
+		"full_name" => ucwords(strtolower($form_state['values']['full_name'])),
+		"mobile" => $form_state['values']['mobile'],
+		"gender" => $form_state['values']['gender'],
+		"how_project" => $form_state['values']['how_project'],
+		"course" => $form_state['values']['course'],
+		"branch" => $form_state['values']['branch'],
+		"university" => $form_state['values']['university'],
+		":city" => $form_state['values']['city'],
+		":pincode" => $form_state['values']['pincode'],
+		":state" => $form_state['values']['all_state'],
+		"faculty" => ucwords(strtolower($form_state['values']['faculty'])),
+		"reviewer" => ucwords(strtolower($form_state['values']['reviewer'])),
+		"reference" => strtolower($form_state['values']['reference']),
+		"completion_date" => "------",
+		"creation_date" => time(),
+		"approval_date" => time(),
+		"proposal_status" => 0,
+		"openmodelica_version" => $openmodelica_version,
+		"operating_system" => $form_state['values']['operating_system'],
+		"teacher_email" => $form_state['values']['faculty_email'],
+		"proposal_type" => $form_state['values']['proposal_type'],
+		"reason" => $my_reason,
+		":proposed_completion_date" => $completion_date_timestamp
+	);
+	$result = db_query($query, $args, array(
+		'return' => Database::RETURN_INSERT_ID
+	));
+	if (!$result)
+	{
+		drupal_set_message(t('Error receiving your proposal. Please try again.'), 'error');
+		return;
+	} //!$result
+	/* proposal id */
+	$proposal_id = db_last_insert_id('textbook_companion_proposal', 'id');
+	/* inserting first book preference */
+	if ($form_state['values']['book1'])
+	{
+		/*$result = db_query("INSERT INTO {textbook_companion_preference}
+		(proposal_id, pref_number, book, author, isbn, publisher, edition, year, category, approval_status, nonaicte_book) VALUES
+		(%d, %d, '%s', '%s', '%s', '%s', '%s', '%s', %d, %d, %d)",
+		$proposal_id,
+		1,
+		ucwords(strtolower($form_state['values']['book1'])),
+		ucwords(strtolower($form_state['values']['author1'])),
+		$form_state['values']['isbn1'],
+		ucwords(strtolower($form_state['values']['publisher1'])),
+		$form_state['values']['edition1'],
+		$form_state['values']['year1'],
+		0,
+		0,
+		1
+		);*/
+		$query = "INSERT INTO {textbook_companion_preference}
+      (proposal_id, pref_number, book, author, isbn, publisher, edition, year, category, approval_status, nonaicte_book) VALUES
+ (:proposal_id, :pref_number, :book, :author, :isbn, :publisher, :edition, :year, :category, :approval_status, :nonaicte_book)";
+		$args = array(
+			":proposal_id" => $proposal_id,
+			":pref_number" => 1,
+			":book" => ucwords(strtolower($form_state['values']['book1'])),
+			":author" => ucwords(strtolower($form_state['values']['author1'])),
+			":isbn" => $form_state['values']['isbn1'],
+			":publisher" => ucwords(strtolower($form_state['values']['publisher1'])),
+			":edition" => $form_state['values']['edition1'],
+			":year" => $form_state['values']['year1'],
+			":category" => 0,
+			":approval_status" => 0,
+			":nonaicte_book" => 1
+		);
+		$result = db_query($query, $args, array(
+			'return' => Database::RETURN_INSERT_ID
+		));
+		if (!$result)
+		{
+			drupal_set_message(t('Error receiving your first book preference.'), 'error');
+		} //!$result
+	} //$form_state['values']['book1']
+	/* sending email */
+	$email_to = $user->mail;
+	$from = variable_get('textbook_companion_from_email', '');
+	$bcc = variable_get('textbook_companion_emails', '');
+	$cc = variable_get('textbook_companion_cc_emails', '');
+	$params['nonaicte_proposal_received']['proposal_id'] = $proposal_id;
+	$params['nonaicte_proposal_received']['user_id'] = $user->uid;
+	$params['nonaicte_proposal_received']['headers'] = array(
+		'From' => $from,
+		'MIME-Version' => '1.0',
+		'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
+		'Content-Transfer-Encoding' => '8Bit',
+		'X-Mailer' => 'Drupal',
+		'Cc' => $cc,
+		'Bcc' => $bcc
+	);
+	if (!drupal_mail('textbook_companion', 'nonaicte_proposal_received', $email_to, language_default(), $params, $from, TRUE))
+		drupal_set_message('Error sending email message.', 'error');
+	drupal_set_message(t('We have received your book proposal. We will get back to you soon.'), 'status');
+	drupal_goto('');
+}
+//
+function del_book_pdf($book_id)
+{
+	$root_path = textbook_companion_path();
+	$dir_path = $root_path . "latex/";
+	$pdf_filename = "book_" . $book_id . ".pdf";
+	if (file_exists($dir_path . $pdf_filename))
+		unlink($dir_path . $pdf_filename);
+}
+function _list_of_software_version()
+{
+	$software_version = array();
+	$query = db_select('openmodelica_software_version');
+	$query->fields('openmodelica_software_version');
+	$query->orderBy('openmodelica_version', 'ASC');
+	$software_version_list = $query->execute();
+	while ($software_version_list_data = $software_version_list->fetchObject())
+	{
+		$software_version[$software_version_list_data->openmodelica_version] = $software_version_list_data->openmodelica_version;
+	} //$software_version_list_data = $software_version_list->fetchObject()
+	return $software_version;
+}
+function _list_of_departments()
+{
+	$department = array();
+	$query = db_select('list_of_departments');
+	$query->fields('list_of_departments');
+	$query->orderBy('id', 'DESC');
+	$department_list = $query->execute();
+	while ($department_list_data = $department_list->fetchObject())
+	{
+		$department[$department_list_data->department] = $department_list_data->department;
+	} //$department_list_data = $department_list->fetchObject()
+	return $department;
+}
+function _list_of_states()
+{
+	$states = array(
+		'' => '-select-'
+	);
+	$query = db_select('list_states_of_india');
+	$query->fields('list_states_of_india');
+	//$query->orderBy('', '');
+	$states_list = $query->execute();
+	while ($states_list_data = $states_list->fetchObject())
+	{
+		$states[$states_list_data->state] = $states_list_data->state;
+	} //$states_list_data = $states_list->fetchObject()
+	return $states;
+}
+function _list_of_cities()
+{
+	$city = array(
+		'' => '-select-'
+	);
+	$query = db_select('list_cities_of_india');
+	$query->fields('list_cities_of_india');
+	$query->orderBy('city', 'ASC');
+	$city_list = $query->execute();
+	while ($city_list_data = $city_list->fetchObject())
+	{
+		$city[$city_list_data->city] = $city_list_data->city;
+	} //$city_list_data = $city_list->fetchObject()
+	return $city;
+}
+/*************************************************************************/
+/***** Function To convert only first charater of string in uppercase ****/
+/*************************************************************************/
+function ucname($string)
+{
+	$string = ucwords(strtolower($string));
+	foreach (array(
+		'-',
+		'\''
+	) as $delimiter)
+	{
+		if (strpos($string, $delimiter) !== false)
+		{
+			$string = implode($delimiter, array_map('ucfirst', explode($delimiter, $string)));
+		} //strpos($string, $delimiter) !== false
+	} //array( '-', '\'' ) as $delimiter
+	return $string;
+}
+function _dir_name($book, $author, $pref_id)
+{
+	if (!$pref_id)
+	{
+		$book_title = ucname($book);
+		$author = ucname($author);
+		$dir_name = $book_title . " " . "by" . " " . $author;
+		$directory_name = str_replace("__", "_", str_replace(" ", "_", $dir_name));
+		$query = db_select('textbook_companion_preference');
+		$query->fields('textbook_companion_preference');
+		$query->condition('directory_name', $directory_name);
+		$query->condition('approval_status', 1);
+		$result = $query->execute()->rowCount();
+		if ($result > 0)
+		{
+			//var_dump('this');die;
+			form_set_error('', t('Book is already allotted. Please try another book or contact to administrator'));
+			return;
+		} //$result > 0
+	} //!$pref_id
+	else
+	{
+		$book_title = ucname($book);
+		$author = ucname($author);
+		$dir_name = $book_title . " " . "by" . " " . $author;
+		$directory_name = str_replace("__", "_", str_replace(" ", "_", $dir_name));
+		$query = db_select('textbook_companion_preference');
+		$query->fields('textbook_companion_preference');
+		$query->condition('directory_name', $directory_name);
+		$query->condition('id', $pref_id);
+		$result = $query->execute()->rowCount();
+		if ($result > 1)
+		{
+			form_set_error('', t('Book is already present. Please try another book or contact to administrator'));
+			return;
+		} //$result > 1
+	}
+	return $directory_name;
+}

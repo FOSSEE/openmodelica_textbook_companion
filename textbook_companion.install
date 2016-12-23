@@ -1,0 +1,512 @@
+<?php
+// $Id$
+/**
+ * Implementation of hook_install().
+ */
+function textbook_companion_install()
+  {
+    // Create tables.
+    drupal_install_schema('textbook_companion');
+    variable_set('textbook_companion_emails', '');
+    variable_set('textbook_companion_from_email', '');
+    variable_set('textbook_companion_source_extensions', '');
+    variable_set('textbook_companion_dependency_extensions', '');
+    variable_set('textbook_companion_result_extensions', '');
+    variable_set('textbook_companion_xcos_extensions', '');
+  }
+/**
+ * Implementation of hook_uninstall().
+ */
+function textbook_companion_uninstall()
+  {
+    // Remove tables.
+    drupal_uninstall_schema('textbook_companion');
+    // Remove variables
+    variable_del('textbook_companion_emails');
+    variable_del('textbook_companion_from_email');
+    variable_del('textbook_companion_source_extensions');
+    variable_del('textbook_companion_dependency_extensions');
+    variable_del('textbook_companion_result_extensions');
+    variable_del('textbook_companion_xcos_extensions');
+  }
+/**
+ * Implementation of hook_schema().
+ */
+function textbook_companion_schema()
+  {
+    /* proposal */
+    $schema['textbook_companion_proposal'] = array(
+        'description' => t('TODO: please describe this table!'),
+        'fields' => array(
+            'id' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'serial',
+                'not null' => TRUE
+            ),
+            'uid' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'approver_uid' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'full_name' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '50',
+                'not null' => TRUE
+            ),
+            'mobile' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '15',
+                'not null' => TRUE
+            ),
+            'how_project' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '50',
+                'not null' => TRUE
+            ),
+            'course' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '50',
+                'not null' => TRUE
+            ),
+            'branch' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '50',
+                'not null' => TRUE
+            ),
+            'university' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '100',
+                'not null' => TRUE
+            ),
+            'faculty' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '100',
+                'not null' => TRUE
+            ),
+            'reviewer' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '100',
+                'not null' => TRUE
+            ),
+            'completion_date' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'creation_date' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'approval_date' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'proposal_status' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'message' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'text',
+                'size' => 'medium',
+                'not null' => TRUE
+            )
+        ),
+        'primary key' => array(
+            'id'
+        ),
+        'unique keys' => array(
+            'id' => array(
+                'id'
+            )
+        )
+    );
+    /* book preference */
+    $schema['textbook_companion_preference'] = array(
+        'description' => t('TODO: please describe this table!'),
+        'fields' => array(
+            'id' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'serial',
+                'not null' => TRUE
+            ),
+            'proposal_id' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'pref_number' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'book' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '100',
+                'not null' => TRUE
+            ),
+            'author' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '100',
+                'not null' => TRUE
+            ),
+            'isbn' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '25',
+                'not null' => TRUE
+            ),
+            'publisher' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '50',
+                'not null' => TRUE
+            ),
+            'edition' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '2',
+                'not null' => TRUE
+            ),
+            'year' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'category' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'approval_status' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            )
+        ),
+        'primary key' => array(
+            'id'
+        ),
+        'unique keys' => array(
+            'id' => array(
+                'id'
+            )
+        )
+    );
+    /* chapter */
+    $schema['textbook_companion_chapter'] = array(
+        'description' => t('TODO: please describe this table!'),
+        'fields' => array(
+            'id' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'serial',
+                'not null' => TRUE
+            ),
+            'preference_id' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'number' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'name' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '255',
+                'not null' => TRUE
+            )
+        ),
+        'primary key' => array(
+            'id'
+        )
+    );
+    /* examples */
+    $schema['textbook_companion_example'] = array(
+        'description' => t('TODO: please describe this table!'),
+        'fields' => array(
+            'id' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'serial',
+                'not null' => TRUE
+            ),
+            'chapter_id' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'approver_uid' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'number' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '10',
+                'not null' => TRUE
+            ),
+            'caption' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '255',
+                'not null' => TRUE
+            ),
+            'approval_date' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'approval_status' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'timestamp' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            )
+        ),
+        'primary key' => array(
+            'id'
+        )
+    );
+    /* example files */
+    $schema['textbook_companion_example_files'] = array(
+        'description' => t('TODO: please describe this table!'),
+        'fields' => array(
+            'id' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'serial',
+                'not null' => TRUE
+            ),
+            'example_id' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'filename' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '255',
+                'not null' => TRUE
+            ),
+            'filepath' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '500',
+                'not null' => TRUE
+            ),
+            'filemime' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '255',
+                'not null' => TRUE
+            ),
+            'filesize' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'filetype' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '1',
+                'not null' => TRUE
+            ),
+            'caption' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '100',
+                'not null' => TRUE
+            ),
+            'timestamp' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            )
+        ),
+        'primary key' => array(
+            'id'
+        )
+    );
+    /* dependency files */
+    $schema['textbook_companion_dependency_files'] = array(
+        'description' => t('TODO: please describe this table!'),
+        'fields' => array(
+            'id' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'serial',
+                'not null' => TRUE
+            ),
+            'preference_id' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'filename' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '255',
+                'not null' => TRUE
+            ),
+            'filepath' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '500',
+                'not null' => TRUE
+            ),
+            'filemime' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '255',
+                'not null' => TRUE
+            ),
+            'filesize' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'caption' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '100',
+                'not null' => TRUE
+            ),
+            'description' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'text',
+                'size' => 'medium',
+                'not null' => TRUE
+            ),
+            'timestamp' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            )
+        ),
+        'primary key' => array(
+            'id'
+        )
+    );
+    /* example - dependency files links */
+    $schema['textbook_companion_example_dependency'] = array(
+        'description' => t('TODO: please describe this table!'),
+        'fields' => array(
+            'id' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'serial',
+                'not null' => TRUE
+            ),
+            'example_id' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'dependency_id' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'approval_status' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'timestamp' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            )
+        ),
+        'primary key' => array(
+            'id'
+        )
+    );
+    $schema['textbook_companion_notes'] = array(
+        'description' => t('TODO: please describe this table!'),
+        'fields' => array(
+            'id' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'serial',
+                'not null' => TRUE
+            ),
+            'preference_id' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'notes' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'text',
+                'size' => 'medium',
+                'not null' => TRUE
+            )
+        ),
+        'primary key' => array(
+            'id'
+        )
+    );
+    $schema['textbook_companion_feedback'] = array(
+        'description' => t('TODO: please describe this table!'),
+        'fields' => array(
+            'id' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'serial',
+                'not null' => TRUE
+            ),
+            'example_id' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'uid' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            ),
+            'feedback' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'text',
+                'size' => 'medium',
+                'not null' => TRUE
+            ),
+            'ip_address' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'varchar',
+                'length' => '16',
+                'not null' => TRUE
+            ),
+            'timestamp' => array(
+                'description' => t('TODO: please describe this field!'),
+                'type' => 'int',
+                'not null' => TRUE
+            )
+        ),
+        'primary key' => array(
+            'id'
+        )
+    );
+    return $schema;
+  }

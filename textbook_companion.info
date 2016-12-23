@@ -1,0 +1,6 @@
+name = Textbook Companion
+description = IIT Bombay Textbook Companion project
+package = IITB
+version = 7.1
+core = 7.x
+
