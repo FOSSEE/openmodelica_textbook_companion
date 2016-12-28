@@ -1434,7 +1434,7 @@ $form['version'] = array(
 '#options' => _list_of_software_version(),
 '#required' => TRUE
 );
-$form['older'] = array(
+$form['other_version'] = array(
 '#type' => 'textfield',
 '#size' => 30,
 '#maxlength' => 50,
@@ -1443,7 +1443,7 @@ $form['older'] = array(
 '#states' => array(
 'visible' => array(
 ':input[name="version"]' => array(
-'value' => 'olderversion'
+'value' => 'Other version'
 )
 )
 )
@@ -1937,7 +1937,7 @@ function book_proposal_form($form, &$form_state)
 		'#options' => _list_of_software_version(),
 		'#required' => TRUE
 	);
-	$form['older'] = array(
+	$form['other_version'] = array(
 		'#type' => 'textfield',
 		'#size' => 30,
 		'#maxlength' => 50,
@@ -1946,7 +1946,7 @@ function book_proposal_form($form, &$form_state)
 		'#states' => array(
 			'visible' => array(
 				':input[name="version"]' => array(
-					'value' => 'olderversion'
+					'value' => 'Other version'
 				)
 			)
 		)
@@ -2293,13 +2293,13 @@ function book_proposal_form_validate($form, &$form_state)
 	/*****************************************************************************
 	
 	}*/
-	if ($form_state['values']['version'] == 'olderversion')
+	if ($form_state['values']['version'] == 'Other version')
 	{
-		if ($form_state['values']['older'] == '')
+		if ($form_state['values']['other_version'] == '')
 		{
-			form_set_error('older', t('Please provide valid version'));
-		} //$form_state['values']['older'] == ''
-	} //$form_state['values']['version'] == 'olderversion'
+			form_set_error('other_version', t('Please provide valid version'));
+		} //$form_state['values']['other_version'] == ''
+	} //$form_state['values']['version'] == 'Other version'
 	if (isset($_FILES['files']))
 	{
 		/* check if atleast one source or result file is uploaded */
@@ -2335,13 +2335,13 @@ function book_proposal_form_validate($form, &$form_state)
 			} //$file_name
 		} //$_FILES['files']['name'] as $file_form_name => $file_name
 	} //isset($_FILES['files'])
-	if ($form_state['values']['version'] == 'olderversion')
+	if ($form_state['values']['version'] == 'Other version')
 	{
-		if ($form_state['values']['older'] == '')
+		if ($form_state['values']['other_version'] == '')
 		{
-			form_set_error('older', t('Please provide valid version'));
-		} //$form_state['values']['older'] == ''
-	} //$form_state['values']['version'] == 'olderversion'
+			form_set_error('other_version', t('Please provide valid version'));
+		} //$form_state['values']['other_version'] == ''
+	} //$form_state['values']['version'] == 'Other version'
 	return;
 }
 function book_proposal_form_submit($form, &$form_state, $directory_name = NULL)
@@ -2358,10 +2358,10 @@ function book_proposal_form_submit($form, &$form_state, $directory_name = NULL)
 	list($d, $m, $y) = explode('-', $form_state['values']['completion_date']);
 	$completion_date_timestamp = mktime(0, 0, 0, $m, $d, $y);
 	$openmodelica_version = $form_state['values']['version'];
-	if ($form_state['values']['version'] == 'olderversion')
+	if ($form_state['values']['version'] == 'Other version')
 	{
-		$form_state['values']['version'] = $form_state['values']['older'];
-	} //$form_state['values']['version'] == 'olderversion'
+		$form_state['values']['version'] = $form_state['values']['other_version'];
+	} //$form_state['values']['version'] == 'Other version'
 	if ($form_state['values']['country'] == 'other')
 	{
 		$form_state['values']['country'] = trim($form_state['values']['other_country']);
@@ -4078,7 +4078,7 @@ function book_proposal_nonaicte_form($form, &$form_state)
 		'#options' => _list_of_software_version(),
 		'#required' => TRUE
 	);
-	$form['older'] = array(
+	$form['other_version'] = array(
 		'#type' => 'textfield',
 		'#size' => 30,
 		'#maxlength' => 50,
@@ -4240,10 +4240,10 @@ function book_proposal_nonaicte_form_submit($form, &$form_state)
 	} //isset($_POST['reason'])
 	/************************************/
 	$openmodelica_version = $form_state['values']['version'];
-	if ($form_state['values']['version'] == 'olderversion')
+	if ($form_state['values']['version'] == 'Other version')
 	{
-		$openmodelica_version = $form_state['values']['older'];
-	} //$form_state['values']['version'] == 'olderversion'
+		$openmodelica_version = $form_state['values']['other_version'];
+	} //$form_state['values']['version'] == 'Other version'
 	$form_state['values']['version'] = $openmodelica_version;
 	$query = "INSERT INTO {textbook_companion_proposal}
     (uid, approver_uid, full_name, mobile, gender, how_project, course, branch, university,city,pincode,state,faculty, reviewer, reference, completion_date, creation_date,approval_date, proposal_status, version, operating_system, teacher_email, proposal_type, reason, proposed_completion_date) VALUES (:uid, :approver_uid, :full_name, :mobile, :gender, :how_project, :course, :branch, :university,:city,:pincode,:state, :faculty, :reviewer, :reference, 
