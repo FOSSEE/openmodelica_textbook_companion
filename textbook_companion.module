@@ -2837,7 +2837,7 @@ Year of publication : ' . $approved_preference_data->year . '
 
 Please ensure that ALL the guidelines for coding are strictly followed:
 
-http://openmodelica.fossee.in/textbook-companion/guidelines-coding
+http://om.fossee.in/textbook-companion/guidelines-coding
 
 
 Best Wishes,
@@ -2899,7 +2899,7 @@ Year of publication : ' . $approved_preference_data->year . '
 
 Your book is now available at following link to download.
 
-http://openmodelica.fossee.in/textbook-companion/textbook-run/' . $approved_preference_data->id . '
+http://om.fossee.in/textbook-companion/textbook-run/' . $approved_preference_data->id . '
 
 Now you should be able to propose a new book.
 
