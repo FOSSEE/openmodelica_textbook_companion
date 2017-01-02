@@ -4263,7 +4263,7 @@ function book_proposal_nonaicte_form_submit($form, &$form_state)
 		":pincode" => $form_state['values']['pincode'],
 		":state" => $form_state['values']['all_state'],
 		"faculty" => ucwords(strtolower($form_state['values']['faculty'])),
-		"reviewer" => ucwords(strtolower($form_state['values']['reviewer'])),
+		"reviewer" => $form_state['values']['reviewer'],
 		"reference" => strtolower($form_state['values']['reference']),
 		"completion_date" => "------",
 		"creation_date" => time(),
