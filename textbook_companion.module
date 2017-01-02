@@ -1926,7 +1926,7 @@ function book_proposal_form($form, &$form_state)
 	);
 	$form['reviewer'] = array(
 		'#type' => 'hidden',
-		'#value' => 'None',
+		'#value' => 'OpenModelica TBC Team',
 		'#title' => t('Reviewer'),
 		'#size' => 30,
 		'#maxlength' => 50
