@@ -712,6 +712,15 @@ function textbook_companion_menu()
 		),
 		'file' => 'pdf/generate_pdf.inc'
 	);
+	 $items["textbook-companion/certificate/verify"] = array(
+    	"title" => "Certificate Verification",
+    	"page callback" => "verify_certificates",
+    	"access arguments" => array(
+      	"verify certificates"
+    ),
+    'type' => MENU_CALLBACK,
+    'file' => 'pdf/verify_certificates.inc'
+  );
 	$items['textbook-companion/manage-proposal/paper-submission'] = array(
 		'title' => 'Application Submission',
 		'description' => 'Application Submission',
@@ -806,6 +815,10 @@ function textbook_companion_permission()
 			"title" => t("list all certificates"),
 			"description" => t("Allows users to list all certificates.")
 		),
+		"verify certificates" => array(
+     		"title" => t("Verify certificates"),
+     		"description" => t("Allows users to verify certificates.")
+    ),
 		"generate pdf" => array(
 			"title" => t("Generate pdf"),
 			"description" => t("Allows users to Generate pdf.")
