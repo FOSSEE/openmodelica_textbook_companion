@@ -81,7 +81,7 @@ function verify_qrcode_fromdb($qr_code)
 		$page_content .= "<h4>Participation Details</h4><table><tr><td>Name</td>";
 		$page_content .= "<td>" . $data3->full_name . "</td></tr>";
 		$page_content .= "<tr><td>Project</td>";
-		$page_content .= "<td>DWSIM Textbook Companion</td></tr>";
+		$page_content .= "<td>OpenModelica Textbook Companion</td></tr>";
 		$page_content .= "<tr><td>Books completed</td>";
 		$page_content .= "<td>" . $data2->book . "</td></tr>";
 		$page_content .= "<tr><td>Book Author</td>";
