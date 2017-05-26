@@ -129,7 +129,7 @@ $form['book_details']['pref_id'] = array(
     );
     $form['example_warning'] = array(
         '#type' => 'item',
-        '#title' => t('You should upload all the files as zip (main or source files, result files, executable file if any): '),
+        '#title' => t('You should upload all the files as extention ".'). variable_get('textbook_companion_source_extensions', '') . t('" main or source files, result files, executable file if any): '),
         '#prefix' => '<div style="color:red">',
         '#suffix' => '</div>'
     );
