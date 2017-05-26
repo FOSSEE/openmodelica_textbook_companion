@@ -146,7 +146,7 @@ function generate_pdf()
 	$pdf->write(0, 'The work done is available at ');
 	$pdf->SetFont('', 'U');
 	$pdf->SetTextColor(0, 147, 211);
-	$pdf->write(0, 'http://om.fossee.in/', 'http://om.fossee.in/');
+	$pdf->write(0, 'http://om.fossee.in', 'http://om.fossee.in');
 	$pdf->SetFont('', '');
 	$pdf->SetTextColor(0, 0, 0);
 	$pdf->write(0, '.', '.');
