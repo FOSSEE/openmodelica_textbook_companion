@@ -71,7 +71,7 @@ function generate_pdf()
 	//$pdf->Cell(200, 8, $pdf->Image($image1, 105, 15, 0, 28), 0, 1, 'C');
 	$pdf->Ln(20);
 	$pdf->SetFont('Arial', 'BI', 25);
-	$pdf->SetTextColor(0, 147, 211);
+	$pdf->SetTextColor(96, 69, 96);
 	$pdf->Cell(240, 8, 'Certificate of Participation', '0', 1, 'C');
 	$pdf->Ln(4);
 	$pdf->SetFont('Arial', 'BI', 12);
@@ -79,7 +79,7 @@ function generate_pdf()
 	$pdf->Cell(240, 8, 'This is to certify that', '0', '1', 'C');
 	$pdf->Ln(4);
 	$pdf->SetFont('Arial', 'BI', 25);
-	$pdf->SetTextColor(0, 147, 211);
+	$pdf->SetTextColor(96, 69, 96);
 	$pdf->Cell(240, 8, $data3->full_name, '0', '1', 'C');
 	$pdf->Ln(5);
 	$pdf->SetFont('Arial', 'I', 12);
@@ -88,23 +88,23 @@ function generate_pdf()
 		//$pdf->Cell(240, 8, 'from ' . $data3->university . ' has successfully', '0', '1', 'C');
 		$pdf->MultiCell(240, 8, 'from ' . $data3->university . ' has successfully', '0','C');
 		$pdf->Ln(0);
-		$pdf->Cell(240, 8, 'completed Internship under OpenModelica Textbook Companion', '0', '1', 'C');
+		$pdf->Cell(240, 8, 'completed an OpenModelica Textbook Companion', '0', '1', 'C');
 		$pdf->Ln(0);
-		$pdf->Cell(240, 8, 'He/she has coded ' . $number_of_example . ' solved examples using OpenModelica from the', '0', '1', 'C');
+		$pdf->Cell(240, 8, 'by coding ' . $number_of_example . ' solved examples from the', '0', '1', 'C');
 		$pdf->Ln(0);
 		//$pdf->Cell(240, 8, 'Book: ' . $data2->book . ', Author: ' . $data2->author . '.', '0', '1', 'C');
-		$pdf->MultiCell(240, 8, 'Book: ' . $data2->book . ', Author: ' . $data2->author . '.', '0','C');
+		$pdf->MultiCell(240, 8, 'book: ' . $data2->book . ', author(s) ' . $data2->author . '.', '0','C');
 		$pdf->Ln(0);
 	} //strtolower($data3->branch) != "others"
 	else {
 		$pdf->SetTextColor(0, 0, 0);
 		$pdf->Cell(240, 8, 'from ' . $data3->university . ' has successfully', '0', '1', 'C');
 		$pdf->Ln(0);
-		$pdf->Cell(240, 8, 'completed Internship under OpenModelica Textbook Companion', '0', '1', 'C');
+		$pdf->Cell(240, 8, 'completed an OpenModelica Textbook Companion', '0', '1', 'C');
 		$pdf->Ln(0);
-		$pdf->Cell(240, 8, 'He/she has coded ' . $number_of_example . ' solved examples using OpenModelica from the', '0', '1', 'C');
+		$pdf->Cell(240, 8, 'by coding ' . $number_of_example . ' solved examples from the', '0', '1', 'C');
 		$pdf->Ln(0);
-		$pdf->Cell(240, 8, 'Book: ' . $data2->book . ', Author: ' . $data2->author . '.', '0', '1', 'C');
+		$pdf->Cell(240, 8, 'book: ' . $data2->book . ', author(s) ' . $data2->author . '.', '0', '1', 'C');
 		$pdf->Ln(0);
 	}
 	$proposal_get_id = 0;
@@ -145,7 +145,7 @@ function generate_pdf()
 	$pdf->SetX(95);
 	$pdf->write(0, 'The work done is available at ');
 	$pdf->SetFont('', 'U');
-	$pdf->SetTextColor(0, 147, 211);
+	$pdf->SetTextColor(96, 69, 96);
 	$pdf->write(0, 'http://om.fossee.in', 'http://om.fossee.in');
 	$pdf->SetFont('', '');
 	$pdf->SetTextColor(0, 0, 0);
@@ -179,9 +179,9 @@ function generate_pdf()
 	$pdf->SetX(80);
 	$image3 = $path . "/pdf/images/iitb.png";
 	$image2 = $path . "/pdf/images/fossee.png";
-	$pdf->Image($image2, $pdf->GetX() - 15, $pdf->GetY() + 7, 40, 0);
+	$pdf->Image($image2, $pdf->GetX() - 60, $pdf->GetY() + 7, 40, 0);
 	$pdf->Image($pngAbsoluteFilePath, $pdf->GetX() + 50, $pdf->GetY() - 5, 30, 0);
-	$pdf->Image($image3, $pdf->GetX() + 110, $pdf->GetY() + 3, 15, 0);
+	$pdf->Image($image3, $pdf->GetX() + 160, $pdf->GetY() + 3, 15, 0);
 	$pdf->Image($image4, $pdf->GetX() - 15, $pdf->GetY() + 28, 150, 0);
 	$pdf->SetFont('Arial', 'I', 8);
 	$pdf->SetTextColor(0, 0, 0);
