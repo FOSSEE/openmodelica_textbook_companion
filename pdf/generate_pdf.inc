@@ -136,7 +136,7 @@ function generate_pdf()
 	else {
 		$UniqueString = $DBString;
 	}
-	$codeContents        = "http://om.fossee.in/textbook-companion/certificate/verify/" . $UniqueString;
+	$codeContents        = "https://om.fossee.in/textbook-companion/certificate/verify/" . $UniqueString;
 	$fileName            = 'generated_qrcode.png';
 	$pngAbsoluteFilePath = $tempDir . $fileName;
 	$urlRelativeFilePath = $path . "/pdf/temp_prcode/" . $fileName;
@@ -146,7 +146,7 @@ function generate_pdf()
 	$pdf->write(0, 'The work done is available at ');
 	$pdf->SetFont('', 'U');
 	$pdf->SetTextColor(96, 69, 96);
-	$pdf->write(0, 'http://om.fossee.in', 'http://om.fossee.in');
+	$pdf->write(0, 'https://om.fossee.in', 'http://om.fossee.in');
 	$pdf->SetFont('', '');
 	$pdf->SetTextColor(0, 0, 0);
 	$pdf->write(0, '.', '.');
@@ -202,7 +202,7 @@ function generate_pdf()
 	} //!feof($fp)
 	fclose($fp);
 	unlink($file);
-	drupal_goto('certificate');
+	//drupal_goto('certificate');
 	return;
 }
 function generateRandomString($length = 5)
@@ -300,7 +300,7 @@ function generate_copyright_form_pdf()
 	} //!feof($fp)
 	fclose($fp);
 	unlink($file);
-	drupal_goto('Summer_Internship_Forms/forms');
+	//drupal_goto('Summer_Internship_Forms/forms');
 	return;
 }
 function generate_undertaking_form_pdf()
@@ -392,6 +392,6 @@ function generate_undertaking_form_pdf()
 	} //!feof($fp)
 	fclose($fp);
 	unlink($file);
-	drupal_goto('Summer_Internship_Forms/forms');
+	//drupal_goto('Summer_Internship_Forms/forms');
 	return;
 }
