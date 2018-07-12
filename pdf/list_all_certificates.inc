@@ -6,9 +6,10 @@ function _list_all_certificates()
 		':uid' => $user->uid
 	));
 	$exist_id = $query_id->fetchObject();
+	$exist_id_count = $query_id->rowCount();
 	if ($exist_id){
 	if ($exist_id->id) {
-		if ($exist_id->id < 3) {
+		if ($exist_id_count < 1 ) {
 			drupal_set_message(t('<strong>You need to propose a book <a href="http://om.fossee.in/textbook-companion/proposal">Book Proposal</a></strong> or if you have already proposed then your book is under reviewing process'), 'status');
 			return '';
 		} //$exist_id->id < 3
