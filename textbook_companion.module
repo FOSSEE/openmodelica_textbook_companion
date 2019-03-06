@@ -1911,7 +1911,7 @@ function book_proposal_form($form, &$form_state)
 		'#title' => t('Pincode'),
 		'#size' => 30,
 		'#maxlength' => 6,
-		'#required' => False,
+		'#required' => TRUE,
 		'#attributes' => array(
 			'placeholder' => 'Enter pincode....'
 		)
@@ -1994,6 +1994,7 @@ function book_proposal_form($form, &$form_state)
 		'#type' => 'textarea',
 		'#size' => 300,
 		'#maxlength' => 300,
+		'#description'=>t('<span style="color:red;">Maximum character limit is 255 characters</span>'),
 		'#states' => array(
 			'visible' => array(
 				':input[name="reason[Other reason]"]' => array(
@@ -2306,6 +2307,14 @@ function book_proposal_form_validate($form, &$form_state)
 	/*****************************************************************************
 	
 	}*/
+	if (isset($form_state['values']['reason']))
+	{
+		$my_reason = $form_state['values']['other_reason'];
+		if($my_reason>255)
+		{
+			form_set_error('other_reason', t('Maximum limit is 255 characters'));
+		}
+	}
 	if ($form_state['values']['version'] == 'Other version')
 	{
 		if ($form_state['values']['other_version'] == '')
