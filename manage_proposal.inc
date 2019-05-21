@@ -810,12 +810,13 @@ function proposal_status_form_submit($form, &$form_state)
         $num_updated = $query->execute();
         /* sending email */
         $book_user = user_load($proposal_data->uid);
+        $email_to = $book_user->mail;
         $from = variable_get('textbook_companion_from_email', '');
         $bcc = variable_get('textbook_companion_emails', '');
         $cc = variable_get('textbook_companion_cc_emails', '');
         $params['all_code_submitted_status_changed']['proposal_id'] = $proposal_id;
         $params['all_code_submitted_status_changed']['user_id'] = $proposal_data->uid;
-        $param['all_code_submitted_status_changed']['headers'] = array(
+        $params['all_code_submitted_status_changed']['headers'] = array(
             'From' => $from,
             'MIME-Version' => '1.0',
             'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
@@ -824,8 +825,6 @@ function proposal_status_form_submit($form, &$form_state)
             'Cc' => $cc,
             'Bcc' => $bcc
         );
-
-        $email_to = $book_user->mail;
         if (!drupal_mail('textbook_companion', 'all_code_submitted_status_changed', $email_to, language_default(), $params, variable_get('textbook_companion_from_email', NULL), TRUE))
             drupal_set_message('Error sending email message.', 'error');
         drupal_set_message('User has been notified of that code submission interface is now available .', 'status');
