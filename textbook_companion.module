@@ -2695,40 +2695,34 @@ function textbook_companion_mail($key, &$message, $params)
 			));
 			$message['body'] = array(
 				'body' => t('
-Dear !user_name,
+Dear ' . $proposal_data->full_name . ',
 
 We have received your proposal for OpenModelica Textbook Companion with the following details:
 
-Full Name : ' . $proposal_data->full_name . '
-Email : ' . $user_data->mail . '
-Mobile : ' . $proposal_data->mobile . '
-Course : ' . $proposal_data->course . '
-Department/Branch : ' . $proposal_data->branch . '
+Full Name: ' . $proposal_data->full_name . '
+Email: ' . $user_data->mail . '
+Mobile: ' . $proposal_data->mobile . '
+Course: ' . $proposal_data->course . '
+Department/Branch: ' . $proposal_data->branch . '
 University/Institute : ' . $proposal_data->university . '
-City : ' . $proposal_data->city . '
-State : ' . $proposal_data->state . '
-Expected date of completion : ' . date('d-m-Y', $proposal_data->completion_date) . '
+City: ' . $proposal_data->city . '
+State: ' . $proposal_data->state . '
+Expected date of completion: ' . date('d-m-Y', $proposal_data->completion_date) . '
 
-
-Your Book Preferences :
-
-Book Preference :-
-Title of the book : ' . $preference1_data->book . '
-Author name : ' . $preference1_data->author . '
-ISBN No. : ' . $preference1_data->isbn . '
-Publisher and Place : ' . $preference1_data->publisher . '
-Edition : ' . $preference1_data->edition . '
-Year of publication : ' . $preference1_data->year . '
-
-
-
+Book Preference:-
+Title of the book: ' . $preference1_data->book . '
+Author name: ' . $preference1_data->author . '
+ISBN No.: ' . $preference1_data->isbn . '
+Publisher and Place: ' . $preference1_data->publisher . '
+Edition: ' . $preference1_data->edition . '
+Year of publication: ' . $preference1_data->year . '
 
 Your proposal is under review. You will soon receive an email when your proposal has been approved/ disapproved. Thank you for your submission.
 
 Best Wishes,
 
-!site_name Team,
-FOSSEE,IIT Bombay', array(
+!site_name Team
+FOSSEE, IIT Bombay', array(
 					'!site_name' => variable_get('site_name', ''),
 					'!user_name' => $user_data->name
 				))
@@ -2762,36 +2756,32 @@ FOSSEE,IIT Bombay', array(
 			));
 			$message['body'] = array(
 				'body' => t('
-Dear !user_name,
+Dear ' . $proposal_data->full_name . ',
 
 We regret to inform you that all the uploaded examples including the book 
 with following details have been deleted permanently.
 
-Full Name : ' . $proposal_data->full_name . '
-Email : ' . $user_data->mail . '
-Mobile : ' . $proposal_data->mobile . '
-Course : ' . $proposal_data->course . '
-Department/Branch : ' . $proposal_data->branch . '
-University/Institute : ' . $proposal_data->university . '
-City : ' . $proposal_data->city . '
-State : ' . $proposal_data->state . '
+Full Name: ' . $proposal_data->full_name . '
+Email: ' . $user_data->mail . '
+Mobile: ' . $proposal_data->mobile . '
+Course: ' . $proposal_data->course . '
+Department/Branch: ' . $proposal_data->branch . '
+University/Institute: ' . $proposal_data->university . '
+City: ' . $proposal_data->city . '
+State: ' . $proposal_data->state . '
 
-Expected date of completion : ' . date('d-m-Y', $proposal_data->completion_date) . '
+Expected date of completion: ' . date('d-m-Y', $proposal_data->completion_date) . '
 
-Reason : ' . $proposal_data->reason . '
+Reason: ' . $proposal_data->reason . '
+Reference: ' . $proposal_data->reference . '
 
-
-Reference : ' . $proposal_data->reference . '
-
-Your Book Preferences :
-
-Book Preference 1 :-
-Title of the book : ' . $preference1_data->book . '
-Author name : ' . $preference1_data->author . '
-ISBN No. : ' . $preference1_data->isbn . '
-Publisher and Place : ' . $preference1_data->publisher . '
-Edition : ' . $preference1_data->edition . '
-Year of publication : ' . $preference1_data->year . '
+Book Preference:-
+Title of the book: ' . $preference1_data->book . '
+Author name: ' . $preference1_data->author . '
+ISBN No.: ' . $preference1_data->isbn . '
+Publisher and Place: ' . $preference1_data->publisher . '
+Edition: ' . $preference1_data->edition . '
+Year of publication: ' . $preference1_data->year . '
 
 Reason for disapproval: ' . $proposal_data->message . '
 
@@ -2799,8 +2789,8 @@ You are welcome to submit a new proposal.
 
 Best Wishes,
 
-!site_name Team,
-FOSSEE,IIT Bombay', array(
+!site_name Team
+FOSSEE, IIT Bombay', array(
 					'!site_name' => variable_get('site_name', ''),
 					'!user_name' => $user_data->name
 				))
@@ -2832,7 +2822,7 @@ FOSSEE,IIT Bombay', array(
 			));
 			$message['body'] = array(
 				'body' => t('
-Dear !user_name,
+Dear ' . $proposal_data->full_name . ',
 
 Congratulations! Your proposal for OpenModelica Textbook Companion with the following details is approved.
 
@@ -2864,8 +2854,8 @@ http://om.fossee.in/textbook-companion/guidelines-coding
 
 Best Wishes,
 
-!site_name Team,
-FOSSEE,IIT Bombay', array(
+!site_name Team
+FOSSEE, IIT Bombay', array(
 					'!site_name' => variable_get('site_name', ''),
 					'!user_name' => $user_data->name
 				))
@@ -2897,7 +2887,7 @@ FOSSEE,IIT Bombay', array(
 			));
 			$message['body'] = array(
 				'body' => t('
-Dear !user_name,
+Dear ' . $proposal_data->full_name . ',
 
 The textbook companion on the following book has been completed successfully by you:
 
@@ -2927,8 +2917,8 @@ Now you should be able to propose a new book.
 
 Best Wishes,
 
-!site_name Team,
-FOSSEE,IIT Bombay', array(
+!site_name Team
+FOSSEE, IIT Bombay', array(
 					'!site_name' => variable_get('site_name', ''),
 					'!user_name' => $user_data->name
 				))
@@ -2960,7 +2950,7 @@ FOSSEE,IIT Bombay', array(
 			));
 			$message['body'] = array(
 				'body' => t('
-Dear !user_name,
+Dear ' . $proposal_data->full_name . ',
 
 You have submitted codes for all examples:
 
@@ -2986,8 +2976,8 @@ You shall be notified after the code is reviewed.
 
 Best Wishes,
 
-!site_name Team,
-FOSSEE,IIT Bombay', array(
+!site_name Team
+FOSSEE, IIT Bombay', array(
 					'!site_name' => variable_get('site_name', ''),
 					'!user_name' => $user_data->name
 				))
@@ -3019,7 +3009,7 @@ FOSSEE,IIT Bombay', array(
 			));
 			$message['body'] = array(
 				'body' => t('
-Dear !user_name,
+Dear ' . $proposal_data->full_name . ',
 
 Your interface for code submission has been enabled by the reviewer, you can now able to send more code for this book.
 
@@ -3043,8 +3033,8 @@ Year of publication : ' . $approved_preference_data->year . '
  
 Best Wishes,
 
-!site_name Team,
-FOSSEE,IIT Bombay', array(
+!site_name Team
+FOSSEE, IIT Bombay', array(
 					'!site_name' => variable_get('site_name', ''),
 					'!user_name' => $user_data->name
 				))
@@ -3073,6 +3063,12 @@ FOSSEE,IIT Bombay', array(
 			$query->range(0, 1);
 			$result = $query->execute();
 			$preference_data = $result->fetchObject();
+			$query = db_select('textbook_companion_proposal');
+			$query->fields('textbook_companion_proposal');
+			$query->condition('id', $preference_data->proposal_id);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$proposal_data = $result->fetchObject();
 			$user_data = user_load($params['example_uploaded']['user_id']);
 			$message['headers'] = $params['example_uploaded']['headers'];
 			$message['subject'] = t('[!site_name] You have uploaded example for Textbook Companion', array(
@@ -3080,7 +3076,7 @@ FOSSEE,IIT Bombay', array(
 			));
 			$message['body'] = array(
 				'body' => t('
-Dear !user_name,
+Dear ' . $proposal_data->full_name . ',
 
 You have uploaded the following solution :
 
@@ -3093,8 +3089,8 @@ You shall be notified after the solution is reviewed
 
 Best Wishes,
 
-!site_name Team,
-FOSSEE,IIT Bombay', array(
+!site_name Team
+FOSSEE, IIT Bombay', array(
 					'!site_name' => variable_get('site_name', ''),
 					'!user_name' => $user_data->name
 				))
@@ -3121,6 +3117,12 @@ FOSSEE,IIT Bombay', array(
 			$query->range(0, 1);
 			$result = $query->execute();
 			$preference_data = $result->fetchObject();
+			$query = db_select('textbook_companion_proposal');
+			$query->fields('textbook_companion_proposal');
+			$query->condition('id', $preference_data->proposal_id);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$proposal_data = $result->fetchObject();
 			$user_data = user_load($params['example_updated']['user_id']);
 			$message['headers'] = $params['example_updated']['headers'];
 			$message['subject'] = t('[!site_name] You have updated example for Textbook Companion', array(
@@ -3128,7 +3130,7 @@ FOSSEE,IIT Bombay', array(
 			));
 			$message['body'] = array(
 				'body' => t('
-Dear !user_name,
+Dear ' . $proposal_data->full_name . ',
 
 You have updated the following example:
 
@@ -3169,6 +3171,12 @@ FOSSEE,IIT Bombay', array(
 			$query->range(0, 1);
 			$result = $query->execute();
 			$preference_data = $result->fetchObject();
+			$query = db_select('textbook_companion_proposal');
+			$query->fields('textbook_companion_proposal');
+			$query->condition('id', $preference_data->proposal_id);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$proposal_data = $result->fetchObject();
 			$user_data = user_load($params['example_updated_admin']['user_id']);
 			$message['headers'] = $params['example_updated_admin']['headers'];
 			$message['subject'] = t('[!site_name] Reviewer have updated example for Textbook Companion ', array(
@@ -3176,7 +3184,7 @@ FOSSEE,IIT Bombay', array(
 			));
 			$message['body'] = array(
 				'body' => t('
-Dear !user_name,
+Dear ' . $proposal_data->full_name . ',
 
 Reviewer have updated the following example:
 
@@ -3216,6 +3224,12 @@ FOSSEE,IIT Bombay', array(
 			$query->range(0, 1);
 			$result = $query->execute();
 			$preference_data = $result->fetchObject();
+			$query = db_select('textbook_companion_proposal');
+			$query->fields('textbook_companion_proposal');
+			$query->condition('id', $preference_data->proposal_id);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$proposal_data = $result->fetchObject();
 			$user_data = user_load($params['example_approved']['user_id']);
 			$message['headers'] = $params['example_approved']['headers'];
 			$message['subject'] = t('[!site_name] Your uploaded example has been approved for Textbook Companion', array(
@@ -3223,7 +3237,7 @@ FOSSEE,IIT Bombay', array(
 			));
 			$message['body'] = array(
 				'body' => t('
-Dear !user_name,
+Dear ' . $proposal_data->full_name . ',
 
 Your example for OpenModelica Textbook Companion with the following details is approved.
 
@@ -3258,13 +3272,19 @@ FOSSEE,IIT Bombay', array(
 			$query->range(0, 1);
 			$result = $query->execute();
 			$preference_data = $result->fetchObject();
+			$query = db_select('textbook_companion_proposal');
+			$query->fields('textbook_companion_proposal');
+			$query->condition('id', $preference_data->proposal_id);
+			$query->range(0, 1);
+			$result = $query->execute();
+			$proposal_data = $result->fetchObject();
 			$message['headers'] = $params['example_disapproved']['headers'];
 			$message['subject'] = t('[!site_name] Your uploaded example has been disapproved for Textbook Companion', array(
 				'!site_name' => variable_get('site_name', '')
 			));
 			$message['body'] = array(
 				'body' => t('
-Dear !user_name,
+Dear ' . $proposal_data->full_name . ',
 
 Your following example has been disapproved:
 
@@ -3328,8 +3348,8 @@ You have uploaded following dependency files :
 
 Best Wishes,
 
-!site_name Team,
-FOSSEE,IIT Bombay', array(
+!site_name Team
+FOSSEE, IIT Bombay', array(
 					'!site_name' => variable_get('site_name', ''),
 					'!user_name' => $user_data->name
 				))
@@ -3357,8 +3377,8 @@ Your feedback :
 
 Best Wishes,
 
-!site_name Team,
-FOSSEE,IIT Bombay', array(
+!site_name Team
+FOSSEE, IIT Bombay', array(
 					'!site_name' => variable_get('site_name', ''),
 					'!user_name' => $user_data->name
 				))
@@ -3383,8 +3403,8 @@ Example No.: ' . $params['internshipform']['example_no'] . '
 
 Best Wishes,
 
-!site_name Team,
-FOSSEE,IIT Bombay', array(
+!site_name Team
+FOSSEE, IIT Bombay', array(
 					'!site_name' => variable_get('site_name', ''),
 					'!user_name' => $user_data->name
 				))
