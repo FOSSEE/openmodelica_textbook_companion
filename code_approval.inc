@@ -3,7 +3,6 @@
 function code_approval()
 {
     /* get a list of unapproved chapters */
-    /*$pending_chapter_q = db_query("SELECT c.id as c_id, c.number as c_number, c.name as c_name, c.preference_id as c_preference_id FROM {textbook_companion_example} as e JOIN {textbook_companion_chapter} as c ON c.id = e.chapter_id WHERE e.approval_status = 0");*/
     $query = db_select('textbook_companion_example', 'e');
     $query->fields('c', array(
         'id',
@@ -25,16 +24,12 @@ function code_approval()
     $rows = array();
     while ($row = $pending_chapter_q->fetchObject()) {
         /* get preference data */
-        /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE id = %d", $row->c_preference_id);
-        $preference_data = db_fetch_object($preference_q);*/
         $query = db_select('textbook_companion_preference');
         $query->fields('textbook_companion_preference');
         $query->condition('id', $row->c_preference_id);
         $result = $query->execute();
         $preference_data = $result->fetchObject();
         /* get proposal data */
-        /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d", $preference_data->proposal_id);
-        $proposal_data = db_fetch_object($proposal_q);*/
         $query = db_select('textbook_companion_proposal');
         $query->fields('textbook_companion_proposal');
         $query->condition('id', $preference_data->proposal_id);
@@ -71,23 +66,18 @@ function code_approval_form($form, &$form_state)
 {
     /* get a list of unapproved chapters */
     $chapter_id = arg(3);
-    /*$pending_chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE id = %d", $chapter_id);*/
     $query = db_select('textbook_companion_chapter');
     $query->fields('textbook_companion_chapter');
     $query->condition('id', $chapter_id);
     $pending_chapter_q = $query->execute();
     if ($pending_chapter_data = $pending_chapter_q->fetchObject()) {
         /* get preference data */
-        /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE id = %d", $pending_chapter_data->preference_id);
-        $preference_data = db_fetch_object($preference_q);*/
         $query = db_select('textbook_companion_preference');
         $query->fields('textbook_companion_preference');
         $query->condition('id', $pending_chapter_data->preference_id);
         $result = $query->execute();
         $preference_data = $result->fetchObject();
         /* get proposal data */
-        /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d", $preference_data->proposal_id);
-        $proposal_data = db_fetch_object($proposal_q);*/
         $query = db_select('textbook_companion_proposal');
         $query->fields('textbook_companion_proposal');
         $query->condition('id', $preference_data->proposal_id);
@@ -124,7 +114,6 @@ function code_approval_form($form, &$form_state)
         '#markup' => l('Back to Code Approval List', 'textbook-companion/code-approval')
     );
     /* get example data */
-    /*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE chapter_id = %d AND approval_status = 0", $chapter_id);*/
     $query = db_select('textbook_companion_example');
     $query->fields('textbook_companion_example');
     $query->condition('chapter_id', $chapter_id);
@@ -172,33 +161,36 @@ function code_approval_form($form, &$form_state)
     );
     return $form;
 }
+function code_approval_form_validate($form, &$form_state){
+    foreach ($form_state['values']['example_details'] as $ex_id => $ex_data) {
+    if ($ex_data['approved'] == "1"){
+        if($ex_data['message'] == NULL || $ex_data['message'] == '')
+        form_set_error('example_details' , t('Enter reason for disapproval'));
+    }
+    }
+}
 function code_approval_form_submit($form, &$form_state)
 {
     global $user;
     foreach ($form_state['values']['example_details'] as $ex_id => $ex_data) {
-        /*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE id = %d LIMIT 1", $ex_data['example_id']);
-        $example_data = db_fetch_object($example_q);*/
         $query = db_select('textbook_companion_example');
         $query->fields('textbook_companion_example');
         $query->condition('id', $ex_data['example_id']);
         $query->range(0, 1);
         $result = $query->execute();
         $example_data = $result->fetchObject();
-        /*$chapter_data = db_fetch_object(db_query("SELECT * FROM {textbook_companion_chapter} WHERE id = %d LIMIT 1", $example_data->chapter_id));*/
         $query = db_select('textbook_companion_chapter');
         $query->fields('textbook_companion_chapter');
         $query->condition('id', $example_data->chapter_id);
         $query->range(0, 1);
         $result = $query->execute();
         $chapter_data = $result->fetchObject();
-        /*$preference_data = db_fetch_object(db_query("SELECT * FROM {textbook_companion_preference} WHERE id = %d LIMIT 1", $chapter_data->preference_id));*/
         $query = db_select('textbook_companion_preference');
         $query->fields('textbook_companion_preference');
         $query->condition('id', $chapter_data->preference_id);
         $query->range(0, 1);
         $result = $query->execute();
         $preference_data = $result->fetchObject();
-        /*$proposal_data = db_fetch_object(db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d LIMIT 1", $preference_data->proposal_id));*/
         $query = db_select('textbook_companion_proposal');
         $query->fields('textbook_companion_proposal');
         $query->condition('id', $preference_data->proposal_id);
@@ -208,7 +200,6 @@ function code_approval_form_submit($form, &$form_state)
         $user_data = user_load($proposal_data->uid);
         del_book_pdf($preference_data->id);
         if ($ex_data['approved'] == "0") {
-            /*db_query("UPDATE {textbook_companion_example} SET approval_status = 1, approver_uid = %d, approval_date = %d WHERE id = %d", $user->uid, time(), $ex_data['example_id']);*/
             $query = db_update('textbook_companion_example');
             $query->fields(array(
                 'approval_status' => 1,
@@ -267,9 +258,7 @@ function code_approval_form_submit($form, &$form_state)
     drupal_set_message('Updated successfully.', 'status');
     drupal_goto('textbook-companion/code-approval');
 }
-/******************************************************************************/
 /********************************* BULK APPROVAL ******************************/
-/******************************************************************************/
 function bulk_approval_form($form, &$form_state)
 {
     $options_first = _bulk_list_of_books();
@@ -291,14 +280,6 @@ function bulk_approval_form($form, &$form_state)
         '#type' => 'item',
         '#markup' => '<div id="ajax_selected_book"></div>'
     );
-    /*$form['download_pdf'] = array(
-    '#type' => 'item',
-    '#markup' => '<div id="ajax_selected_book_pdf"></div>',
-    );
-    $form['regenrate_book'] = array(
-    '#type' => 'item',
-    '#markup' => '<div id="ajax_selected_book_regenerate_pdf"></div>',
-    );*/
     $form['notes_book'] = array(
         '#type' => 'item',
         '#markup' => '<div id="ajax_selected_book_notes"></div>'
@@ -504,8 +485,6 @@ function bulk_approval_form_submit($form, &$form_state)
             $user_data = user_load($user_info->uid);
             if (($form_state['values']['book_actions'] == 1) && ($form_state['values']['chapter_actions'] == 0) && ($form_state['values']['example_actions'] == 0)) {
                 /* approving entire book */
-                /* $chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE preference_id = %d", 
-                $form_state['values']['book']);*/
                 $query = db_select('textbook_companion_preference');
                 $query->fields('textbook_companion_preference');
                 $query->condition('id', $form_state['values']['book']);
@@ -517,7 +496,6 @@ function bulk_approval_form_submit($form, &$form_state)
                 $query->condition('preference_id', $form_state['values']['book']);
                 $chapter_q = $query->execute();
                 while ($chapter_data = $chapter_q->fetchObject()) {
-                    /*db_query("UPDATE {textbook_companion_example} SET approval_status = 1, approver_uid = %d WHERE chapter_id = %d AND approval_status = 0", $user->uid, $chapter_data->id);*/
                     $query = db_update('textbook_companion_example');
                     $query->fields(array(
                         'approval_status' => 1,
@@ -535,8 +513,6 @@ function bulk_approval_form_submit($form, &$form_state)
                 $num_updated = $query->execute();
                 drupal_set_message(t('Approved Entire Book.'), 'status');
                 /* email */
-                //$email_subject = t('Your uploaded examples have been approved');
-                //$email_body = array(0=>t('Your all the uploaded examples for the book have been approved.'));
                 $email_subject = t('[!site_name][Textbook Companion] Your uploaded Textbook Companion examples have been approved', array(
                     '!site_name' => variable_get('site_name', '')
                 ));
@@ -570,13 +546,11 @@ FOSSEE,IIT Bombay', array(
                 $query->condition('approval_status', 1);
                 $result = $query->execute();
                 $preference_data = $result->fetchObject();
-                /*$chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE preference_id = %d", $form_state['values']['book']);*/
                 $query = db_select('textbook_companion_chapter');
                 $query->fields('textbook_companion_chapter');
                 $query->condition('preference_id', $form_state['values']['book']);
                 $chapter_q = $query->execute();
                 while ($chapter_data = $chapter_q->fetchObject()) {
-                    /*db_query("UPDATE {textbook_companion_example} SET approval_status = 0 WHERE chapter_id = %d", $chapter_data->id);*/
                     $query = db_update('textbook_companion_example');
                     $query->fields(array(
                         'approval_status' => 0
@@ -586,8 +560,6 @@ FOSSEE,IIT Bombay', array(
                 }
                 drupal_set_message(t('Pending Review Entire Book.'), 'status');
                 /* email */
-                /*$email_subject = t('Your uploaded examples have been marked as pending');
-                $email_body =array( t('Your all the uploaded examples for the book have been marked as pending to be review. You will be able to see the exmaples after they have been approved by one of our reviewers.'));*/
                 $email_subject = t('[!site_name] Your uploaded Textbook Companion examples have been marked as pending', array(
                     '!site_name' => variable_get('site_name', '')
                 ));
@@ -687,18 +659,6 @@ FOSSEE,IIT Bombay', array(
                     drupal_set_message(t('You do not have permission to Bulk Delete Entire Book Including Proposal.'), 'error');
                     return;
                 }
-                /* check if dependency files are present */
-                /*$dep_q = db_query("SELECT * FROM {textbook_companion_dependency_files} WHERE preference_id = %d", $form_state['values']['book']);*/
-                /*$query = db_select('textbook_companion_dependency_files');
-                $query->fields('textbook_companion_dependency_files');
-                $query->condition('preference_id', $form_state['values']['book']);
-                $dep_q = $query->execute();
-                
-                if ($dep_data =$dep_q->fetchObject())
-                {
-                drupal_set_message(t("Cannot delete book since it has dependency files that can be used by others. First delete the dependency files before deleing the Book."), 'error');
-                return;
-                }*/
                 if (delete_book($form_state['values']['book'])) {
                     drupal_set_message(t('Dis-Approved and Deleted Entire Book examples.'), 'status');
                     $dir_path = $root_path . $form_state['values']['book'];
@@ -712,29 +672,20 @@ FOSSEE,IIT Bombay', array(
                         drupal_set_message(t("Book directory not present : " . $dir_path . ". Skipping deleting book directory."), 'status');
                     }
                     /* deleting preference and proposal */
-                    /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE id = %d", $form_state['values']['book']);
-                    $preference_data = db_fetch_object($preference_q);
-                    */
                     $query = db_select('textbook_companion_preference');
                     $query->fields('textbook_companion_preference');
                     $query->condition('id', $form_state['values']['book']);
                     $result = $query->execute();
                     $preference_data = $result->fetchObject();
                     $proposal_id = $preference_data->proposal_id;
-                    /*db_query("DELETE FROM {textbook_companion_preference} WHERE proposal_id = %d", $proposal_id);*/
                     $query = db_delete('textbook_companion_preference');
                     $query->condition('proposal_id', $proposal_id);
                     $num_deleted = $query->execute();
-                    /*db_query("DELETE FROM {textbook_companion_proposal} WHERE id = %d", $proposal_id);*/
                     $query = db_delete('textbook_companion_proposal');
                     $query->condition('id', $proposal_id);
                     $num_deleted = $query->execute();
                     drupal_set_message(t('Deleted Book Proposal.'), 'status');
                     /* email */
-                    /*$email_subject = t('Your uploaded examples including the book proposal have been deleted');
-                    $email_body = array(0=>t('Your all the uploaded examples including the book have been deleted permanently.
-                    Reason for deletion:
-                    ' . $form_state['values']['message']));*/
                     $email_subject = t('[!site_name] Your uploaded Textbook Companion examples including the book proposal 					have been deleted', array(
                         '!site_name' => variable_get('site_name', '')
                     ));
@@ -768,7 +719,6 @@ FOSSEE,IIT Bombay', array(
                     drupal_set_message(t('Error Dis-Approving and Deleting Entire Book.'), 'error');
                 }
             } elseif (($form_state['values']['book_actions'] == 0) && ($form_state['values']['chapter_actions'] == 1) && ($form_state['values']['example_actions'] == 0)) {
-                /*db_query("UPDATE {textbook_companion_example} SET approval_status = 1, approver_uid = %d WHERE chapter_id = %d AND approval_status = 0", $user->uid, $form_state['values']['chapter']);*/
                 $query = db_select('textbook_companion_preference');
                 $query->fields('textbook_companion_preference');
                 $query->condition('id', $form_state['values']['book']);
@@ -791,8 +741,6 @@ FOSSEE,IIT Bombay', array(
                 $num_updated = $query->execute();
                 drupal_set_message(t('Approved Entire Chapter.'), 'status');
                 /* email */
-                /*$email_subject = t('Your uploaded examples have been approved');
-                $email_body = array(0=>t('Your all the uploaded examples for the chapter have been approved.'));*/
                 $email_subject = t('[!site_name] Your uploaded Textbook Companion examples have been approved', array(
                     '!site_name' => variable_get('site_name', '')
                 ));
@@ -836,9 +784,6 @@ FOSSEE,IIT Bombay', array(
                 $num_updated = $query->execute();
                 drupal_set_message(t('Entire Chapter marked as Pending Review.'), 'status');
                 /* email */
-                /*$email_subject = t('Your uploaded examples have been marked as pending');
-                $email_body = array(0=>t('Your all the uploaded examples for the chapter have been marked as pending 
-                to be review.'));*/
                 $email_subject = t('[!site_name] Your uploaded Textbook Companion examples have been marked as pending', array(
                     '!site_name' => variable_get('site_name', '')
                 ));
@@ -888,9 +833,6 @@ FOSSEE,IIT Bombay', array(
                     drupal_set_message(t('Error Dis-Approving and Deleting Entire Chapter.'), 'error');
                 }
                 /* email */
-                /*$email_subject = t('Your uploaded example have been marked as dis-approved');
-                $email_body = array(0=>t('Your uploaded example for the entire chapter have been marked as dis-approved.
-                Reason for dis-approval:' . $form_state['values']['message']));*/
                 $email_subject = t('[!site_name] Your uploaded Textbook Companion example have been marked as 					dis-approved', array(
                     '!site_name' => variable_get('site_name', '')
                 ));
@@ -916,7 +858,6 @@ FOSSEE,IIT Bombay', array(
                     ))
                 );
             } elseif (($form_state['values']['book_actions'] == 0) && ($form_state['values']['chapter_actions'] == 0) && ($form_state['values']['example_actions'] == 1)) {
-                /*db_query("UPDATE {textbook_companion_example} SET approval_status = 1, approver_uid = %d WHERE id = %d", $user->uid, $form_state['values']['example']);*/
                 $query = db_select('textbook_companion_preference');
                 $query->fields('textbook_companion_preference');
                 $query->condition('id', $form_state['values']['book']);
@@ -943,8 +884,6 @@ FOSSEE,IIT Bombay', array(
                 $num_updated = $query->execute();
                 drupal_set_message(t('Example approved.'), 'status');
                 /* email */
-                /*$email_subject = t('Your uploaded example has been approved');
-                $email_body = array(0=>t('Your uploaded example has been approved.'));*/
                 $email_subject = t('[!site_name] Your uploaded Textbook Companion example have been approved', array(
                     '!site_name' => variable_get('site_name', '')
                 ));
@@ -969,7 +908,6 @@ FOSSEE,IIT Bombay', array(
                     ))
                 );
             } elseif (($form_state['values']['book_actions'] == 0) && ($form_state['values']['chapter_actions'] == 0) && ($form_state['values']['example_actions'] == 2)) {
-                /*db_query("UPDATE {textbook_companion_example} SET approval_status = 0 WHERE id = %d", $form_state['values']['example']);*/
                 $query = db_select('textbook_companion_preference');
                 $query->fields('textbook_companion_preference');
                 $query->condition('id', $form_state['values']['book']);
@@ -995,8 +933,6 @@ FOSSEE,IIT Bombay', array(
                 $num_updated = $query->execute();
                 drupal_set_message(t('Example marked as Pending Review.'), 'status');
                 /* email */
-                /*$email_subject = t('Your uploaded example has been marked as pending');
-                $email_body = array(0=>t('Your uploaded example has been marked as pending to be review.'));*/
                 $email_subject = t('[!site_name] Your uploaded Textbook Companion example has been marked as pending', array(
                     '!site_name' => variable_get('site_name', '')
                 ));
@@ -1049,9 +985,6 @@ FOSSEE,IIT Bombay', array(
                     drupal_set_message(t('Error Dis-Approving and Deleting Example.'), 'error');
                 }
                 /* email */
-                /*$email_subject = t('Your uploaded example has been marked as dis-approved');
-                $email_body =array(0=> t('Your uploaded example has been marked as dis-approved.
-                Reason for dis-approval:' . $form_state['values']['message']));*/
                 $email_subject = t('[!site_name] Your uploaded Textbook Companion example has been marked as 
 				dis-approved', array(
                     '!site_name' => variable_get('site_name', '')
@@ -1112,7 +1045,6 @@ function _bulk_list_of_books()
     $book_titles = array(
         '0' => 'Please select...'
     );
-    /*$book_titles_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE approval_status = 1 OR approval_status = 3 ORDER BY book ASC");*/
     $query = db_select('textbook_companion_preference', 'pp');
     $query->join('textbook_companion_proposal', 'p', 'pp.proposal_id=p.id');
     $query->join('users', 'u', 'p.uid=u.uid');
@@ -1140,7 +1072,6 @@ function _ajax_bulk_get_chapter_list($preference_id = 0)
     $book_chapters = array(
         '0' => 'Please select...'
     );
-    /*$book_chapters_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE preference_id = %d ORDER BY number ASC", $preference_id);*/
     $query = db_select('textbook_companion_chapter');
     $query->fields('textbook_companion_chapter');
     $query->condition('preference_id', $preference_id);
@@ -1156,16 +1087,9 @@ function _ajax_bulk_get_examples($chapter_id = 0)
     $book_examples = array(
         '0' => 'Please select...'
     );
-    /*$book_examples_q = db_query("SELECT * FROM {textbook_companion_example} WHERE chapter_id = %d ORDER BY
-    CAST(SUBSTRING_INDEX(number, '.', 1) AS BINARY) ASC,
-    CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(number , '.', 2), '.', -1) AS UNSIGNED) ASC,
-    CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(number , '.', -1), '.', 1) AS UNSIGNED) ASC", $chapter_id);*/
     $query = db_select('textbook_companion_example');
     $query->fields('textbook_companion_example');
     $query->condition('chapter_id', $chapter_id);
-    //$query->orderBy('CAST', 'ASC');
-    //$query->orderBy('CAST', 'ASC');
-    //$query->orderBy('CAST', 'ASC');
     $book_examples_q = $query->execute();
     while ($book_examples_data = $book_examples_q->fetchObject()) {
         $book_examples[$book_examples_data->id] = $book_examples_data->number . ' (' . $book_examples_data->caption . ')';
@@ -1203,16 +1127,13 @@ function _bulk_list_example_actions()
     $example_actions[3] = 'Dis-approve Example (This will delete the example)';
     return $example_actions;
 }
-/****************************** Ajax Callback function ***************************/
+/****************************** Ajax Callback function ********************/
 function ajax_bulk_chapter_list_callback($form, $form_state)
 {
     $commands = array();
     $book_default_value = $form_state['values']['book'];
     if ($book_default_value > 0) {
         $commands[] = ajax_command_html('#ajax_selected_book', l('Download', 'textbook-companion/full-download/book/' . $book_default_value) . ' ' . t('(Download all the approved and unapproved examples of the entire book)'));
-        /*$commands[] = ajax_command_html('#ajax_selected_book_pdf', l('Download PDF', 'textbook_companion/generate_book/' . $book_default_value . '/1') . ' ' . t('(Download PDF of all the approved and unapproved examples of the entire book)'));
-        $commands[] = ajax_command_html('#ajax_selected_book_regenerate_pdf', l('Regenerate PDF', 'textbook_companion/delete_book/' . $book_default_value) . ' ' . t('(Manually Regenerate PDF of the entire book)'));*/
-        /*$commands[] = ajax_command_html('#ajax_selected_book_notes', l('Notes for Reviewers', 'code_approval/notes/' . $book_default_value));*/
         $form['book_actions']['#options'] = _bulk_list_book_actions();
         $commands[] = ajax_command_replace('#ajax_selected_book_action', drupal_render($form['book_actions']));
         $form['chapter']['#options'] = _ajax_bulk_get_chapter_list($book_default_value);
@@ -1306,8 +1227,6 @@ function ajax_bulk_example_files_callback($form, $form_state)
     $example_list_default_value = $form_state['values']['example'];
     //var_dump($example_list_default_value);
     if ($example_list_default_value > 0) {
-        /*************************************************************************************/
-        /*$example_list_q = db_query("SELECT * FROM {textbook_companion_example_files} WHERE example_id = %d", $form_state['values']['example']);*/
         $query = db_select('textbook_companion_example_files');
         $query->fields('textbook_companion_example_files');
         $query->condition('example_id', $example_list_default_value);
@@ -1335,30 +1254,6 @@ function ajax_bulk_example_files_callback($form, $form_state)
                     $example_file_type
                 );
             }
-            /* dependency files */
-            /*$dependency_list_q = db_query("SELECT dependency.id as dependency_id, dependency.filename as dependency_filename, dependency.caption as dependency_caption
-            FROM {textbook_companion_example_dependency} example_dependency LEFT JOIN {textbook_companion_dependency_files} dependency
-            ON example_dependency.dependency_id = dependency.id
-            WHERE example_dependency.example_id = %d", $form_state['values']['example']);*/
-            /*
-            $query = db_select('textbook_companion_example_dependency', 'example_dependency');
-            $query->fields('dependency', array('id', 'filename', 'caption'));
-            $query->addField('dependency','id','dependency_id');
-            $query->addField('dependency','filename','dependency_filename');
-            $query->addField('dependency','caption','dependency_caption');
-            $query->leftJoin('textbook_companion_dependency_files', 'dependency', 'example_dependency.dependency_id = dependency.id');
-            $query->condition('example_dependency.example_id',  $form_state['values']['example']);
-            $dependency_list_q = $query->execute();
-            
-            while ($dependency_list_data = $dependency_list_q->fetchObject())
-            {
-            $example_file_type = 'Dependency file';
-            $temp_caption = '';
-            if ($dependency_list_data->dependency_caption)
-            $temp_caption = ' (' . $dependency_list_data->dependency_caption . ')';
-            $example_files_rows[] = array(l($dependency_list_data->dependency_filename, 'download/dependency/' . $dependency_list_data->dependency_id) . $temp_caption, $example_file_type);
-            }
-            */
             /* creating list of files table */
             $example_files_header = array(
                 'Filename',
@@ -1375,7 +1270,6 @@ function ajax_bulk_example_files_callback($form, $form_state)
             $commands[] = ajax_command_html('#ajax_edit_selected_example', l('Edit Example', 'code_approval/editcode/' . $example_list_default_value));
             $form['example_actions']['#options'] = _bulk_list_example_actions();
             $commands[] = ajax_command_replace('#ajax_selected_example_action', drupal_render($form['example_actions']));
-            //$commands[] = ajax_command_html('#ajax_selected_example_action', '' );
         }
     } else {
         $commands[] = ajax_command_html('#ajax_download_selected_example', '');
@@ -1394,10 +1288,6 @@ function ajax_bulk_example_files_callback($form, $form_state)
 }
 function ajax_bulk_chapter_actions_callback()
 {
-    //if($form_state['values']['chapter_actions'] > 0){
-    //	$form['book_actions']['#options'] = _bulk_list_book_actions();
-    //$commands[] = ajax_command_replace('#ajax_selected_book_action',drupal_render($form['book_actions']));
-    //	}
     return array(
         '#type' => 'ajax',
         '#commands' => $commands
@@ -1407,7 +1297,6 @@ function edit_code_submission()
 {
     /* get pending proposals to be approved */
     $proposal_rows = array();
-    /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} ORDER BY id DESC");*/
     $query = db_select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('proposal_status', 1);
@@ -1415,8 +1304,6 @@ function edit_code_submission()
     $proposal_q = $query->execute();
     while ($proposal_data = $proposal_q->fetchObject()) {
         /* get preference */
-        /*$preference_q = db_query("SELECT * FROM textbook_companion_preference WHERE proposal_id = %d AND approval_status = 1 LIMIT 1", $proposal_data->id);   
-        $preference_data = db_fetch_object($preference_q);*/
         $query = db_select('textbook_companion_preference');
         $query->fields('textbook_companion_preference');
         $query->condition('proposal_id', $proposal_data->id);
@@ -1426,8 +1313,6 @@ function edit_code_submission()
         $preference_q = $query->execute();
         $preference_data = $preference_q->fetchObject();
         if (!$preference_data) {
-            /* $preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d AND pref_number = 1 LIMIT 1", $proposal_data->id);  
-            $preference_data = db_fetch_object($preference_q);*/
             $query = db_select('textbook_companion_preference');
             $query->fields('textbook_companion_preference');
             $query->condition('proposal_id', $proposal_data->id);
@@ -1483,8 +1368,6 @@ function edit_code_submission_form($form, $form_state, $preference_id)
 {
     /* get current proposal */
     $preference_id = arg(4);
-    /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE id = %d", $preference_id);
-    $preference_data = db_fetch_object($preference_q);*/
     $query = db_select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('id', $preference_id);
