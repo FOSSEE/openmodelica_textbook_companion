@@ -128,7 +128,7 @@ function code_approval_form($form, &$form_state)
         $form['example_details'][$example_data->id]['example_number'] = array(
             '#type' => 'item',
             '#markup' => $example_data->number,
-            '#title' => t('Example Number')
+            '#title' => t('Example Number'),
         );
         $form['example_details'][$example_data->id]['example_caption'] = array(
             '#type' => 'item',
@@ -154,6 +154,10 @@ function code_approval_form($form, &$form_state)
             '#type' => 'hidden',
             '#value' => $example_data->id
         );
+        $form['example_details'][$example_data->id]['example_number_hidden'] = array(
+            '#type' => 'hidden',
+            '#value' => $example_data->number
+        );
     }
     $form['submit'] = array(
         '#type' => 'submit',
@@ -165,7 +169,7 @@ function code_approval_form_validate($form, &$form_state){
     foreach ($form_state['values']['example_details'] as $ex_id => $ex_data) {
     if ($ex_data['approved'] == "1"){
         if($ex_data['message'] == NULL || $ex_data['message'] == '')
-        form_set_error('example_details' , t('Enter reason for disapproval'));
+        form_set_error($ex_id . '][message', t('Enter reason for disapproval for experiment no: ' . $ex_data['example_number_hidden']));
     }
     }
 }
