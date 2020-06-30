@@ -158,14 +158,14 @@ function generate_pdf()
 	$pdf->SetX(200);
 	$pdf->SetTextColor(0, 0, 0);
 	$pdf->SetFont('', '');
-	//$sign = $path . "/pdf/images/sign.png";
-	//$pdf->Image($sign, $pdf->GetX(), $pdf->GetY() - 20, 50, 0);
-	$pdf->Cell(0, 8, 'Prof. Kannan M. Moudgalya', 0, 1, 'L');
+	$sign = $path . "/pdf/images/sign.png";
+	$pdf->Image($sign, $pdf->GetX() - 20, $pdf->GetY()+15, 75, 0);
+	/*$pdf->Cell(0, 8, 'Prof. Kannan M. Moudgalya', 0, 1, 'L');
 	$pdf->SetX(199);
 	$pdf->SetFont('Arial', '', 10);
 	$pdf->Cell(0, 7, 'Co - Principal Investigator - FOSSEE', 0, 1, 'L');
 	$pdf->SetX(190);
-	$pdf->Cell(0, 7, ' Dept. of Chemical Engineering, IIT Bombay.', 0, 1, 'L');
+	$pdf->Cell(0, 7, ' Dept. of Chemical Engineering, IIT Bombay.', 0, 1, 'L');*/
 	$pdf->SetX(29);
 	$pdf->SetFont('Arial', 'B', 10);
 	$pdf->SetY(-58);
@@ -177,11 +177,11 @@ function generate_pdf()
 	//$pdf->Image($image4, $pdf->GetX(), $pdf->GetY(), 20, 0);
 	$pdf->SetY(-50);
 	$pdf->SetX(80);
-	$image3 = $path . "/pdf/images/iitb.png";
+	$image3 = $path . "/pdf/images/mhrd.png";
 	$image2 = $path . "/pdf/images/fossee.png";
 	$pdf->Image($image2, $pdf->GetX() - 60, $pdf->GetY() + 7, 40, 0);
 	$pdf->Image($pngAbsoluteFilePath, $pdf->GetX() + 50, $pdf->GetY() - 5, 30, 0);
-	$pdf->Image($image3, $pdf->GetX() + 160, $pdf->GetY() + 3, 15, 0);
+	$pdf->Image($image3, $pdf->GetX() + 120, $pdf->GetY() + 3, 40, 0);
 	$pdf->Image($image4, $pdf->GetX() - 15, $pdf->GetY() + 28, 150, 0);
 	$pdf->SetFont('Arial', 'I', 8);
 	$pdf->SetTextColor(0, 0, 0);
