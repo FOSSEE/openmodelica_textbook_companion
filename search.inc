@@ -22,10 +22,13 @@ function textbook_companion_search_form($form, $form_state)
         '#type' => 'submit',
         '#value' => t('Search')
     );
-    $form['cancel'] = array(
-        '#type' => 'item',
-        '#markup' => l(t('Cancel'), '')
-    );
+    // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['cancel'] = array(
+//         '#type' => 'item',
+//         '#markup' => l(t('Cancel'), '')
+//     );
+
     if ($_POST)
       {
         $output = '';
@@ -34,7 +37,7 @@ function textbook_companion_search_form($form, $form_state)
         if ($_POST['search_by_title'] && $_POST['search_by_author'])
           {
             /*$search_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE approval_status = 1 AND (book LIKE '%%%s%%' OR author LIKE '%%%s%%')", $_POST['search'], $_POST['search']);*/
-            $query = db_select('textbook_companion_preference');
+            $query = \Drupal::database()->select('textbook_companion_preference');
             $query->fields('textbook_companion_preference');
             $query->condition('approval_status', 1);
             $or = db_or();
@@ -46,7 +49,7 @@ function textbook_companion_search_form($form, $form_state)
         else if ($_POST['search_by_title'])
           {
             /*$search_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE approval_status = 1 AND book LIKE '%%%s%%'", $_POST['search']);*/
-            $query = db_select('textbook_companion_preference');
+            $query = \Drupal::database()->select('textbook_companion_preference');
             $query->fields('textbook_companion_preference');
             $query->condition('approval_status', 1);
             $query->condition('book', '%%' . $_POST['search'] . '%%', 'LIKE');
@@ -55,7 +58,7 @@ function textbook_companion_search_form($form, $form_state)
         else if ($_POST['search_by_author'])
           {
             /*$search_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE approval_status = 1 AND author LIKE '%%%s%%'", $_POST['search']);*/
-            $query = db_select('textbook_companion_preference');
+            $query = \Drupal::database()->select('textbook_companion_preference');
             $query->fields('textbook_companion_preference');
             $query->condition('approval_status', 1);
             $query->condition('author', '%%' . $_POST['search'] . '%%', 'LIKE');
@@ -63,14 +66,17 @@ function textbook_companion_search_form($form, $form_state)
           }
         else
           {
-            drupal_set_message('Please select whether to search by Title and/or Author of the Book.', 'error');
+            \Drupal::messenger()->addError('Please select whether to search by Title and/or Author of the Book.');
           }
         while ($search_data = $search_q->fetchObject())
           {
-            $search_rows[] = array(
-                l($search_data->book, 'textbook_run/' . $search_data->id),
-                $search_data->author
-            );
+            // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $search_rows[] = array(
+//                 l($search_data->book, 'textbook_run/' . $search_data->id),
+//                 $search_data->author
+//             );
+
           }
         if ($search_rows)
           {
@@ -78,10 +84,19 @@ function textbook_companion_search_form($form, $form_state)
                 'Title of the Book',
                 'Author Name'
             );
-            $output .= theme('table', array(
-                'headers' => $search_header,
-                'rows' => $search_rows
-            ));
+            // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $output .= theme('table', array(
+//                 'headers' => $search_header,
+//                 'rows' => $search_rows
+//             ));
+
             $form['search_results'] = array(
                 '#type' => 'item',
                 '#title' => t('Search results for "') . $_POST['search'] . '"',
@@ -115,17 +130,20 @@ function textbook_companion_browse_book()
       }
     $book_rows = array();
     /*$book_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE book like '%s%%' AND approval_status = 1", $query_character);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('book', '' . $query_character . '%%', 'like');
     $query->condition('approval_status', 1);
     $book_q = $query->execute();
     while ($book_data = $book_q->fetchObject())
       {
-        $book_rows[] = array(
-            l($book_data->book, 'textbook_run/' . $book_data->id),
-            $book_data->author
-        );
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $book_rows[] = array(
+//             l($book_data->book, 'textbook_run/' . $book_data->id),
+//             $book_data->author
+//         );
+
       }
     if (!$book_rows)
       {
@@ -137,10 +155,19 @@ function textbook_companion_browse_book()
             'Title of the Book',
             'Author Name'
         );
-        $return_html .= theme('table', array(
-            'headers' => $book_header,
-            'rows' => $book_rows
-        ));
+        // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $return_html .= theme('table', array(
+//             'headers' => $book_header,
+//             'rows' => $book_rows
+//         ));
+
       }
     return $return_html;
   }
@@ -157,7 +184,7 @@ function textbook_companion_browse_author()
       }
     $book_rows = array();
     /*$book_q = db_query("SELECT pe.book as book, pe.author as author, pe.publisher as publisher, pe.year as year, pe.id as id FROM {textbook_companion_preference} pe RIGHT JOIN  {textbook_companion_proposal} po on pe.proposal_id=po.id  WHERE po.proposal_status=3 and pe.approval_status = 1", $query_character);*/
-    $query = db_select('textbook_companion_preference', 'pe');
+    $query = \Drupal::database()->select('textbook_companion_preference', 'pe');
     $query->fields('pe', array(
         'book',
         'author',
@@ -194,10 +221,13 @@ function textbook_companion_browse_author()
             /* Check count of matches after removing And */
             if (count($matches[0]) > 0)
               {
-                $book_rows[] = array(
-                    l($book_data->book, 'textbook_run/' . $book_data->id),
-                    $book_data->author
-                );
+                // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $book_rows[] = array(
+//                     l($book_data->book, 'textbook_run/' . $book_data->id),
+//                     $book_data->author
+//                 );
+
               }
           }
       }
@@ -211,10 +241,19 @@ function textbook_companion_browse_author()
             'Title of the Book',
             'Author Name'
         );
-        $return_html .= theme('table', array(
-            'headers' => $book_header,
-            'rows' => $book_rows
-        ));
+        // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $return_html .= theme('table', array(
+//             'headers' => $book_header,
+//             'rows' => $book_rows
+//         ));
+
       }
     return $return_html;
   }
@@ -237,7 +276,7 @@ function textbook_companion_browse_student()
     FROM textbook_companion_preference pe LEFT JOIN textbook_companion_proposal po ON pe.proposal_id = po.id 
     WHERE po.proposal_status = 3 AND pe.approval_status = 1 AND full_name LIKE '%s%%'
     ", $query_character);*/
-    $query = db_select('textbook_companion_preference', 'pe');
+    $query = \Drupal::database()->select('textbook_companion_preference', 'pe');
     $query->fields('po', array(
         'full_name',
         'approval_date'
@@ -256,10 +295,13 @@ function textbook_companion_browse_student()
     $student_q = $query->execute();
     while ($student_data = $student_q->fetchObject())
       {
-        $book_rows[] = array(
-            l($student_data->book, 'textbook_run/' . $student_data->pe_id),
-            $student_data->full_name
-        );
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $book_rows[] = array(
+//             l($student_data->book, 'textbook_run/' . $student_data->pe_id),
+//             $student_data->full_name
+//         );
+
       }
     if (!$book_rows)
       {
@@ -271,10 +313,19 @@ function textbook_companion_browse_student()
             'Title of the Book',
             'Student Name'
         );
-        $return_html .= theme('table', array(
-            'headers' => $book_header,
-            'rows' => $book_rows
-        ));
+        // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $return_html .= theme('table', array(
+//             'headers' => $book_header,
+//             'rows' => $book_rows
+//         ));
+
       }
     return $return_html;
   }
@@ -311,7 +362,10 @@ function _browse_list($type)
     );
     foreach ($char_list as $char_name)
       {
-        $return_html .= l($char_name, 'textbook_search/' . $type . '/' . $char_name);
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $return_html .= l($char_name, 'textbook_search/' . $type . '/' . $char_name);
+
         if ($char_name != 'Z')
             $return_html .= ' | ';
       }
@@ -323,7 +377,7 @@ function _list_of_colleges()
         '0' => '--- select ---'
     );
     /*$college_names_q = db_query("SELECT DISTINCT university FROM {textbook_companion_proposal} WHERE proposal_status=1 OR proposal_status=3 ORDER BY university ASC");*/
-    $query = db_select('textbook_companion_proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal');
     $query = distinct();
     $query->fields('university', array(
         ''
@@ -344,7 +398,7 @@ function _list_books_by_college($college)
   {
     /*$query = "SELECT pro.full_name, pro.proposal_status, pre.id as preid, pre.book, pre.isbn FROM textbook_companion_proposal pro, textbook_companion_preference pre WHERE pro.university='".$college."' AND (pro.proposal_status=1 OR pro.proposal_status=3) AND pre.proposal_id=pro.id AND pre.approval_status=1";
     $result = db_query($query);*/
-    $query = db_select('textbook_companion_proposal', 'pro');
+    $query = \Drupal::database()->select('textbook_companion_proposal', 'pro');
     $query->fields('pro', array(
         'full_name',
         'proposal_status'

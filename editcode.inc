@@ -5,12 +5,12 @@
 /******************************************************************************/
 function upload_examples_edit_form($form, &$form_state)
   {
-    global $user;
+    $user = \Drupal::currentUser();
     $example_id = arg(3);
     /* get example details */
     /*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE id = %d LIMIT 1", $example_id);
     $example_data = db_fetch_object($example_q);*/
-    $query = db_select('textbook_companion_example');
+    $query = \Drupal::database()->select('textbook_companion_example');
     $query->fields('textbook_companion_example');
     $query->condition('id', $example_id);
     $query->range(0, 1);
@@ -18,13 +18,13 @@ function upload_examples_edit_form($form, &$form_state)
     $example_data = $example_q->fetchObject();
     if (!$example_q)
       {
-        drupal_set_message(t("Invalid example selected."), 'error');
+        \Drupal::messenger()->addError(t("Invalid example selected."));
         drupal_goto('');
         return;
       }
     if ($example_data->approval_status != 0)
       {
-        drupal_set_message(t("You cannot edit an example after it has been approved or dis-approved. Please contact site administrator if you want to edit this example."), 'error');
+        \Drupal::messenger()->addError(t("You cannot edit an example after it has been approved or dis-approved. Please contact site administrator if you want to edit this example."));
         drupal_goto('');
         return;
       }
@@ -40,7 +40,7 @@ function upload_examples_edit_form($form, &$form_state)
     $xcos2_file = "";
     $xcos2_id = 0;
     /*$example_files_q = db_query("SELECT * FROM {textbook_companion_example_files} WHERE example_id = %d", $example_id);*/
-    $query = db_select('textbook_companion_example_files');
+    $query = \Drupal::database()->select('textbook_companion_example_files');
     $query->fields('textbook_companion_example_files');
     $query->condition('example_id', $example_id);
     $example_files_q = $query->execute();
@@ -48,7 +48,10 @@ function upload_examples_edit_form($form, &$form_state)
       {
         if ($example_files_data->filetype == "S")
           {
-            $source_file = l($example_files_data->filename, 'textbook-companion/download/file/' . $example_files_data->id);
+            // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $source_file = l($example_files_data->filename, 'textbook-companion/download/file/' . $example_files_data->id);
+
             $source_file_id = $example_files_data->id;
             //var_dump($source_file);die;
           }
@@ -56,58 +59,58 @@ function upload_examples_edit_form($form, &$form_state)
     /* get chapter details */
     /*$chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE id = %d", $example_data->chapter_id);
     $chapter_data = db_fetch_object($chapter_q);*/
-    $query = db_select('textbook_companion_chapter');
+    $query = \Drupal::database()->select('textbook_companion_chapter');
     $query->fields('textbook_companion_chapter');
     $query->condition('id', $example_data->chapter_id);
     $result = $query->execute();
     $chapter_data = $result->fetchObject();
     if (!$chapter_data)
       {
-        drupal_set_message(t("Invalid chapter selected."), 'error');
+        \Drupal::messenger()->addError(t("Invalid chapter selected."));
         drupal_goto('');
         return;
       }
     /* get preference details */
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE id = %d", $chapter_data->preference_id);
     $preference_data = db_fetch_object($preference_q);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('id', $chapter_data->preference_id);
     $result = $query->execute();
     $preference_data = $result->fetchObject();
     if (!$preference_data)
       {
-        drupal_set_message(t("Invalid book selected."), 'error');
+        \Drupal::messenger()->addError(t("Invalid book selected."));
         drupal_goto('');
         return;
       }
     if ($preference_data->approval_status != 1)
       {
-        drupal_set_message(t("Cannot edit example. Either the book proposal has not been approved or it has been rejected."), 'error');
+        \Drupal::messenger()->addError(t("Cannot edit example. Either the book proposal has not been approved or it has been rejected."));
         drupal_goto('');
         return;
       }
     /* get proposal details */
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d", $preference_data->proposal_id);
     $proposal_data = db_fetch_object($proposal_q);*/
-    $query = db_select('textbook_companion_proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('id', $preference_data->proposal_id);
     $result = $query->execute();
     $proposal_data = $result->fetchObject();
     if (!$proposal_data)
       {
-        drupal_set_message(t("Invalid proposal selected."), 'error');
+        \Drupal::messenger()->addError(t("Invalid proposal selected."));
         drupal_goto('');
         return;
       }
     if ($proposal_data->uid != $user->uid)
       {
-        drupal_set_message(t("You do not have permissions to edit this example."), 'error');
+        \Drupal::messenger()->addError(t("You do not have permissions to edit this example."));
         drupal_goto('');
         return;
       }
-    $user_data = user_load($proposal_data->uid);
+    $user_data = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid);
     $form['#redirect'] = 'textbook-companion/code';
     $form['#attributes'] = array(
         'enctype' => "multipart/form-data"
@@ -173,7 +176,7 @@ function upload_examples_edit_form($form, &$form_state)
             '#type' => 'file',
             '#title' => t('Upload New Main or Source File'),
             '#size' => 48,
-            '#description' => t("Upload new Main or Source file above if you want to replace the existing file. Leave blank if you want to keep using the existing file. <br />") . t('Allowed file extensions : ') . variable_get('textbook_companion_source_extensions', '')
+            '#description' => t("Upload new Main or Source file above if you want to replace the existing file. Leave blank if you want to keep using the existing file. <br />") . t('Allowed file extensions : ') . \Drupal::config('textbook_companion.settings')->get('textbook_companion_source_extensions')
         );
         $form['sourcefile']['cur_source_file_id'] = array(
             '#type' => 'hidden',
@@ -186,17 +189,20 @@ function upload_examples_edit_form($form, &$form_state)
             '#type' => 'file',
             '#title' => t('Upload New Main or Source File'),
             '#size' => 48,
-            '#description' => t('Allowed file extensions : ') . variable_get('textbook_companion_source_extensions', '')
+            '#description' => t('Allowed file extensions : ') . \Drupal::config('textbook_companion.settings')->get('textbook_companion_source_extensions')
         );
       }
     $form['submit'] = array(
         '#type' => 'submit',
         '#value' => t('Submit')
     );
-    $form['cancel'] = array(
-        '#type' => 'item',
-        '#markup' => l(t('Cancel'), 'textbook-companion/code')
-    );
+    // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['cancel'] = array(
+//         '#type' => 'item',
+//         '#markup' => l(t('Cancel'), 'textbook-companion/code')
+//     );
+
     return $form;
   }
 function upload_examples_edit_form_validate($form, &$form_state)
@@ -223,13 +229,13 @@ function upload_examples_edit_form_validate($form, &$form_state)
                 switch ($file_type)
                 {
                     case 'S':
-                        $allowed_extensions_str = variable_get('textbook_companion_source_extensions', '');
+                        $allowed_extensions_str = \Drupal::config('textbook_companion.settings')->get('textbook_companion_source_extensions');
                         break;
                     case 'R':
-                        $allowed_extensions_str = variable_get('textbook_companion_result_extensions', '');
+                        $allowed_extensions_str = \Drupal::config('textbook_companion.settings')->get('textbook_companion_result_extensions');
                         break;
                     case 'X':
-                        $allowed_extensions_str = variable_get('textbook_companion_xcos_extensions', '');
+                        $allowed_extensions_str = \Drupal::config('textbook_companion.settings')->get('textbook_companion_xcos_extensions');
                         break;
                 }
                 $allowed_extensions = explode(',', $allowed_extensions_str);
@@ -287,12 +293,12 @@ function upload_examples_edit_form_validate($form, &$form_state)
   }
 function upload_examples_edit_form_submit($form, &$form_state)
   {
-    global $user;
+    $user = \Drupal::currentUser();
     $example_id = arg(3);
     /* get example details */
     /*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE id = %d LIMIT 1", $example_id);
     $example_data = db_fetch_object($example_q);*/
-    $query = db_select('textbook_companion_example');
+    $query = \Drupal::database()->select('textbook_companion_example');
     $query->fields('textbook_companion_example');
     $query->condition('id', $example_id);
     $query->range(0, 1);
@@ -300,67 +306,67 @@ function upload_examples_edit_form_submit($form, &$form_state)
     $example_data = $example_q->fetchObject();
     if (!$example_q)
       {
-        drupal_set_message(t("Invalid example selected."), 'error');
+        \Drupal::messenger()->addError(t("Invalid example selected."));
         drupal_goto('');
         return;
       }
     if ($example_data->approval_status != 0)
       {
-        drupal_set_message(t("You cannot edit an example after it has been approved or dis-approved. Please contact site administrator if you want to edit this example."), 'error');
+        \Drupal::messenger()->addError(t("You cannot edit an example after it has been approved or dis-approved. Please contact site administrator if you want to edit this example."));
         drupal_goto('');
         return;
       }
     /* get chapter details */
     /*$chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE id = %d", $example_data->chapter_id);
     $chapter_data = db_fetch_object($chapter_q);*/
-    $query = db_select('textbook_companion_chapter');
+    $query = \Drupal::database()->select('textbook_companion_chapter');
     $query->fields('textbook_companion_chapter');
     $query->condition('id', $example_data->chapter_id);
     $result = $query->execute();
     $chapter_data = $result->fetchObject();
     if (!$chapter_data)
       {
-        drupal_set_message(t("Invalid chapter selected."), 'error');
+        \Drupal::messenger()->addError(t("Invalid chapter selected."));
         drupal_goto('');
         return;
       }
     /* get preference details */
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE id = %d", $chapter_data->preference_id);
     $preference_data = db_fetch_object($preference_q);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('id', $chapter_data->preference_id);
     $result = $query->execute();
     $preference_data = $result->fetchObject();
     if (!$preference_data)
       {
-        drupal_set_message(t("Invalid book selected."), 'error');
+        \Drupal::messenger()->addError(t("Invalid book selected."));
         drupal_goto('');
         return;
       }
     if ($preference_data->approval_status != 1)
       {
-        drupal_set_message(t("Cannot edit example. Either the book proposal has not been approved or it has been rejected."), 'error');
+        \Drupal::messenger()->addError(t("Cannot edit example. Either the book proposal has not been approved or it has been rejected."));
         drupal_goto('');
         return;
       }
     /* get proposal details */
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d", $preference_data->proposal_id);
     $proposal_data = db_fetch_object($proposal_q);*/
-    $query = db_select('textbook_companion_proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('id', $preference_data->proposal_id);
     $result = $query->execute();
     $proposal_data = $result->fetchObject();
     if (!$proposal_data)
       {
-        drupal_set_message(t("Invalid proposal selected."), 'error');
+        \Drupal::messenger()->addError(t("Invalid proposal selected."));
         drupal_goto('');
         return;
       }
     if ($proposal_data->uid != $user->uid)
       {
-        drupal_set_message(t("You do not have permissions to edit this example."), 'error');
+        \Drupal::messenger()->addError(t("You do not have permissions to edit this example."));
         drupal_goto('');
         return;
       }
@@ -378,7 +384,7 @@ function upload_examples_edit_form_submit($form, &$form_state)
     $filepath = 'CH' . $chapter_data->number . '/' . 'EX' . $example_data->number . '/';
     /* updating example caption */
     /*db_query("UPDATE {textbook_companion_example} SET caption = '%s' WHERE id = %d", $form_state['values']['example_caption'], $example_id);*/
-    $query = db_update('textbook_companion_example');
+    $query = \Drupal::database()->update('textbook_companion_example');
     $query->fields(array(
         'caption' => $form_state['values']['example_caption']
     ));
@@ -399,7 +405,7 @@ function upload_examples_edit_form_submit($form, &$form_state)
         /*$file_q = db_query("SELECT * FROM  {textbook_companion_example_files} WHERE id = %d AND example_id = %d", $cur_file_id, $example_data->id);
         $file_data = db_fetch_object($file_q);*/
         //var_dump($cur_file_id. $example_data->id);die;
-        $query = db_select('textbook_companion_example_files');
+        $query = \Drupal::database()->select('textbook_companion_example_files');
         $query->fields('textbook_companion_example_files');
         $query->condition('id', $cur_file_id);
         $query->condition('example_id', $example_data->id);
@@ -407,14 +413,14 @@ function upload_examples_edit_form_submit($form, &$form_state)
         $file_data = $result->fetchObject();
         if (!$file_data)
           {
-            drupal_set_message("Error deleting example source file. File not present in database.", 'error');
+            \Drupal::messenger()->addError("Error deleting example source file. File not present in database.");
             return;
           }
         if (($form_state['values']['cur_source_checkbox'] == 1) && (!$_FILES['files']['name']['sourcefile1']))
           {
             if (!delete_file($cur_file_id))
               {
-                drupal_set_message("Error deleting example source file.", 'error');
+                \Drupal::messenger()->addError("Error deleting example source file.");
                 return;
               }
           }
@@ -425,15 +431,15 @@ function upload_examples_edit_form_submit($form, &$form_state)
           {
             if (!delete_file($cur_file_id))
               {
-                drupal_set_message("Error removing previous example source file.", 'error');
+                \Drupal::messenger()->addError("Error removing previous example source file.");
                 return;
               }
           }
         if (file_exists($root_path . $dest_path . $_FILES['files']['name']['sourcefile1']))
           {
-            drupal_set_message(t("Error uploading source file. File !filename already exists.", array(
+            \Drupal::messenger()->addError(t("Error uploading source file. File !filename already exists.", array(
                 '!filename' => $_FILES['files']['name']['sourcefile1']
-            )), 'error');
+            )));
             return;
           }
         /* uploading file */
@@ -460,21 +466,19 @@ function upload_examples_edit_form_submit($form, &$form_state)
                 ":filetype" => 'S',
                 ":timestamp" => time()
             );
-            $result = db_query($query, $args, array(
-                'return' => Database::RETURN_INSERT_ID
-            ));
-            drupal_set_message($_FILES['files']['name']['sourcefile1'] . ' uploaded successfully.', 'status');
+            $result = \Drupal::database()->query($query, $args, $query);
+            \Drupal::messenger()->addStatus($_FILES['files']['name']['sourcefile1'] . ' uploaded successfully.');
           }
         else
           {
-            drupal_set_message('Error uploading file : ' . $dest_path . '/' . $_FILES['files']['name']['sourcefile1'], 'error');
+            \Drupal::messenger()->addError('Error uploading file : ' . $dest_path . '/' . $_FILES['files']['name']['sourcefile1']);
           }
       }
     /* sending email */
     $email_to = $user->mail;
-    $from = variable_get('textbook_companion_from_email', '');
-    $bcc = variable_get('textbook_companion_emails', '');
-    $cc = variable_get('textbook_companion_cc_emails', '');
+    $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
+    $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
+    $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
     $param['example_updated']['example_id'] = $example_id;
     $param['example_updated']['user_id'] = $user->uid;
     $param['example_updated']['headers'] = array(
@@ -487,19 +491,19 @@ function upload_examples_edit_form_submit($form, &$form_state)
         'Bcc' => $bcc
     );
     if (!drupal_mail('textbook_companion', 'example_updated', $email_to, language_default(), $param, $from, TRUE))
-        drupal_set_message('Error sending email message.', 'error');
-    drupal_set_message(t("Example successfully udpated."), 'status');
+        \Drupal::messenger()->addError('Error sending email message.');
+    \Drupal::messenger()->addStatus(t("Example successfully udpated."));
   }
 /******************************************************************************/
 /**************************** EDIT CHAPTER TITLE ******************************/
 /******************************************************************************/
 function edit_chapter_title_form($form, $form_state)
   {
-    global $user;
+    $user = \Drupal::currentUser();
     /************************ start approve book details ************************/
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE uid = %d ORDER BY id DESC LIMIT 1", $user->uid);
     $proposal_data = db_fetch_object($proposal_q);*/
-    $query = db_select('textbook_companion_proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('uid', $user->uid);
     $query->orderBy('id', 'DESC');
@@ -508,7 +512,10 @@ function edit_chapter_title_form($form, $form_state)
     $proposal_data = $result->fetchObject();
     if (!$proposal_data)
       {
-        drupal_set_message("Please submit a " . l('proposal', 'textbook-companion/proposal') . ".", 'error');
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message("Please submit a " . l('proposal', 'textbook-companion/proposal') . ".", 'error');
+
         drupal_goto('textbook-companion/code');
       }
     if ($proposal_data->proposal_status != 1 && $proposal_data->proposal_status != 4)
@@ -516,22 +523,28 @@ function edit_chapter_title_form($form, $form_state)
         switch ($proposal_data->proposal_status)
         {
             case 0:
-                drupal_set_message(t('We have already received your proposal. We will get back to you soon.'), 'status');
+                \Drupal::messenger()->addStatus(t('We have already received your proposal. We will get back to you soon.'));
                 drupal_goto('textbook-companion/code');
                 return;
                 break;
             case 2:
-                drupal_set_message(t('Your proposal has been dis-approved. Please create another proposal ' . l('here', 'proposal') . '.'), 'error');
+                // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message(t('Your proposal has been dis-approved. Please create another proposal ' . l('here', 'proposal') . '.'), 'error');
+
                 drupal_goto('textbook-companion/code');
                 return;
                 break;
             case 3:
-                drupal_set_message(t('Congratulations! You have completed your last book proposal. You have to create another proposal ' . l('here', 'textbook-companion/proposal') . '.'), 'status');
+                // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message(t('Congratulations! You have completed your last book proposal. You have to create another proposal ' . l('here', 'textbook-companion/proposal') . '.'), 'status');
+
                 drupal_goto('textbook-companion/code');
                 return;
                 break;
             default:
-                drupal_set_message(t('Invalid proposal state. Please contact site administrator for further information.'), 'error');
+                \Drupal::messenger()->addError(t('Invalid proposal state. Please contact site administrator for further information.'));
                 drupal_goto('textbook-companion/code');
                 return;
                 break;
@@ -539,7 +552,7 @@ function edit_chapter_title_form($form, $form_state)
       }
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d AND approval_status = 1 LIMIT 1", $proposal_data->id);
     $preference_data = db_fetch_object($preference_q);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('proposal_id', $proposal_data->id);
     $query->condition('approval_status', 1);
@@ -548,7 +561,7 @@ function edit_chapter_title_form($form, $form_state)
     $preference_data = $result->fetchObject();
     if (!$preference_data)
       {
-        drupal_set_message(t('Invalid Book Preference status. Please contact site administrator for further information.'), 'error');
+        \Drupal::messenger()->addError(t('Invalid Book Preference status. Please contact site administrator for further information.'));
         drupal_goto('textbook-companion/code');
         return;
       }
@@ -556,7 +569,7 @@ function edit_chapter_title_form($form, $form_state)
     $chapter_id = arg(4);
     /*$chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE id = %d AND preference_id = %d", $chapter_id, $preference_data->id);
     $chapter_data = db_fetch_object($chapter_q);*/
-    $query = db_select('textbook_companion_chapter');
+    $query = \Drupal::database()->select('textbook_companion_chapter');
     $query->fields('textbook_companion_chapter');
     $query->condition('id', $chapter_id);
     $query->condition('preference_id', $preference_data->id);
@@ -564,7 +577,7 @@ function edit_chapter_title_form($form, $form_state)
     $chapter_data = $result->fetchObject();
     if (!$chapter_data)
       {
-        drupal_set_message(t('Invalid chapter.'), 'error');
+        \Drupal::messenger()->addError(t('Invalid chapter.'));
         drupal_goto('textbook-companion/code');
         return;
       }
@@ -596,10 +609,13 @@ function edit_chapter_title_form($form, $form_state)
         '#type' => 'submit',
         '#value' => t('Submit')
     );
-    $form['cancel'] = array(
-        '#type' => 'markup',
-        '#value' => l(t('Cancel'), 'textbook_companion/code')
-    );
+    // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['cancel'] = array(
+//         '#type' => 'markup',
+//         '#value' => l(t('Cancel'), 'textbook_companion/code')
+//     );
+
     return $form;
   }
 function edit_chapter_title_form_validate($form, &$form_state)
@@ -609,11 +625,11 @@ function edit_chapter_title_form_validate($form, &$form_state)
   }
 function edit_chapter_title_form_submit($form, &$form_state)
   {
-    global $user;
+    $user = \Drupal::currentUser();
     /************************ start approve book details ************************/
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE uid = %d ORDER BY id DESC LIMIT 1", $user->uid);
     $proposal_data = db_fetch_object($proposal_q);*/
-    $query = db_select('textbook_companion_proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('uid', $user->uid);
     $query->orderBy('id', 'DESC');
@@ -622,7 +638,10 @@ function edit_chapter_title_form_submit($form, &$form_state)
     $proposal_data = $result->fetchObject();
     if (!$proposal_data)
       {
-        drupal_set_message("Please submit a " . l('proposal', 'textbook-companion/proposal') . ".", 'error');
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message("Please submit a " . l('proposal', 'textbook-companion/proposal') . ".", 'error');
+
         drupal_goto('textbook-companion/code');
       }
     if ($proposal_data->proposal_status != 1 && $proposal_data->proposal_status != 4)
@@ -630,22 +649,28 @@ function edit_chapter_title_form_submit($form, &$form_state)
         switch ($proposal_data->proposal_status)
         {
             case 0:
-                drupal_set_message(t('We have already received your proposal. We will get back to you soon.'), 'status');
+                \Drupal::messenger()->addStatus(t('We have already received your proposal. We will get back to you soon.'));
                 drupal_goto('textbook-companion/code');
                 return;
                 break;
             case 2:
-                drupal_set_message(t('Your proposal has been dis-approved. Please create another proposal ' . l('here', 'proposal') . '.'), 'error');
+                // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message(t('Your proposal has been dis-approved. Please create another proposal ' . l('here', 'proposal') . '.'), 'error');
+
                 drupal_goto('textbook-companion/code');
                 return;
                 break;
             case 3:
-                drupal_set_message(t('Congratulations! You have completed your last book proposal. You have to create another proposal ' . l('here', 'textbook-companion/proposal') . '.'), 'status');
+                // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message(t('Congratulations! You have completed your last book proposal. You have to create another proposal ' . l('here', 'textbook-companion/proposal') . '.'), 'status');
+
                 drupal_goto('textbook-companion/code');
                 return;
                 break;
             default:
-                drupal_set_message(t('Invalid proposal state. Please contact site administrator for further information.'), 'error');
+                \Drupal::messenger()->addError(t('Invalid proposal state. Please contact site administrator for further information.'));
                 drupal_goto('textbook-companion/code');
                 return;
                 break;
@@ -653,7 +678,7 @@ function edit_chapter_title_form_submit($form, &$form_state)
       }
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d AND approval_status = 1 LIMIT 1", $proposal_data->id);
     $preference_data = db_fetch_object($preference_q);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('proposal_id', $proposal_data->id);
     $query->condition('approval_status', 1);
@@ -662,7 +687,7 @@ function edit_chapter_title_form_submit($form, &$form_state)
     $preference_data = $result->fetchObject();
     if (!$preference_data)
       {
-        drupal_set_message(t('Invalid Book Preference status. Please contact site administrator for further information.'), 'error');
+        \Drupal::messenger()->addError(t('Invalid Book Preference status. Please contact site administrator for further information.'));
         drupal_goto('textbook-companion/code');
         return;
       }
@@ -670,7 +695,7 @@ function edit_chapter_title_form_submit($form, &$form_state)
     $chapter_id = arg(4);
     /*$chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE id = %d AND preference_id = %d", $chapter_id, $preference_data->id);
     $chapter_data = db_fetch_object($chapter_q);*/
-    $query = db_select('textbook_companion_chapter');
+    $query = \Drupal::database()->select('textbook_companion_chapter');
     $query->fields('textbook_companion_chapter');
     $query->condition('id', $chapter_id);
     $query->condition('preference_id', $preference_data->id);
@@ -678,18 +703,18 @@ function edit_chapter_title_form_submit($form, &$form_state)
     $chapter_data = $result->fetchObject();
     if (!$chapter_data)
       {
-        drupal_set_message(t('Invalid chapter.'), 'error');
+        \Drupal::messenger()->addError(t('Invalid chapter.'));
         drupal_goto('textbookcompanion/code');
         return;
       }
     /*db_query("UPDATE {textbook_companion_chapter} SET name = '%s' WHERE id = %d", $form_state['values']['chapter_title'], $chapter_id);*/
-    $query = db_update('textbook_companion_chapter');
+    $query = \Drupal::database()->update('textbook_companion_chapter');
     $query->fields(array(
         'name' => $form_state['values']['chapter_title']
     ));
     $query->condition('id', $chapter_id);
     $num_updated = $query->execute();
-    drupal_set_message(t('Title of the Chapter updated.'), 'status');
+    \Drupal::messenger()->addStatus(t('Title of the Chapter updated.'));
   }
 /******************************************************************************/
 /************************** GENERAL FUNCTIONS *********************************/
@@ -700,7 +725,7 @@ function _list_of_book_titles()
         '0' => 'Please select...'
     );
     /*$book_titles_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE approval_status = 1 OR approval_status = 3 ORDER BY book ASC");*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $or = db_or();
     $or->condition('approval_status', 1);

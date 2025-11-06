@@ -5,12 +5,12 @@
 /******************************************************************************/
 function upload_examples_admin_edit_form($form, &$form_state)
   {
-    global $user;
+    $user = \Drupal::currentUser();
     $example_id = arg(3);
     /* get example details */
     /*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE id = %d LIMIT 1", $example_id);
     $example_data = db_fetch_object($example_q);*/
-    $query = db_select('textbook_companion_example');
+    $query = \Drupal::database()->select('textbook_companion_example');
     $query->fields('textbook_companion_example');
     $query->condition('id', $example_id);
     $query->range(0, 1);
@@ -18,7 +18,7 @@ function upload_examples_admin_edit_form($form, &$form_state)
     $example_data = $example_q->fetchObject();
     if (!$example_q)
       {
-        drupal_set_message(t("Invalid example selected."), 'error');
+        \Drupal::messenger()->addError(t("Invalid example selected."));
         drupal_goto('');
         return;
       }
@@ -34,7 +34,7 @@ function upload_examples_admin_edit_form($form, &$form_state)
     $xcos2_file = "";
     $xcos2_id = 0;
     /*$example_files_q = db_query("SELECT * FROM {textbook_companion_example_files} WHERE example_id = %d", $example_id);*/
-    $query = db_select('textbook_companion_example_files');
+    $query = \Drupal::database()->select('textbook_companion_example_files');
     $query->fields('textbook_companion_example_files');
     $query->condition('example_id', $example_id);
     $example_files_q = $query->execute();
@@ -42,19 +42,28 @@ function upload_examples_admin_edit_form($form, &$form_state)
       {
         if ($example_files_data->filetype == "S")
           {
-            $source_file = l($example_files_data->filename, 'textbook-companion/download/file/' . $example_files_data->id);
+            // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $source_file = l($example_files_data->filename, 'textbook-companion/download/file/' . $example_files_data->id);
+
             $source_file_id = $example_files_data->id;
           }
         if ($example_files_data->filetype == "R")
           {
             if (strlen($result1_file) == 0)
               {
-                $result1_file = l($example_files_data->filename, 'textbook-companion/download/file/' . $example_files_data->id);
+                // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $result1_file = l($example_files_data->filename, 'textbook-companion/download/file/' . $example_files_data->id);
+
                 $result1_file_id = $example_files_data->id;
               }
             else
               {
-                $result2_file = l($example_files_data->filename, 'textbook-companion/download/file/' . $example_files_data->id);
+                // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $result2_file = l($example_files_data->filename, 'textbook-companion/download/file/' . $example_files_data->id);
+
                 $result2_file_id = $example_files_data->id;
               }
           }
@@ -62,12 +71,18 @@ function upload_examples_admin_edit_form($form, &$form_state)
           {
             if (strlen($xcos1_file) <= 0)
               {
-                $xcos1_file = l($example_files_data->filename, 'textbook-companion/download/file/' . $example_files_data->id);
+                // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $xcos1_file = l($example_files_data->filename, 'textbook-companion/download/file/' . $example_files_data->id);
+
                 $xcos1_file_id = $example_files_data->id;
               }
             else
               {
-                $xcos2_file = l($example_files_data->filename, 'textbook-companion/download/file/' . $example_files_data->id);
+                // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $xcos2_file = l($example_files_data->filename, 'textbook-companion/download/file/' . $example_files_data->id);
+
                 $xcos2_file_id = $example_files_data->id;
               }
           }
@@ -75,46 +90,46 @@ function upload_examples_admin_edit_form($form, &$form_state)
     /* get chapter details */
     /*$chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE id = %d", $example_data->chapter_id);
     $chapter_data = db_fetch_object($chapter_q);*/
-    $query = db_select('textbook_companion_chapter');
+    $query = \Drupal::database()->select('textbook_companion_chapter');
     $query->fields('textbook_companion_chapter');
     $query->condition('id', $example_data->chapter_id);
     $result = $query->execute();
     $chapter_data = $result->fetchObject();
     if (!$chapter_data)
       {
-        drupal_set_message(t("Invalid chapter selected."), 'error');
+        \Drupal::messenger()->addError(t("Invalid chapter selected."));
         drupal_goto('');
         return;
       }
     /* get preference details */
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE id = %d", $chapter_data->preference_id);
     $preference_data = db_fetch_object($preference_q);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('id', $chapter_data->preference_id);
     $result = $query->execute();
     $preference_data = $result->fetchObject();
     if (!$preference_data)
       {
-        drupal_set_message(t("Invalid book selected."), 'error');
+        \Drupal::messenger()->addError(t("Invalid book selected."));
         drupal_goto('');
         return;
       }
     /* get proposal details */
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d", $preference_data->proposal_id);
     $proposal_data = db_fetch_object($proposal_q);*/
-    $query = db_select('textbook_companion_proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('id', $preference_data->proposal_id);
     $result = $query->execute();
     $proposal_data = $result->fetchObject();
     if (!$proposal_data)
       {
-        drupal_set_message(t("Invalid proposal selected."), 'error');
+        \Drupal::messenger()->addError(t("Invalid proposal selected."));
         drupal_goto('');
         return;
       }
-    $user_data = user_load($proposal_data->uid);
+    $user_data = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid);
     $form['#redirect'] = 'code_approval/bulk';
     $form['#attributes'] = array(
         'enctype' => "multipart/form-data"
@@ -180,7 +195,7 @@ function upload_examples_admin_edit_form($form, &$form_state)
             '#type' => 'file',
             '#title' => t('Upload New Main or Source File'),
             '#size' => 48,
-            '#description' => t("Upload new Main or Source file above if you want to replace the existing file. Leave blank if you want to keep using the existing file. <br />") . t('Allowed file extensions : ') . variable_get('textbook_companion_source_extensions', '')
+            '#description' => t("Upload new Main or Source file above if you want to replace the existing file. Leave blank if you want to keep using the existing file. <br />") . t('Allowed file extensions : ') . \Drupal::config('textbook_companion.settings')->get('textbook_companion_source_extensions')
         );
         $form['sourcefile']['cur_source_file_id'] = array(
             '#type' => 'hidden',
@@ -193,17 +208,20 @@ function upload_examples_admin_edit_form($form, &$form_state)
             '#type' => 'file',
             '#title' => t('Upload New Main or Source File'),
             '#size' => 48,
-            '#description' => t('Allowed file extensions : ') . variable_get('textbook_companion_source_extensions', '')
+            '#description' => t('Allowed file extensions : ') . \Drupal::config('textbook_companion.settings')->get('textbook_companion_source_extensions')
         );
       }
     $form['submit'] = array(
         '#type' => 'submit',
         '#value' => t('Submit')
     );
-    $form['cancel'] = array(
-        '#type' => 'markup',
-        '#value' => l(t('Cancel'), 'textbook-companion/code')
-    );
+    // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['cancel'] = array(
+//         '#type' => 'markup',
+//         '#value' => l(t('Cancel'), 'textbook-companion/code')
+//     );
+
     return $form;
   }
 function upload_examples_admin_edit_form_validate($form, &$form_state)
@@ -230,13 +248,13 @@ function upload_examples_admin_edit_form_validate($form, &$form_state)
                 switch ($file_type)
                 {
                     case 'S':
-                        $allowed_extensions_str = variable_get('textbook_companion_source_extensions', '');
+                        $allowed_extensions_str = \Drupal::config('textbook_companion.settings')->get('textbook_companion_source_extensions');
                         break;
                     case 'R':
-                        $allowed_extensions_str = variable_get('textbook_companion_result_extensions', '');
+                        $allowed_extensions_str = \Drupal::config('textbook_companion.settings')->get('textbook_companion_result_extensions');
                         break;
                     case 'X':
-                        $allowed_extensions_str = variable_get('textbook_companion_xcos_extensions', '');
+                        $allowed_extensions_str = \Drupal::config('textbook_companion.settings')->get('textbook_companion_xcos_extensions');
                         break;
                 }
                 $allowed_extensions = explode(',', $allowed_extensions_str);
@@ -255,12 +273,12 @@ function upload_examples_admin_edit_form_validate($form, &$form_state)
   }
 function upload_examples_admin_edit_form_submit($form, &$form_state)
   {
-    global $user;
+    $user = \Drupal::currentUser();
     $example_id = arg(3);
     /* get example details */
     /*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE id = %d LIMIT 1", $example_id);
     $example_data = db_fetch_object($example_q);*/
-    $query = db_select('textbook_companion_example');
+    $query = \Drupal::database()->select('textbook_companion_example');
     $query->fields('textbook_companion_example');
     $query->condition('id', $example_id);
     $query->range(0, 1);
@@ -268,53 +286,53 @@ function upload_examples_admin_edit_form_submit($form, &$form_state)
     $example_data = $example_q->fetchObject();
     if (!$example_q)
       {
-        drupal_set_message(t("Invalid example selected."), 'error');
+        \Drupal::messenger()->addError(t("Invalid example selected."));
         drupal_goto('');
         return;
       }
     /* get chapter details */
     /*$chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE id = %d", $example_data->chapter_id);
     $chapter_data = db_fetch_object($chapter_q);*/
-    $query = db_select('textbook_companion_chapter');
+    $query = \Drupal::database()->select('textbook_companion_chapter');
     $query->fields('textbook_companion_chapter');
     $query->condition('id', $example_data->chapter_id);
     $chapter_q = $query->execute();
     $chapter_data = $chapter_q->fetchObject();
     if (!$chapter_data)
       {
-        drupal_set_message(t("Invalid chapter selected."), 'error');
+        \Drupal::messenger()->addError(t("Invalid chapter selected."));
         drupal_goto('');
         return;
       }
     /* get preference details */
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE id = %d", $chapter_data->preference_id);
     $preference_data = db_fetch_object($preference_q);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('id', $chapter_data->preference_id);
     $result = $query->execute();
     $preference_data = $result->fetchObject();
     if (!$preference_data)
       {
-        drupal_set_message(t("Invalid book selected."), 'error');
+        \Drupal::messenger()->addError(t("Invalid book selected."));
         drupal_goto('');
         return;
       }
     /* get proposal details */
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d", $preference_data->proposal_id);
     $proposal_data = db_fetch_object($proposal_q);*/
-    $query = db_select('textbook_companion_proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('id', $preference_data->proposal_id);
     $result = $query->execute();
     $proposal_data = $result->fetchObject();
     if (!$proposal_data)
       {
-        drupal_set_message(t("Invalid proposal selected."), 'error');
+        \Drupal::messenger()->addError(t("Invalid proposal selected."));
         drupal_goto('');
         return;
       }
-    $user_data = user_load($proposal_data->uid);
+    $user_data = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid);
     /* creating directories */
     $root_path = textbook_companion_path();
     $dest_path = $preference_data->directory_name . '/';
@@ -329,7 +347,7 @@ function upload_examples_admin_edit_form_submit($form, &$form_state)
     $filepath = 'CH' . $chapter_data->number . '/' . 'EX' . $example_data->number . '/';
     /* updating example caption */
     /*db_query("UPDATE {textbook_companion_example} SET caption = '%s' WHERE id = %d", $form_state['values']['example_caption'], $example_id);*/
-    $query = db_update('textbook_companion_example');
+    $query = \Drupal::database()->update('textbook_companion_example');
     $query->fields(array(
         'caption' => $form_state['values']['example_caption']
     ));
@@ -345,7 +363,7 @@ function upload_examples_admin_edit_form_submit($form, &$form_state)
       {
         /*$file_q = db_query("SELECT * FROM  {textbook_companion_example_files} WHERE id = %d AND example_id = %d", $cur_file_id, $example_data->id);
         $file_data = db_fetch_object($file_q);*/
-        $query = db_select('textbook_companion_example_files');
+        $query = \Drupal::database()->select('textbook_companion_example_files');
         $query->fields('textbook_companion_example_files');
         $query->condition('id', $cur_file_id);
         $query->condition('example_id', $example_data->id);
@@ -353,14 +371,14 @@ function upload_examples_admin_edit_form_submit($form, &$form_state)
         $file_data = $result->fetchObject();
         if (!$file_data)
           {
-            drupal_set_message("Error deleting example source file. File not present in database.", 'error');
+            \Drupal::messenger()->addError("Error deleting example source file. File not present in database.");
             return;
           }
         if (($form_state['values']['cur_source_checkbox'] == 1) && (!$_FILES['files']['name']['sourcefile1']))
           {
             if (!delete_file($cur_file_id))
               {
-                drupal_set_message("Error deleting example source file.", 'error');
+                \Drupal::messenger()->addError("Error deleting example source file.");
                 return;
               }
           }
@@ -371,15 +389,15 @@ function upload_examples_admin_edit_form_submit($form, &$form_state)
           {
             if (!delete_file($cur_file_id))
               {
-                drupal_set_message("Error removing previous example source file.", 'error');
+                \Drupal::messenger()->addError("Error removing previous example source file.");
                 return;
               }
           }
         if (file_exists($root_path . $dest_path . $_FILES['files']['name']['sourcefile1']))
           {
-            drupal_set_message(t("Error uploading source file. File !filename already exists.", array(
+            \Drupal::messenger()->addError(t("Error uploading source file. File !filename already exists.", array(
                 '!filename' => $_FILES['files']['name']['sourcefile1']
-            )), 'error');
+            )));
             return;
           }
         /* uploading file */
@@ -407,23 +425,21 @@ function upload_examples_admin_edit_form_submit($form, &$form_state)
                 ":filetype" => 'S',
                 ":timestamp" => time()
             );
-            $result = db_query($query, $args, array(
-                'return' => Database::RETURN_INSERT_ID
-            ));
-            drupal_set_message($_FILES['files']['name']['sourcefile1'] . ' uploaded successfully.', 'status');
+            $result = \Drupal::database()->query($query, $args, $query);
+            \Drupal::messenger()->addStatus($_FILES['files']['name']['sourcefile1'] . ' uploaded successfully.');
           }
         else
           {
-            drupal_set_message('Error uploading file : ' . $dest_path . '/' . $_FILES['files']['name']['sourcefile1'], 'error');
+            \Drupal::messenger()->addError('Error uploading file : ' . $dest_path . '/' . $_FILES['files']['name']['sourcefile1']);
           }
       }
     /* sending email */
     $email_to = $user_data->mail;
     $param['example_updated_admin']['example_id'] = $example_id;
     $param['example_updated_admin']['user_id'] = $proposal_data->uid;
-    if (!drupal_mail('textbook_companion', 'example_updated_admin', $email_to, language_default(), $param, variable_get('textbook_companion_from_email', NULL), TRUE))
-        drupal_set_message('Error sending email message.', 'error');
-    drupal_set_message(t("Example successfully udpated."), 'status');
+    if (!drupal_mail('textbook_companion', 'example_updated_admin', $email_to, language_default(), $param, \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email'), TRUE))
+        \Drupal::messenger()->addError('Error sending email message.');
+    \Drupal::messenger()->addStatus(t("Example successfully udpated."));
   }
 /******************************************************************************/
 /************************** GENERAL FUNCTIONS *********************************/
@@ -434,7 +450,7 @@ function _list_of_book_titles()
         '0' => 'Please select...'
     );
     /*$book_titles_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE approval_status = 1 OR approval_status = 3 ORDER BY book ASC");*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $or = db_or();
     $or->condition('approval_status', 1);
@@ -453,7 +469,7 @@ function _list_of_book_dependency_files()
     $book_dependency_files = array();
     $book_dependency_files_class = array();
     /*$book_dependency_files_q = db_query("SELECT * FROM {textbook_companion_dependency_files} ORDER BY filename ASC");*/
-    $query = db_select('textbook_companion_dependency_files');
+    $query = \Drupal::database()->select('textbook_companion_dependency_files');
     $query->fields('textbook_companion_dependency_files');
     $query->orderBy('filename', 'ASC');
     $book_dependency_files_q = $query->execute();
@@ -462,7 +478,10 @@ function _list_of_book_dependency_files()
         $temp_caption = '';
         if ($book_dependency_files_data->caption)
             $temp_caption .= ' (' . $book_dependency_files_data->caption . ')';
-        $book_dependency_files[$book_dependency_files_data->id] = l($book_dependency_files_data->filename . $temp_caption, '/textbook-companion/download/dependency/' . $book_dependency_files_data->id);
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $book_dependency_files[$book_dependency_files_data->id] = l($book_dependency_files_data->filename . $temp_caption, '/textbook-companion/download/dependency/' . $book_dependency_files_data->id);
+
         $book_dependency_files_class[$book_dependency_files_data->id] = $book_dependency_files_data->preference_id;
       }
     return array(

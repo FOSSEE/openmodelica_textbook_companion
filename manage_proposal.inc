@@ -4,22 +4,25 @@ function _proposal_pending()
     /* get pending proposals to be approved */
     $pending_rows = array();
     /*$pending_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE proposal_status = 0 ORDER BY id DESC");*/
-    $query = db_select('textbook_companion_proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('proposal_status', 0);
     $query->orderBy('id', 'DESC');
     $pending_q = $query->execute();
     while ($pending_data = $pending_q->fetchObject()) {
-        $pending_rows[$pending_data->id] = array(
-            date('d-m-Y', $pending_data->creation_date),
-            l($pending_data->full_name, 'user/' . $pending_data->uid),
-            date('d-m-Y', $pending_data->proposed_completion_date),
-            l('Approve', 'textbook-companion/manage-proposal/approve/' . $pending_data->id) . ' | ' . l('Edit', 'textbook-companion/manage-proposal/edit/' . $pending_data->id)
-        );
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $pending_rows[$pending_data->id] = array(
+//             date('d-m-Y', $pending_data->creation_date),
+//             l($pending_data->full_name, 'user/' . $pending_data->uid),
+//             date('d-m-Y', $pending_data->proposed_completion_date),
+//             l('Approve', 'textbook-companion/manage-proposal/approve/' . $pending_data->id) . ' | ' . l('Edit', 'textbook-companion/manage-proposal/edit/' . $pending_data->id)
+//         );
+
     }
     /* check if there are any pending proposals */
     if (!$pending_rows) {
-        drupal_set_message(t('There are no pending proposals.'), 'status');
+        \Drupal::messenger()->addStatus(t('There are no pending proposals.'));
         return '';
     }
     $pending_header = array(
@@ -28,10 +31,19 @@ function _proposal_pending()
 		'Proposed Date of Completion',
 		'Action'
 	);
-    $output = theme('table', array(
-        'header' => $pending_header,
-        'rows' => $pending_rows
-    ));
+    // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $output = theme('table', array(
+//         'header' => $pending_header,
+//         'rows' => $pending_rows
+//     ));
+
     return $output;
 }
 function _proposal_all()
@@ -48,7 +60,7 @@ function _proposal_all()
     /* get pending proposals to be approved */
     $proposal_rows = array();
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} ORDER BY id DESC");*/
-    $query = db_select('textbook_companion_proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->orderBy('id', 'DESC');
     $proposal_q = $query->execute();
@@ -56,7 +68,7 @@ function _proposal_all()
         /* get preference */
         /*$preference_q = db_query("SELECT * FROM textbook_companion_preference WHERE proposal_id = %d AND approval_status = 1 LIMIT 1", $proposal_data->id);   
         $preference_data = db_fetch_object($preference_q);*/
-        $query = db_select('textbook_companion_preference');
+        $query = \Drupal::database()->select('textbook_companion_preference');
         $query->fields('textbook_companion_preference');
         $query->condition('proposal_id', $proposal_data->id);
         $query->condition('approval_status', 1);
@@ -66,7 +78,7 @@ function _proposal_all()
         if (!$preference_data) {
             /* $preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d AND pref_number = 1 LIMIT 1", $proposal_data->id);  
             $preference_data = db_fetch_object($preference_q);*/
-            $query = db_select('textbook_companion_preference');
+            $query = \Drupal::database()->select('textbook_companion_preference');
             $query->fields('textbook_companion_preference');
             $query->condition('proposal_id', $proposal_data->id);
             $query->condition('pref_number', 1);
@@ -105,20 +117,23 @@ function _proposal_all()
         else{
         $proposed_completion_date = "-----";
         }
-        $proposal_rows[] = array(
-            date('d-m-Y', $proposal_data->creation_date),
-            "{$preference_data->book} <br> 
-<em>by {$preference_data->author}</em>",
-            l($proposal_data->full_name, 'user/' . $proposal_data->uid),
-            date('d-m-Y', $proposal_data->completion_date),
-            $proposed_completion_date,
-            $proposal_status,
-            l('Status', 'textbook-companion/manage-proposal/status/' . $proposal_data->id) . ' | ' . l('Edit', 'textbook-companion/manage-proposal/edit/' . $proposal_data->id) . _tbc_ext($proposal_status, $preference_data->id)
-        );
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $proposal_rows[] = array(
+//             date('d-m-Y', $proposal_data->creation_date),
+//             "{$preference_data->book} <br>
+// <em>by {$preference_data->author}</em>",
+//             l($proposal_data->full_name, 'user/' . $proposal_data->uid),
+//             date('d-m-Y', $proposal_data->completion_date),
+//             $proposed_completion_date,
+//             $proposal_status,
+//             l('Status', 'textbook-companion/manage-proposal/status/' . $proposal_data->id) . ' | ' . l('Edit', 'textbook-companion/manage-proposal/edit/' . $proposal_data->id) . _tbc_ext($proposal_status, $preference_data->id)
+//         );
+
     }
     /* check if there are any pending proposals */
     if (!$proposal_rows) {
-        drupal_set_message(t('There are no proposals.'), 'status');
+        \Drupal::messenger()->addStatus(t('There are no proposals.'));
         return '';
     }
     $proposal_header = array(
@@ -130,10 +145,19 @@ function _proposal_all()
         'Status',
         'Action'
     );
-    $output = theme('table', array(
-        'header' => $proposal_header,
-        'rows' => $proposal_rows
-    ));
+    // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $output = theme('table', array(
+//         'header' => $proposal_header,
+//         'rows' => $proposal_rows
+//     ));
+
     return $output;
 }
 function _category_all()
@@ -141,7 +165,7 @@ function _category_all()
     /* get pending proposals to be approved */
     $preference_rows = array();
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE approval_status = 1 ORDER BY id DESC");*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('approval_status', 1);
     $query->orderBy('id', 'DESC');
@@ -194,15 +218,18 @@ function _category_all()
                 $category_data = 'Unknown';
                 break;
         }
-        $preference_rows[] = array(
-            $preference_data->book . "<br> <i>by " . $preference_data->author . "</i>",
-            $preference_data->isbn,
-            $preference_data->publisher,
-            $preference_data->edition,
-            $preference_data->year,
-            $category_data,
-            l('Edit', 'textbook-companion/manage-proposal/category/edit/' . $preference_data->id)
-        );
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $preference_rows[] = array(
+//             $preference_data->book . "<br> <i>by " . $preference_data->author . "</i>",
+//             $preference_data->isbn,
+//             $preference_data->publisher,
+//             $preference_data->edition,
+//             $preference_data->year,
+//             $category_data,
+//             l('Edit', 'textbook-companion/manage-proposal/category/edit/' . $preference_data->id)
+//         );
+
     }
     $preference_header = array(
         'Book',
@@ -213,10 +240,19 @@ function _category_all()
         'Category',
         'Status'
     );
-    $output = theme('table', array(
-        'header' => $preference_header,
-        'rows' => $preference_rows
-    ));
+    // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $output = theme('table', array(
+//         'header' => $preference_header,
+//         'rows' => $preference_rows
+//     ));
+
     return $output;
 }
 /******************************************************************************/
@@ -224,11 +260,11 @@ function _category_all()
 /******************************************************************************/
 function proposal_approval_form($form, &$form_state)
 {
-    global $user;
+    $user = \Drupal::currentUser();
     /* get current proposal */
     $proposal_id = arg(3);
     /*$result = db_query("SELECT * FROM {textbook_companion_proposal} WHERE proposal_status = 0 and id = %d", $proposal_id);*/
-    $query = db_select('textbook_companion_proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('proposal_status', 0);
     $query->condition('id', $proposal_id);
@@ -237,23 +273,26 @@ function proposal_approval_form($form, &$form_state)
         if ($row = $result->fetchObject()) {
             /* everything ok */
         } else {
-            drupal_set_message(t('Invalid proposal selected. Please try again.'), 'error');
+            \Drupal::messenger()->addError(t('Invalid proposal selected. Please try again.'));
             drupal_goto('textbook-companion/manage-proposal');
             return;
         }
     } else {
-        drupal_set_message(t('Invalid proposal selected. Please try again.'), 'error');
+        \Drupal::messenger()->addError(t('Invalid proposal selected. Please try again.'));
         drupal_goto('textbook-companion/manage-proposal');
         return;
     }
-    $form['full_name'] = array(
-        '#type' => 'item',
-        '#markup' => l($row->full_name, 'user/' . $row->uid),
-        '#title' => t('Contributor Name')
-    );
+    // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['full_name'] = array(
+//         '#type' => 'item',
+//         '#markup' => l($row->full_name, 'user/' . $row->uid),
+//         '#title' => t('Contributor Name')
+//     );
+
     $form['email'] = array(
         '#type' => 'item',
-        '#markup' => user_load($row->uid)->mail,
+        '#markup' => \Drupal::entityTypeManager()->getStorage('user')->load($row->uid)->mail,
         '#title' => t('Email')
     );
     $form['mobile'] = array(
@@ -353,7 +392,7 @@ function proposal_approval_form($form, &$form_state)
     /* get book preference */
     $preference_rows = array();
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d ORDER BY pref_number ASC", $proposal_id);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('proposal_id', $proposal_id);
     $query->orderBy('pref_number', 'ASC');
@@ -377,10 +416,13 @@ function proposal_approval_form($form, &$form_state)
         );
     }
     if ($row->samplefilepath != "Not available") {
-        $form['samplecode'] = array(
-            '#type' => 'markup',
-            '#markup' => l('Download Sample Code', 'textbook-companion/download/samplecode/' . $proposal_id) . "<br><br>"
-        );
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['samplecode'] = array(
+//             '#type' => 'markup',
+//             '#markup' => l('Download Sample Code', 'textbook-companion/download/samplecode/' . $proposal_id) . "<br><br>"
+//         );
+
     }
     $form['disapprove'] = array(
         '#type' => 'checkbox',
@@ -410,10 +452,13 @@ function proposal_approval_form($form, &$form_state)
         '#type' => 'submit',
         '#value' => t('Submit')
     );
-    $form['cancel'] = array(
-        '#type' => 'markup',
-        '#value' => l(t('Cancel'), 'textbook-companion/manage-proposal')
-    );
+    // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['cancel'] = array(
+//         '#type' => 'markup',
+//         '#value' => l(t('Cancel'), 'textbook-companion/manage-proposal')
+//     );
+
     return $form;
 }
 function proposal_approval_form_validate($form, &$form_state)
@@ -427,11 +472,11 @@ function proposal_approval_form_validate($form, &$form_state)
 }
 function proposal_approval_form_submit($form, &$form_state)
 {
-    global $user;
+    $user = \Drupal::currentUser();
     /* get current proposal */
     $proposal_id = $form_state['values']['proposal_id'];
     /*$result = db_query("SELECT * FROM {textbook_companion_proposal} WHERE proposal_status = 0 and id = %d", $proposal_id);*/
-    $query = db_select('textbook_companion_proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('proposal_status', 0);
     $query->condition('id', $proposal_id);
@@ -440,19 +485,19 @@ function proposal_approval_form_submit($form, &$form_state)
         if ($row = $result->fetchObject()) {
             /* everything ok */
         } else {
-            drupal_set_message(t('Invalid proposal selected. Please try again.'), 'error');
+            \Drupal::messenger()->addError(t('Invalid proposal selected. Please try again.'));
             drupal_goto('textbook-companion/manage-proposal');
             return;
         }
     } else {
-        drupal_set_message(t('Invalid proposal selected. Please try again.'), 'error');
+        \Drupal::messenger()->addError(t('Invalid proposal selected. Please try again.'));
         drupal_goto('textbook-companion/manage-proposal');
         return;
     }
     /* disapprove */
     if ($form_state['values']['disapprove']) {
         /*db_query("UPDATE {textbook_companion_proposal} SET approver_uid = %d, approval_date = %d, proposal_status = 2, message = '%s' WHERE id = %d", $user->uid, time(), $form_state['values']['message'], $proposal_id);*/
-        $query = db_update('textbook_companion_proposal');
+        $query = \Drupal::database()->update('textbook_companion_proposal');
         $query->fields(array(
             'approver_uid' => $user->uid,
             'approval_date' => time(),
@@ -463,7 +508,7 @@ function proposal_approval_form_submit($form, &$form_state)
         $query->condition('id', $proposal_id);
         $num_updated = $query->execute();
         /*db_query("UPDATE {textbook_companion_preference} SET approval_status = 2 WHERE proposal_id = %d", $proposal_id);*/
-        $query = db_update('textbook_companion_preference');
+        $query = \Drupal::database()->update('textbook_companion_preference');
         $query->fields(array(
             'approval_status' => 2
         ));
@@ -486,11 +531,11 @@ function proposal_approval_form_submit($form, &$form_state)
         $query->condition('proposal_id', $proposal_id);
         $num_updated = $query->execute();*/
         /* sending email */
-        $book_user = user_load($row->uid);
+        $book_user = \Drupal::entityTypeManager()->getStorage('user')->load($row->uid);
         $email_to = $book_user->mail;
-        $from = variable_get('textbook_companion_from_email', '');
-        $bcc = variable_get('textbook_companion_emails', '');
-        $cc = variable_get('textbook_companion_cc_emails', '');
+        $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
+        $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
+        $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
         $param['proposal_disapproved']['proposal_id'] = $proposal_id;
         $param['proposal_disapproved']['user_id'] = $row->uid;
         $param['proposal_disapproved']['headers'] = array(
@@ -503,15 +548,15 @@ function proposal_approval_form_submit($form, &$form_state)
             'Bcc' => $bcc
         );
         if (!drupal_mail('textbook_companion', 'proposal_disapproved', $email_to, language_default(), $param, $from, TRUE))
-            drupal_set_message('Error sending email message.', 'error');
-        drupal_set_message('Book proposal dis-approved. User has been notified of the dis-approval.', 'error');
+            \Drupal::messenger()->addError('Error sending email message.');
+        \Drupal::messenger()->addError('Book proposal dis-approved. User has been notified of the dis-approval.');
         drupal_goto('textbook-companion/manage-proposal');
         return;
     }
     /* get book preference and set the status */
     $preference_id = $form_state['values']['book_preference'];
     /*db_query("UPDATE {textbook_companion_proposal} SET approver_uid = %d, approval_date = %d, proposal_status = 1 WHERE id = %d", $user->uid, time(), $proposal_id);*/
-    $query = db_update('textbook_companion_proposal');
+    $query = \Drupal::database()->update('textbook_companion_proposal');
     $query->fields(array(
         'approver_uid' => $user->uid,
         'approval_date' => time(),
@@ -520,7 +565,7 @@ function proposal_approval_form_submit($form, &$form_state)
     $query->condition('id', $proposal_id);
     $num_updated = $query->execute();
     /*db_query("UPDATE {textbook_companion_preference} SET approval_status = 1 WHERE id = %d", $preference_id);*/
-    $query = db_update('textbook_companion_preference');
+    $query = \Drupal::database()->update('textbook_companion_preference');
     $query->fields(array(
         'approval_status' => 1
     ));
@@ -544,11 +589,11 @@ function proposal_approval_form_submit($form, &$form_state)
     $query->condition('preference_id', '$preference_id', '<>');
     $num_updated = $query->execute();*/
     /* sending email */
-    $book_user = user_load($row->uid);
+    $book_user = \Drupal::entityTypeManager()->getStorage('user')->load($row->uid);
     $email_to = $book_user->mail;
-    $from = variable_get('textbook_companion_from_email', '');
-    $bcc = variable_get('textbook_companion_emails', '');
-    $cc = variable_get('textbook_companion_cc_emails', '');
+    $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
+    $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
+    $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
     $param['proposal_approved']['proposal_id'] = $proposal_id;
     $param['proposal_approved']['user_id'] = $row->uid;
     $param['proposal_approved']['headers'] = array(
@@ -561,8 +606,8 @@ function proposal_approval_form_submit($form, &$form_state)
         'Bcc' => $bcc
     );
     if (!drupal_mail('textbook_companion', 'proposal_approved', $email_to, language_default(), $param, $from, TRUE))
-        drupal_set_message('Error sending email message.', 'error');
-    drupal_set_message('Book proposal approved. User has been notified of the approval', 'status');
+        \Drupal::messenger()->addError('Error sending email message.');
+    \Drupal::messenger()->addStatus('Book proposal approved. User has been notified of the approval');
     drupal_goto('textbook-companion/manage-proposal');
     return;
 }
@@ -571,16 +616,16 @@ function proposal_approval_form_submit($form, &$form_state)
 /******************************************************************************/
 function proposal_status_form($from, $form_state)
 {
-    global $user;
+    $user = \Drupal::currentUser();
     /* get current proposal */
     $proposal_id = arg(3);
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d", $proposal_id);*/
-    $query = db_select('textbook_companion_proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('id', $proposal_id);
     $proposal_q = $query->execute();
     if (!$proposal_data = $proposal_q->fetchObject()) {
-        drupal_set_message(t('Invalid proposal selected. Please try again.'), 'error');
+        \Drupal::messenger()->addError(t('Invalid proposal selected. Please try again.'));
         drupal_goto('textbook-companion/manage-proposal');
         return;
     }
@@ -591,7 +636,7 @@ function proposal_status_form($from, $form_state)
     );
     $form['email'] = array(
         '#type' => 'item',
-        '#markup' => user_load($proposal_data->uid)->mail,
+        '#markup' => \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid)->mail,
         '#title' => t('Email')
     );
     $form['mobile'] = array(
@@ -674,7 +719,7 @@ function proposal_status_form($from, $form_state)
     /* get book preference */
     $preference_html = '<ul>';
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d ORDER BY pref_number ASC", $proposal_id);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('proposal_id', $proposal_id);
     $query->orderBy('pref_number', 'ASC');
@@ -727,7 +772,7 @@ function proposal_status_form($from, $form_state)
             '#title' => t('Reason for disapproval')
         );
     }
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('proposal_id', $proposal_id);
     $query->orderBy('pref_number', 'ASC');
@@ -757,11 +802,14 @@ function proposal_status_form($from, $form_state)
         );
     }}
     if ($proposal_data->proposal_status == 0) {
-        $form['approve'] = array(
-            '#type' => 'item',
-            '#markup' => l('Click here', 'textbook-companion/manage-proposal/approve/' . $proposal_id),
-            '#title' => t('Approve')
-        );
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['approve'] = array(
+//             '#type' => 'item',
+//             '#markup' => l('Click here', 'textbook-companion/manage-proposal/approve/' . $proposal_id),
+//             '#title' => t('Approve')
+//         );
+
         $form['completed'] = array(
             '#type' => 'hidden',
             '#value' => 0
@@ -779,41 +827,44 @@ function proposal_status_form($from, $form_state)
         '#type' => 'submit',
         '#value' => t('Submit')
     );
-    $form['cancel'] = array(
-        '#type' => 'item',
-        '#markup' => l(t('Cancel'), 'textbook-companion/manage-proposal/all')
-    );
+    // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['cancel'] = array(
+//         '#type' => 'item',
+//         '#markup' => l(t('Cancel'), 'textbook-companion/manage-proposal/all')
+//     );
+
     return $form;
 }
 function proposal_status_form_submit($form, &$form_state)
 {
-    global $user;
+    $user = \Drupal::currentUser();
     /* get current proposal */
     $proposal_id = $form_state['values']['proposal_id'];
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d", $proposal_id);*/
-    $query = db_select('textbook_companion_proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('id', $proposal_id);
     $proposal_q = $query->execute();
     if (!$proposal_data = $proposal_q->fetchObject()) {
-        drupal_set_message(t('Invalid proposal selected. Please try again.'), 'error');
+        \Drupal::messenger()->addError(t('Invalid proposal selected. Please try again.'));
         drupal_goto('textbook-companion/manage-proposal');
         return;
     }
     if ($form_state['values']['submit_all_code'] == 1) {
         /*db_query("UPDATE {textbook_companion_proposal} SET proposal_status = 3 WHERE id = %d", $proposal_id);*/
-        $query = db_update('textbook_companion_preference');
+        $query = \Drupal::database()->update('textbook_companion_preference');
         $query->fields(array(
             'submited_all_examples_code' => 0
         ));
         $query->condition('proposal_id', $proposal_id);
         $num_updated = $query->execute();
         /* sending email */
-        $book_user = user_load($proposal_data->uid);
+        $book_user = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid);
         $email_to = $book_user->mail;
-        $from = variable_get('textbook_companion_from_email', '');
-        $bcc = variable_get('textbook_companion_emails', '');
-        $cc = variable_get('textbook_companion_cc_emails', '');
+        $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
+        $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
+        $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
         $params['all_code_submitted_status_changed']['proposal_id'] = $proposal_id;
         $params['all_code_submitted_status_changed']['user_id'] = $proposal_data->uid;
         $params['all_code_submitted_status_changed']['headers'] = array(
@@ -825,14 +876,14 @@ function proposal_status_form_submit($form, &$form_state)
             'Cc' => $cc,
             'Bcc' => $bcc
         );
-        if (!drupal_mail('textbook_companion', 'all_code_submitted_status_changed', $email_to, language_default(), $params, variable_get('textbook_companion_from_email', NULL), TRUE))
-            drupal_set_message('Error sending email message.', 'error');
-        drupal_set_message('User has been notified of that code submission interface is now available .', 'status');
+        if (!drupal_mail('textbook_companion', 'all_code_submitted_status_changed', $email_to, language_default(), $params, \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email'), TRUE))
+            \Drupal::messenger()->addError('Error sending email message.');
+        \Drupal::messenger()->addStatus('User has been notified of that code submission interface is now available .');
         drupal_goto('textbook-companion/manage-proposal');
         return;
     } else if ($form_state['values']['completed'] == 1) { /* set the book status to completed */ 
         /*db_query("UPDATE {textbook_companion_proposal} SET proposal_status = 3 WHERE id = %d", $proposal_id);*/
-        $query = db_update('textbook_companion_proposal');
+        $query = \Drupal::database()->update('textbook_companion_proposal');
         $query->fields(array(
             'proposal_status' => 3,
             'completion_date' => time()
@@ -841,11 +892,11 @@ function proposal_status_form_submit($form, &$form_state)
         $num_updated = $query->execute();
         CreateReadmeFileTextbookCompanion($proposal_id);
         /* sending email */
-        $book_user = user_load($proposal_data->uid);
+        $book_user = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid);
         $email_to = $book_user->mail;
-        $from = variable_get('textbook_companion_from_email', '');
-        $bcc = variable_get('textbook_companion_emails', '');
-        $cc = variable_get('textbook_companion_cc_emails', '');
+        $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
+        $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
+        $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
         $param['proposal_completed']['proposal_id'] = $proposal_id;
         $param['proposal_completed']['user_id'] = $proposal_data->uid;
         $param['proposal_completed']['headers'] = array(
@@ -858,10 +909,10 @@ function proposal_status_form_submit($form, &$form_state)
             'Bcc' => $bcc
         );
         if (!drupal_mail('textbook_companion', 'proposal_completed', $email_to, language_default(), $param, $from, TRUE))
-            drupal_set_message('Error sending email message.', 'error');
-        drupal_set_message('Congratulations! Book proposal has been marked as completed. User has been notified of the completion.', 'status');
+            \Drupal::messenger()->addError('Error sending email message.');
+        \Drupal::messenger()->addStatus('Congratulations! Book proposal has been marked as completed. User has been notified of the completion.');
     } else {
-        drupal_set_message('Please select any one action.', 'error');
+        \Drupal::messenger()->addError('Please select any one action.');
         drupal_goto('textbook-companion/manage-proposal/status/' . $proposal_id);
         return;
     }
@@ -873,30 +924,30 @@ function proposal_status_form_submit($form, &$form_state)
 /******************************************************************************/
 function proposal_edit_form($form, &$form_state, $nonaicte_book)
 {
-    global $user;
+    $user = \Drupal::currentUser();
     /* get current proposal */
     $proposal_id = arg(3);
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d", $proposal_id);*/
-    $query = db_select('textbook_companion_proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('id', $proposal_id);
     $proposal_q = $query->execute();
     if ($proposal_q) {
         $proposal_data = $proposal_q->fetchObject();
         if (!$proposal_data) {
-            drupal_set_message(t('Invalid proposal selected. Please try again.'), 'error');
+            \Drupal::messenger()->addError(t('Invalid proposal selected. Please try again.'));
             drupal_goto('textbook-companion/manage-proposal');
             return;
         }
     } else {
-        drupal_set_message(t('Invalid proposal selected. Please try again.'), 'error');
+        \Drupal::messenger()->addError(t('Invalid proposal selected. Please try again.'));
         drupal_goto('textbook-companion/manage-proposal');
         return;
     }
-    $user_data = user_load($proposal_data->uid);
+    $user_data = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid);
     /* $preference1_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d AND pref_number = %d LIMIT 1", $proposal_id, 1);
     $preference1_data = db_fetch_object($preference1_q);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('proposal_id', $proposal_id);
     $query->condition('pref_number', 1);
@@ -904,7 +955,7 @@ function proposal_edit_form($form, &$form_state, $nonaicte_book)
     $preference1_q = $query->execute();
     $preference1_data = $preference1_q->fetchObject();
     /********************************************************************/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('proposal_id', $proposal_id);
     $query->condition('pref_number', 2);
@@ -912,7 +963,7 @@ function proposal_edit_form($form, &$form_state, $nonaicte_book)
     $preference2_q = $query->execute();
     $preference2_data = $preference2_q->fetchObject();
     /**************************************************************************/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('proposal_id', $proposal_id);
     $query->condition('pref_number', 3);
@@ -1313,10 +1364,13 @@ function proposal_edit_form($form, &$form_state, $nonaicte_book)
         '#type' => 'submit',
         '#value' => t('Submit')
     );
-    $form['cancel'] = array(
-        '#type' => 'item',
-        '#markup' => l(t('Cancel'), 'textbook-companion/manage-proposal')
-    );
+    // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['cancel'] = array(
+//         '#type' => 'item',
+//         '#markup' => l(t('Cancel'), 'textbook-companion/manage-proposal')
+//     );
+
     return $form;
 }
 function proposal_edit_form_validate($form, &$form_state)
@@ -1395,7 +1449,7 @@ function proposal_edit_form_submit($form, &$form_state)
         $form_state['values']['country'] = $form_state['values']['other_country'];
         $form_state['values']['all_state'] = $form_state['values']['other_state'];
     }
-    $query = db_update('textbook_companion_proposal');
+    $query = \Drupal::database()->update('textbook_companion_proposal');
     $query->fields(array(
         'full_name' => $form_state['values']['full_name'],
         'mobile' => $form_state['values']['mobile'],
@@ -1415,7 +1469,7 @@ function proposal_edit_form_submit($form, &$form_state)
     ));
     $query->condition('id', $proposal_id);
     $num_updated = $query->execute();
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('proposal_id', $proposal_id);
     $query->condition('pref_number', 1);
@@ -1426,7 +1480,7 @@ function proposal_edit_form_submit($form, &$form_state)
     if ($preference1_data) {
         del_book_pdf($preference1_data->id);
         RenameDir($preference1_id, $form_state['values']['dir_name1']);
-        $query = db_update('textbook_companion_preference');
+        $query = \Drupal::database()->update('textbook_companion_preference');
         $query->fields(array(
             'book' => $form_state['values']['book1'],
             'author' => $form_state['values']['author1'],
@@ -1491,7 +1545,7 @@ function proposal_edit_form_submit($form, &$form_state)
     $query->condition('id', $preference3_id);
     $num_updated = $query->execute();
     }**/
-    drupal_set_message(t('Proposal Updated'), 'status');
+    \Drupal::messenger()->addStatus(t('Proposal Updated'));
 }
 /******************************************************************************/
 /**************************** CATEGORY EDIT FORM ******************************/
@@ -1502,12 +1556,12 @@ function category_edit_form($from, $form_state)
     $preference_id = arg(3);
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE id = %d", $preference_id);
     $preference_data = db_fetch_object($preference_q);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('id', $preference_id);
     $result = $query->execute();
     if (!$preference_data) {
-        drupal_set_message(t('Invalid book selected. Please try again.'), 'error');
+        \Drupal::messenger()->addError(t('Invalid book selected. Please try again.'));
         drupal_goto('textbook-companion/manage-proposal/category');
         return;
     }
@@ -1552,10 +1606,13 @@ function category_edit_form($from, $form_state)
         '#type' => 'submit',
         '#value' => t('Submit')
     );
-    $form['cancel'] = array(
-        '#type' => 'markup',
-        '#value' => l(t('Cancel'), 'textbook-companion/manage-proposal/category')
-    );
+    // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['cancel'] = array(
+//         '#type' => 'markup',
+//         '#value' => l(t('Cancel'), 'textbook-companion/manage-proposal/category')
+//     );
+
     return $form;
 }
 function category_edit_form_submit($form, &$form_state)
@@ -1564,24 +1621,24 @@ function category_edit_form_submit($form, &$form_state)
     $preference_id = (int) arg(3);
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE id = %d", $preference_id);
     $preference_data = db_fetch_object($preference_q);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('id', $preference_id);
     $preference_q = $query->execute();
     $preference_data = $preference_q->fetchObject();
     if (!$preference_data) {
-        drupal_set_message(t('Invalid book selected. Please try again.'), 'error');
+        \Drupal::messenger()->addError(t('Invalid book selected. Please try again.'));
         drupal_goto('textbook-companion/manage-proposal/category');
         return;
     }
     /*db_query("UPDATE {textbook_companion_preference} SET category = %d WHERE id = %d", $form_state['values']['category'], $preference_data->id);*/
-    $query = db_update('textbook_companion_preference');
+    $query = \Drupal::database()->update('textbook_companion_preference');
     $query->fields(array(
         'category' => $form_state['values']['category']
     ));
     $query->condition('id', $preference_data->id);
     $num_updated = $query->execute();
-    drupal_set_message(t('Book Category Updated'), 'status');
+    \Drupal::messenger()->addStatus(t('Book Category Updated'));
     drupal_goto('textbook-companion/manage-proposal/category');
 }
 /****************************************************************/
@@ -1592,24 +1649,27 @@ function _data_entry_proposal_all()
     /* get pending proposals to be approved */
     $proposal_rows = array();
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE approval_status = 1 ORDER BY book ASC");*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('approval_status', 1);
     $query->orderBy('book', 'ASC');
     $preference_q = $query->execute();
     $sno = 1;
     while ($preference_data = $preference_q->fetchObject()) {
-        $proposal_rows[] = array(
-            $sno++,
-            $preference_data->book,
-            $preference_data->author,
-            $preference_data->isbn,
-            l('Edit', 'textbook-companion/dataentry-edit/' . $preference_data->id)
-        );
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $proposal_rows[] = array(
+//             $sno++,
+//             $preference_data->book,
+//             $preference_data->author,
+//             $preference_data->isbn,
+//             l('Edit', 'textbook-companion/dataentry-edit/' . $preference_data->id)
+//         );
+
     }
     /* check if there are any pending proposals */
     if (!$proposal_rows) {
-        drupal_set_message(t('There are no proposals.'), 'status');
+        \Drupal::messenger()->addStatus(t('There are no proposals.'));
         return '';
     }
     $proposal_header = array(
@@ -1619,26 +1679,35 @@ function _data_entry_proposal_all()
         'ISBN',
         ''
     );
-    $output = theme('table', array(
-        'headers' => $proposal_header,
-        'rows' => $proposal_rows
-    ));
+    // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $output = theme('table', array(
+//         'headers' => $proposal_header,
+//         'rows' => $proposal_rows
+//     ));
+
     return $output;
 }
 function dataentry_edit($id = NULL)
 {
     if ($id) {
-        return drupal_get_form('dataentry_edit_form', $id);
+        return \Drupal::formBuilder()->getForm('dataentry_edit_form', $id);
     } else {
         return 'Access denied';
     }
 }
 function dataentry_edit_form($form_state, $id)
 {
-    global $user;
+    $user = \Drupal::currentUser();
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE id = %d", $id);
     $preference_data = db_fetch_object($preference_q);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('id', $id);
     $preference_q = $query->execute();
@@ -1708,7 +1777,7 @@ function dataentry_edit_form($form_state, $id)
 function dataentry_edit_form_submit($form, &$form_state)
 {
     /*db_query("UPDATE {textbook_companion_preference} SET book = '%s', author = '%s', isbn = '%s', publisher = '%s', edition = '%s', year = %d WHERE id = %d", $_POST['book'], $_POST['author'], $_POST['isbn'], $_POST['publisher'], $_POST['edition'], $_POST['year'], $_POST['id']);*/
-    $query = db_update('textbook_companion_preference');
+    $query = \Drupal::database()->update('textbook_companion_preference');
     $query->fields(array(
         'book' => $_POST['book'],
         'author' => $_POST['author'],
@@ -1719,7 +1788,7 @@ function dataentry_edit_form_submit($form, &$form_state)
     ));
     $query->condition('id', $_POST['id']);
     $num_updated = $query->execute();
-    drupal_set_message('Book details updated successfully');
+    \Drupal::messenger()->addMessage('Book details updated successfully');
     drupal_goto('dataentry_book');
 }
 function _failed_all($preference_id = 0, $confirm = "")
@@ -1734,7 +1803,7 @@ function _failed_all($preference_id = 0, $confirm = "")
         ";
         $result = db_query($query);
         $row = db_fetch_object($result);*/
-        $query = db_select('textbook_companion_proposal', 'pro');
+        $query = \Drupal::database()->select('textbook_companion_proposal', 'pro');
         $query->fields('*', array(
             ''
         ));
@@ -1753,7 +1822,7 @@ function _failed_all($preference_id = 0, $confirm = "")
         WHERE id = {$row->proposal_id}
         ";
         db_query($query);*/
-        $query = db_update('textbook_companion_proposal');
+        $query = \Drupal::database()->update('textbook_companion_proposal');
         $query->fields(array(
             'failed_reminder' => 'failed_reminder + 1'
         ));
@@ -1785,7 +1854,7 @@ function _failed_all($preference_id = 0, $confirm = "")
             )
         );
         drupal_mail_send($message);
-        drupal_set_message("Reminder sent successfully.");
+        \Drupal::messenger()->addMessage("Reminder sent successfully.");
         drupal_goto("textbook-companion/manage-proposal/failed");
     } else if ($preference_id) {
         /*$query = "
@@ -1795,7 +1864,7 @@ function _failed_all($preference_id = 0, $confirm = "")
         ";
         $result = db_query($query);
         $row = db_fetch_object($result);*/
-        $query = db_select('textbook_companion_preference', 'pre');
+        $query = \Drupal::database()->select('textbook_companion_preference', 'pre');
         $query->fields('pre');
         $query->leftJoin('textbook_companion_proposal', 'pro', 'pro.id = pre.proposal_id');
         $query->condition('pre.id', $preference_id);
@@ -1806,8 +1875,14 @@ function _failed_all($preference_id = 0, $confirm = "")
         $page_content .= "Author: <b>{$row->author}</b><br>";
         $page_content .= "Contributor: <b>{$row->full_name}</b><br>";
         $page_content .= "Expected Completion Date: <b>" . date("d-m-Y", $row->completion_date) . "</b><br><br>";
-        $page_content .= l("Yes", "textbook-companion/manage-proposal/failed/{$preference_id}/yes") . " | ";
-        $page_content .= l("Cancel", "textbook-companion/manage-proposal/failed");
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $page_content .= l("Yes", "textbook-companion/manage-proposal/failed/{$preference_id}/yes") . " | ";
+
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $page_content .= l("Cancel", "textbook-companion/manage-proposal/failed");
+
     } else {
         /*$query = "
         SELECT * FROM textbook_companion_proposal pro
@@ -1817,7 +1892,7 @@ function _failed_all($preference_id = 0, $confirm = "")
         ORDER BY failed_reminder
         ";
         $result = db_query($query, time());*/
-        $query = db_select('textbook_companion_proposal', 'pro');
+        $query = \Drupal::database()->select('textbook_companion_proposal', 'pro');
         $query->fields('pro');
         $query->leftJoin('textbook_companion_preference', 'pre', 'pre.proposal_id = pro.id');
         $query->leftJoin('users', 'usr', 'usr.uid = pro.uid');
@@ -1836,20 +1911,32 @@ function _failed_all($preference_id = 0, $confirm = "")
         );
         $rows = array();
         while ($row = $result->fetchObject()) {
-            $item = array(
-                date("d-m-Y", $row->creation_date),
-                "{$row->book}<br><i>by</i> {$row->author}",
-                $row->name,
-                date("d-m-Y", $row->completion_date),
-                $row->failed_reminder,
-                l("Remind", "textbook-companion/manage-proposal/failed/{$row->id}")
-            );
+            // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $item = array(
+//                 date("d-m-Y", $row->creation_date),
+//                 "{$row->book}<br><i>by</i> {$row->author}",
+//                 $row->name,
+//                 date("d-m-Y", $row->completion_date),
+//                 $row->failed_reminder,
+//                 l("Remind", "textbook-companion/manage-proposal/failed/{$row->id}")
+//             );
+
             array_push($rows, $item);
         }
-        $page_content .= theme('table', array(
-            'header' => $headers,
-            'rows' => $rows
-        ));
+        // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $page_content .= theme('table', array(
+//             'header' => $headers,
+//             'rows' => $rows
+//         ));
+
     }
     return $page_content;
 }
@@ -1858,7 +1945,7 @@ function _failed_all($preference_id = 0, $confirm = "")
 /***************************************************************************/
 function CreateReadmeFileTextbookCompanion($proposal_id)
 {
-    $result = db_query("
+    $result = \Drupal::database()->query("
                        SELECT  tcc.id AS proposal_id,tcc.full_name, tcc.course, tcc.branch, tcc.university, tcp.id as pref_id, tcp.directory_name, tcp.* FROM textbook_companion_preference tcp JOIN textbook_companion_proposal tcc ON tcp.proposal_id= tcc.id WHERE  tcc.proposal_status = 3 AND tcp.approval_status = 1 AND tcc.id = :proposal_id
                        ", array(
         ":proposal_id" => $proposal_id
@@ -1889,7 +1976,7 @@ function RenameDir($preference_id, $dir_name)
 {
     $preference_id = $preference_id;
     $dir_name = $dir_name;
-    $query = db_query("SELECT directory_name, proposal_id, id FROM textbook_companion_preference WHERE id = :preference_id", array(
+    $query = \Drupal::database()->query("SELECT directory_name, proposal_id, id FROM textbook_companion_preference WHERE id = :preference_id", array(
         ':preference_id' => $preference_id
     ));
     $result = $query->fetchObject();
@@ -1906,11 +1993,11 @@ function RenameDir($preference_id, $dir_name)
             CreateReadmeFileTextbookCompanion($result->proposal_id);
             return $new_directory_name;
         } else {
-            drupal_set_message('Can not rename the directory. If you are editing proposal before approving the proposal directory is not present because the code has been not uploaded yet. For more information please contact to administrator');
+            \Drupal::messenger()->addMessage('Can not rename the directory. If you are editing proposal before approving the proposal directory is not present because the code has been not uploaded yet. For more information please contact to administrator');
             return;
         }
     } else {
-        drupal_set_message('Book names directory not present in databse');
+        \Drupal::messenger()->addMessage('Book names directory not present in databse');
         return;
     }
     return;

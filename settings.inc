@@ -9,7 +9,7 @@ function textbook_companion_settings_form($form, &$form_state)
         '#size' => 50,
         '#maxlength' => 255,
         '#required' => TRUE,
-        '#default_value' => variable_get('textbook_companion_emails', '')
+        '#default_value' => \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails')
     );
     $form['cc_emails'] = array(
         '#type' => 'textfield',
@@ -18,7 +18,7 @@ function textbook_companion_settings_form($form, &$form_state)
         '#size' => 50,
         '#maxlength' => 255,
         '#required' => TRUE,
-        '#default_value' => variable_get('textbook_companion_cc_emails', '')
+        '#default_value' => \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails')
     );
     $form['from_email'] = array(
         '#type' => 'textfield',
@@ -27,7 +27,7 @@ function textbook_companion_settings_form($form, &$form_state)
         '#size' => 50,
         '#maxlength' => 255,
         '#required' => TRUE,
-        '#default_value' => variable_get('textbook_companion_from_email', '')
+        '#default_value' => \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email')
     );
     $form['extensions']['source'] = array(
         '#type' => 'textfield',
@@ -36,7 +36,7 @@ function textbook_companion_settings_form($form, &$form_state)
         '#size' => 50,
         '#maxlength' => 255,
         '#required' => TRUE,
-        '#default_value' => variable_get('textbook_companion_source_extensions', '')
+        '#default_value' => \Drupal::config('textbook_companion.settings')->get('textbook_companion_source_extensions')
     );
     $form['extensions']['sample_source'] = array(
         '#type' => 'textfield',
@@ -45,7 +45,7 @@ function textbook_companion_settings_form($form, &$form_state)
         '#size' => 50,
         '#maxlength' => 255,
         '#required' => TRUE,
-        '#default_value' => variable_get('textbook_companion_sample_source_extensions', '')
+        '#default_value' => \Drupal::config('textbook_companion.settings')->get('textbook_companion_sample_source_extensions')
     );
     $options = array(
         '1' => t('1'),
@@ -58,7 +58,7 @@ function textbook_companion_settings_form($form, &$form_state)
         '#options' => $options,
         '#required' => TRUE,
         '#description' => t('Set number book preference to be allowed'),
-        '#default_value' => variable_get('textbook_companion_book_preferences', '')
+        '#default_value' => \Drupal::config('textbook_companion.settings')->get('textbook_companion_book_preferences')
     );
     $form['submit'] = array(
         '#type' => 'submit',
@@ -72,11 +72,11 @@ function textbook_companion_settings_form_validate($form, &$form_state)
   }
 function textbook_companion_settings_form_submit($form, &$form_state)
   {
-    variable_set('textbook_companion_emails', $form_state['values']['emails']);
-    variable_set('textbook_companion_cc_emails', $form_state['values']['cc_emails']);
-    variable_set('textbook_companion_from_email', $form_state['values']['from_email']);
-    variable_set('textbook_companion_source_extensions', $form_state['values']['source']);
-    variable_set('textbook_companion_sample_source_extensions', $form_state['values']['sample_source']);
-    variable_set('textbook_companion_book_preferences', $form_state['values']['book_preference_options']);
-    drupal_set_message(t('Settings updated'), 'status');
+    \Drupal::configFactory()->getEditable('textbook_companion.settings')->set('textbook_companion_emails', $form_state['values']['emails'])->save();
+    \Drupal::configFactory()->getEditable('textbook_companion.settings')->set('textbook_companion_cc_emails', $form_state['values']['cc_emails'])->save();
+    \Drupal::configFactory()->getEditable('textbook_companion.settings')->set('textbook_companion_from_email', $form_state['values']['from_email'])->save();
+    \Drupal::configFactory()->getEditable('textbook_companion.settings')->set('textbook_companion_source_extensions', $form_state['values']['source'])->save();
+    \Drupal::configFactory()->getEditable('textbook_companion.settings')->set('textbook_companion_sample_source_extensions', $form_state['values']['sample_source'])->save();
+    \Drupal::configFactory()->getEditable('textbook_companion.settings')->set('textbook_companion_book_preferences', $form_state['values']['book_preference_options'])->save();
+    \Drupal::messenger()->addStatus(t('Settings updated'));
   }

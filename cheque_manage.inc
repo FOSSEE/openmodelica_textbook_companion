@@ -13,10 +13,13 @@ function cheque_proposal_all()
       '#type' => 'submit',
       '#value' => t('Search')
   );
-  $form['cancel_cheque'] = array(
-     '#type' => 'markup',
-     '#value' => l(t('Cancel'), ''),
-  );
+  // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['cancel_cheque'] = array(
+//      '#type' => 'markup',
+//      '#value' => l(t('Cancel'), ''),
+//   );
+
   
   
   $count=20;
@@ -24,7 +27,7 @@ function cheque_proposal_all()
   $proposal_rows = array();
 
   /*$proposal_q = "SELECT * FROM {textbook_companion_proposal} ORDER BY id DESC";*/
-	$query = db_select('textbook_companion_proposal');
+	$query = \Drupal::database()->select('textbook_companion_proposal');
 	$query->fields('textbook_companion_proposal');
 	$query->orderBy('id', 'DESC');
 
@@ -39,7 +42,7 @@ function cheque_proposal_all()
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d AND approval_status = 1 LIMIT 1", $proposal_data->id);
     $preference_data = db_fetch_object($preference_q);*/
 
-	$query = db_select('textbook_companion_preference');
+	$query = \Drupal::database()->select('textbook_companion_preference');
 	$query->fields('textbook_companion_preference');
 	$query->condition('proposal_id', $proposal_data->id);
 	$query->condition('approval_status', 1);
@@ -50,7 +53,7 @@ function cheque_proposal_all()
     /*$preference_q1 = db_query("SELECT * FROM {textbook_companion_proposal} WHERE uid = %d AND approval_status = 1 LIMIT 1", $proposal_data->id);
     $preference_data1 = db_fetch_object($preference_q1);*/
 
-	$query = db_select('textbook_companion_proposal');
+	$query = \Drupal::database()->select('textbook_companion_proposal');
 	$query->fields('textbook_companion_proposal');
 	$query->condition('uid', $proposal_data->id);
 	$query->condition('proposal_status', 1);
@@ -68,18 +71,30 @@ function cheque_proposal_all()
     case 3: $proposal_status = 'Completed'; break;
     default: $proposal_status = 'Unknown'; break;
     }
-    $proposal_rows[] = array(date('d-m-Y', $proposal_data->creation_date), l($proposal_data->full_name, 'user/' . $proposal_data->uid), date('d-m-Y', $proposal_data->completion_date), l('Form Submission', 'manage_proposal/paper_submission/' . $proposal_data->id) . ' | ' . l('Cheque Details', 'cheque_contact/status/' . $proposal_data->id));
+    // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $proposal_rows[] = array(date('d-m-Y', $proposal_data->creation_date), l($proposal_data->full_name, 'user/' . $proposal_data->uid), date('d-m-Y', $proposal_data->completion_date), l('Form Submission', 'manage_proposal/paper_submission/' . $proposal_data->id) . ' | ' . l('Cheque Details', 'cheque_contact/status/' . $proposal_data->id));
+
   }
 
   /* check if there are any pending proposals */
   if (!$proposal_rows)
   {
-    drupal_set_message(t('There are no proposals.'), 'status');
+    \Drupal::messenger()->addStatus(t('There are no proposals.'));
     return '';
   }
  
   $proposal_header = array('Date of Submission', 'Contributor Name', 'Expected Date of Completion', 'Status');
-  $output = theme('table',array('header' =>$proposal_header,'rows'=>$proposal_rows));
+  // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $output = theme('table',array('header' =>$proposal_header,'rows'=>$proposal_rows));
+
   return $output . theme_pager($count);
   }
   return $form;

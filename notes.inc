@@ -5,12 +5,12 @@
 /******************************************************************************/
 function book_notes_form($form_state)
   {
-    global $user;
+    $user = \Drupal::currentUser();
     /* get current proposal */
     $preference_id = arg(2);
     $preference_id = (int) $preference_id;
     /*$result = db_query("SELECT * FROM {textbook_companion_preference} WHERE id = %d", $preference_id);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('id', $preference_id);
     $result = $query->execute();
@@ -22,21 +22,21 @@ function book_notes_form($form_state)
           }
         else
           {
-            drupal_set_message(t('Invalid book selected. Please try again.'), 'error');
+            \Drupal::messenger()->addError(t('Invalid book selected. Please try again.'));
             drupal_goto('code_approval/bulk');
             return;
           }
       }
     else
       {
-        drupal_set_message(t('Invalid book selected. Please try again.'), 'error');
+        \Drupal::messenger()->addError(t('Invalid book selected. Please try again.'));
         drupal_goto('code_approval/bulk');
         return;
       }
     /* get current notes */
     $notes = '';
     /*$notes_q = db_query("SELECT * FROM {textbook_companion_notes} WHERE preference_id = %d LIMIT 1", $preference_id);*/
-    $query = db_select('textbook_companion_notes');
+    $query = \Drupal::database()->select('textbook_companion_notes');
     $query->fields('textbook_companion_notes');
     $query->condition('preference_id', $preference_id);
     $query->range(0, 1);
@@ -61,20 +61,23 @@ function book_notes_form($form_state)
         '#type' => 'submit',
         '#value' => t('Submit')
     );
-    $form['cancel'] = array(
-        '#type' => 'markup',
-        '#value' => l(t('Back'), 'code_approval/bulk')
-    );
+    // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['cancel'] = array(
+//         '#type' => 'markup',
+//         '#value' => l(t('Back'), 'code_approval/bulk')
+//     );
+
     return $form;
   }
 function book_notes_form_submit($form, &$form_state)
   {
-    global $user;
+    $user = \Drupal::currentUser();
     /* get current proposal */
     $preference_id = arg(2);
     $preference_id = (int) $preference_id;
     /*$result = db_query("SELECT * FROM {textbook_companion_preference} WHERE id = %d", $preference_id);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('id', $preference_id);
     $result = $query->execute();
@@ -86,21 +89,21 @@ function book_notes_form_submit($form, &$form_state)
           }
         else
           {
-            drupal_set_message(t('Invalid book selected. Please try again.'), 'error');
+            \Drupal::messenger()->addError(t('Invalid book selected. Please try again.'));
             drupal_goto('code_approval/bulk');
             return;
           }
       }
     else
       {
-        drupal_set_message(t('Invalid book selected. Please try again.'), 'error');
+        \Drupal::messenger()->addError(t('Invalid book selected. Please try again.'));
         drupal_goto('code_approval/bulk');
         return;
       }
     /* find existing notes */
     /*$notes_q = db_query("SELECT * FROM {textbook_companion_notes} WHERE preference_id = %d LIMIT 1", $preference_id);
     $notes_data = db_fetch_object($notes_q);*/
-    $query = db_select('textbook_companion_notes');
+    $query = \Drupal::database()->select('textbook_companion_notes');
     $query->fields('textbook_companion_notes');
     $query->condition('preference_id', $preference_id);
     $query->range(0, 1);
@@ -110,13 +113,13 @@ function book_notes_form_submit($form, &$form_state)
     if ($notes_data)
       {
         /*db_query("UPDATE {textbook_companion_notes} SET notes = '%s' WHERE id = %d", $form_state['values']['notes'], $notes_data->id);*/
-        $query = db_update('textbook_companion_notes');
+        $query = \Drupal::database()->update('textbook_companion_notes');
         $query->fields(array(
             'notes' => $form_state['values']['notes']
         ));
         $query->condition('id', $notes_data->id);
         $num_updated = $query->execute();
-        drupal_set_message('Notes updated successfully.', 'status');
+        \Drupal::messenger()->addStatus('Notes updated successfully.');
       }
     else
       {
@@ -127,10 +130,8 @@ function book_notes_form_submit($form, &$form_state)
             ":preference_id" => $preference_id,
             ":notes" => $form_state['values']['notes']
         );
-        $result = db_query($query, $args, array(
-            'return' => Database::RETURN_INSERT_ID
-        ));
-        drupal_set_message('Notes added successfully.', 'status');
+        $result = \Drupal::database()->query($query, $args, $query);
+        \Drupal::messenger()->addStatus('Notes added successfully.');
       }
   }
 /* return proposal and author information */
@@ -140,7 +141,7 @@ function _book_information($preference_id)
     preference.book as preference_book, preference.author as preference_author, preference.isbn as preference_isbn, preference.publisher as preference_publisher, preference.edition as preference_edition, preference.year as preference_year,
     proposal.full_name as proposal_full_name, proposal.faculty as proposal_faculty, proposal.reviewer as proposal_reviewer, proposal.course as proposal_course, proposal.branch as proposal_branch, proposal.university as proposal_university
     FROM {textbook_companion_proposal} proposal LEFT JOIN {textbook_companion_preference} preference ON proposal.id = preference.proposal_id WHERE preference.id = %d", $preference_id));*/
-    $query = db_select('textbook_companion_proposal', 'proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal', 'proposal');
     $query->fields('preference', array(
         'book',
         'author',

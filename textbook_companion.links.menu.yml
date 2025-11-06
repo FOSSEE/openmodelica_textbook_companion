@@ -1,0 +1,212 @@
+textbook_companion.book_proposal_form:
+  route_name: textbook_companion.book_proposal_form
+  title: 'Book Proposal Form'
+  description: 'Book Proposal Form.'
+textbook_companion.aicte_proposal_all:
+  route_name: textbook_companion.aicte_proposal_all
+  title: 'Book Proposal'
+  description: 'Book Proposal Form'
+textbook_companion._proposal_pending:
+  route_name: textbook_companion._proposal_pending
+  title: 'Manage Book Proposals'
+  description: 'Manage Book Proposals'
+textbook_companion._proposal_pending_0:
+  route_name: textbook_companion._proposal_pending
+  title: 'Pending Proposals'
+  weight: 1
+  description: 'Pending Proposals Queue'
+textbook_companion._proposal_all:
+  route_name: textbook_companion._proposal_all
+  title: 'All Proposals'
+  weight: 2
+  description: 'All Proposals'
+textbook_companion._failed_all:
+  route_name: textbook_companion._failed_all
+  title: 'Failed Proposals'
+  weight: 3
+  description: 'Failed to submit code'
+textbook_companion.proposal_approval_form:
+  route_name: textbook_companion.proposal_approval_form
+  title: 'Proposal Approval'
+  description: 'Proposal Approval'
+textbook_companion.proposal_status_form:
+  route_name: textbook_companion.proposal_status_form
+  title: 'Proposal Status'
+  description: 'Proposal Status'
+textbook_companion.proposal_edit_form:
+  route_name: textbook_companion.proposal_edit_form
+  title: 'Edit Proposal'
+  description: 'Edit Proposal'
+textbook_companion.code_approval:
+  route_name: textbook_companion.code_approval
+  title: 'Manage Code Approval'
+  description: 'Manage Code Approval'
+textbook_companion.code_approval_form:
+  route_name: textbook_companion.code_approval_form
+  title: 'Code Approval'
+  weight: 1
+  description: 'Code Approval'
+  parent: textbook_companion.code_approval
+textbook_companion.bulk_approval_form:
+  route_name: textbook_companion.bulk_approval_form
+  title: 'Bulk Manage'
+  weight: 2
+  description: 'Bulk Mangage'
+  parent: textbook_companion.code_approval
+textbook_companion.edit_code_submission_form:
+  route_name: textbook_companion.edit_code_submission_form
+  title: 'Edit Code Submission'
+  description: 'Enable users code submission interface'
+textbook_companion.upload_examples_admin_edit_form:
+  route_name: textbook_companion.upload_examples_admin_edit_form
+  title: 'Admin Edit Example'
+  weight: 3
+  description: 'Admin Edit Example'
+  parent: textbook_companion.code_approval
+textbook_companion.book_notes_form:
+  route_name: textbook_companion.book_notes_form
+  title: 'Notes for Reviewers'
+  weight: 4
+  description: 'Notes for Reviewers'
+  parent: textbook_companion.code_approval
+textbook_companion.list_chapters:
+  route_name: textbook_companion.list_chapters
+  title: 'Code Submission'
+  description: 'Code Submission'
+textbook_companion.list_chapters_0:
+  route_name: textbook_companion.list_chapters
+  title: 'List Chapters'
+  weight: 1
+  description: 'List Chapters'
+textbook_companion.upload_examples:
+  route_name: textbook_companion.upload_examples
+  title: 'Code Submission'
+  weight: 2
+  description: 'Code Submission'
+textbook_companion.upload_examples_edit_form:
+  route_name: textbook_companion.upload_examples_edit_form
+  title: 'Edit Example'
+  description: 'Edit Example'
+textbook_companion._upload_examples_delete:
+  route_name: textbook_companion._upload_examples_delete
+  title: 'Delete Example'
+  description: 'Delete Example'
+textbook_companion.edit_chapter_title_form:
+  route_name: textbook_companion.edit_chapter_title_form
+  title: 'Edit Chapter Title'
+  description: 'Edit Chapter Title'
+textbook_companion.list_examples:
+  route_name: textbook_companion.list_examples
+  title: 'List Examples'
+  weight: 3
+  description: 'List Examples'
+textbook_companion.search_form:
+  route_name: textbook_companion.search_form
+  title: 'Book Search'
+  description: ''
+textbook_companion.search_form_0:
+  route_name: textbook_companion.search_form
+  title: 'Book Search'
+  weight: 1
+  description: ''
+textbook_companion.browse_book:
+  route_name: textbook_companion.browse_book
+  title: 'By Book Title'
+  weight: 2
+  description: ''
+textbook_companion.browse_author:
+  route_name: textbook_companion.browse_author
+  title: 'By Author'
+  weight: 3
+  description: ''
+textbook_companion.browse_college_form:
+  route_name: textbook_companion.browse_college_form
+  title: 'By College'
+  weight: 4
+  description: ''
+textbook_companion.browse_student:
+  route_name: textbook_companion.browse_student
+  title: 'By Student'
+  weight: 5
+  description: ''
+textbook_companion.run_form:
+  route_name: textbook_companion.run_form
+  title: 'Download Codes'
+textbook_companion.run_form_0:
+  route_name: textbook_companion.run_form
+  title: 'Download Codes'
+textbook_companion.download_example_file:
+  route_name: textbook_companion.download_example_file
+  title: 'Code Download'
+  description: 'Code Download'
+textbook_companion.download_sample_code:
+  route_name: textbook_companion.download_sample_code
+  title: 'Sample Code Download'
+  description: 'Sample Code Download'
+textbook_companion.download_example:
+  route_name: textbook_companion.download_example
+  title: 'Code Download'
+  description: 'Code Download'
+textbook_companion.download_chapter:
+  route_name: textbook_companion.download_chapter
+  title: 'Code Download'
+  description: 'Code Download'
+textbook_companion.download_book:
+  route_name: textbook_companion.download_book
+  title: 'Code Download'
+  description: 'Code Download'
+textbook_companion.download_full_chapter:
+  route_name: textbook_companion.download_full_chapter
+  title: 'Code Download'
+  description: 'Code Download'
+textbook_companion.download_full_book:
+  route_name: textbook_companion.download_full_book
+  title: 'Code Download'
+  description: 'Code Download'
+textbook_companion.download_full_chapter_0:
+  route_name: textbook_companion.download_full_chapter
+  title: 'Code Download'
+  description: 'Code Download'
+textbook_companion.download_full_book_0:
+  route_name: textbook_companion.download_full_book
+  title: 'Code Download'
+  description: 'Code Download'
+textbook_companion.download_book_0:
+  route_name: textbook_companion.download_book
+  title: 'Generate Book'
+  description: 'Generate Book From Latex Script'
+textbook_companion.delete_book:
+  route_name: textbook_companion.delete_book
+  title: 'Delete Book PDF'
+  description: 'Delete Book PDF'
+textbook_companion.ajax:
+  route_name: textbook_companion.ajax
+  title: Ajax
+  description: Ajax
+textbook_companion.settings_form:
+  route_name: textbook_companion.settings_form
+  title: 'Book Companion Settings'
+  description: 'Textbook Companion Settings'
+textbook_companion._data_entry_proposal_all:
+  route_name: textbook_companion._data_entry_proposal_all
+  title: 'Approved books list'
+textbook_companion.dataentry_edit:
+  route_name: textbook_companion.dataentry_edit
+  title: 'Edit book details'
+textbook_companion._list_all_certificates:
+  route_name: textbook_companion._list_all_certificates
+  title: 'List Of All Certificates'
+  description: 'List Of All Certificates'
+textbook_companion.generate_pdf:
+  route_name: textbook_companion.generate_pdf
+  title: 'Download Certificate'
+  description: 'Download Certificate'
+  parent: textbook_companion._list_all_certificates
+textbook_companion.verify_certificates:
+  route_name: textbook_companion.verify_certificates
+  title: 'Certificate Verification'
+  parent: textbook_companion._list_all_certificates
+textbook_companion.nonaicte_proposal_all:
+  route_name: textbook_companion.nonaicte_proposal_all
+  title: 'Book Suggestion Form '
+  description: 'NON-AICTE Book Proposal Form'

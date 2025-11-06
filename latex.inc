@@ -22,19 +22,19 @@ function _latex_generate_files($preference_id, $full_book = FALSE)
     $sep = "#";
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE id = %d", $preference_id);
     $preference_data = db_fetch_object($preference_q);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('id', $preference_id);
     $preference_q = $query->execute();
     $preference_data = $preference_q->fetchObject();
     if (!$preference_data)
       {
-        drupal_set_message('Invalid book specified.', 'error');
+        \Drupal::messenger()->addError('Invalid book specified.');
         drupal_goto('');
       }
     if ($preference_data->approval_status == 0)
       {
-        drupal_set_message('Book proposal is still in pending review.', 'error');
+        \Drupal::messenger()->addError('Book proposal is still in pending review.');
         drupal_goto('');
       }
     $book_filedata = $preference_data->book . $sep . $preference_data->author . $sep . $preference_data->isbn . $sep . $preference_data->publisher . $sep . $preference_data->edition . $sep . $preference_data->year . $eol;
@@ -59,18 +59,18 @@ function _latex_generate_files($preference_id, $full_book = FALSE)
       }
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d", $preference_data->proposal_id);
     $proposal_data = db_fetch_object($proposal_q);*/
-    $query = db_select('textbook_companion_proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('id', $preference_data->proposal_id);
     $proposal_q = $query->execute();
     $proposal_data = $proposal_q->fetchObject();
     if (!$proposal_data)
       {
-        drupal_set_message('Could not fetch contributors information for the book specified.', 'error');
+        \Drupal::messenger()->addError('Could not fetch contributors information for the book specified.');
       }
     $contributor_filedata .= $proposal_data->full_name . $sep . $proposal_data->course . $sep . $proposal_data->branch . $sep . $proposal_data->university . $sep . $proposal_data->faculty . $sep . $proposal_data->reviewer . $eol;
     /*$chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE preference_id = %d ORDER BY number DESC", $preference_data->id);*/
-    $query = db_select('textbook_companion_chapter');
+    $query = \Drupal::database()->select('textbook_companion_chapter');
     $query->fields('textbook_companion_chapter');
     $query->condition('preference_id', $preference_data->id);
     $query->orderBy('number', 'DESC');
@@ -80,7 +80,7 @@ function _latex_generate_files($preference_id, $full_book = FALSE)
         if ($full_book)
           {
             /*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE chapter_id = %d ORDER BY number DESC", $chapter_data->id);*/
-            $query = db_select('textbook_companion_example');
+            $query = \Drupal::database()->select('textbook_companion_example');
             $query->fields('textbook_companion_example');
             $query->condition('chapter_id', $chapter_data->id);
             $query->orderBy('number', 'DESC');
@@ -89,7 +89,7 @@ function _latex_generate_files($preference_id, $full_book = FALSE)
         else
           {
             /*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE chapter_id = %d AND approval_status = 1 ORDER BY number DESC", $chapter_data->id);*/
-            $query = db_select('textbook_companion_example');
+            $query = \Drupal::database()->select('textbook_companion_example');
             $query->fields('textbook_companion_example');
             $query->condition('chapter_id', $chapter_data->id);
             $query->condition('approval_status', 1);
@@ -99,7 +99,7 @@ function _latex_generate_files($preference_id, $full_book = FALSE)
         while ($example_data = $example_q->fetchObject())
           {
             /*$example_files_q = db_query("SELECT * FROM {textbook_companion_example_files} WHERE example_id = %d", $example_data->id);*/
-            $query = db_select('textbook_companion_example_files');
+            $query = \Drupal::database()->select('textbook_companion_example_files');
             $query->fields('textbook_companion_example_files');
             $query->condition('example_id', $example_data->id);
             $example_files_q = $query->execute();
@@ -117,14 +117,14 @@ function _latex_generate_files($preference_id, $full_book = FALSE)
                 $latex_filedata .= $eol;
               }
             /*$dependency_files_q = db_query("SELECT * FROM {textbook_companion_example_dependency} WHERE example_id = %d", $example_data->id);*/
-            $query = db_select('textbook_companion_example_dependency');
+            $query = \Drupal::database()->select('textbook_companion_example_dependency');
             $query->fields('textbook_companion_example_dependency');
             $query->condition('example_id', $example_data->id);
             $dependency_files_q = $query->execute();
             while ($dependency_files_data = $dependency_files_q->fetchObject())
               {
                 /*$dependency_q = db_query("SELECT * FROM {textbook_companion_dependency_files} WHERE id = %d LIMIT 1", $dependency_files_data->dependency_id);*/
-                $query = db_select('textbook_companion_dependency_files');
+                $query = \Drupal::database()->select('textbook_companion_dependency_files');
                 $query->fields('textbook_companion_dependency_files');
                 $query->condition('id', $dependency_files_data->dependency_id);
                 $query->range(0, 1);
@@ -149,7 +149,7 @@ function _latex_generate_files($preference_id, $full_book = FALSE)
     foreach ($depedency_list as $row => $data)
       {
         /*$dependency_q = db_query("SELECT * FROM {textbook_companion_dependency_files} WHERE id = %d LIMIT 1", $row);*/
-        $query = db_select('textbook_companion_dependency_files');
+        $query = \Drupal::database()->select('textbook_companion_dependency_files');
         $query->fields('textbook_companion_dependency_files');
         $query->condition('id', $row);
         $query->range(0, 1);
@@ -200,7 +200,7 @@ function _latex_generate_files($preference_id, $full_book = FALSE)
       }
     else
       {
-        drupal_set_message("Error occurred when generating the PDF version of the Book.", 'error');
+        \Drupal::messenger()->addError("Error occurred when generating the PDF version of the Book.");
       }
     /*********************** DELETING TEMPORARY FILES ***************************/
     /* regenerate book if full book selected */
@@ -230,7 +230,7 @@ function textbook_companion_delete_book()
   {
     $book_id = arg(2);
     del_book_pdf($book_id);
-    drupal_set_message(t('Book schedule for regeneration.'), 'status');
+    \Drupal::messenger()->addStatus(t('Book schedule for regeneration.'));
     drupal_goto('code_approval/bulk');
     return;
   }

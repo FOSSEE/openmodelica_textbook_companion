@@ -2,14 +2,14 @@
 
 function paper_submission_form($form_state, $proposal_id)
 {
-		global $user;
+		$user = \Drupal::currentUser();
 		$proposal_id = arg(2);
 		
 		/* get current proposal */
 
 		/*$preference4_q = db_query("SELECT * FROM {textbook_companion_paper} WHERE proposal_id=".$proposal_id);*/
 
-		$query = db_select('textbook_companion_paper');
+		$query = \Drupal::database()->select('textbook_companion_paper');
 		$query->fields('textbook_companion_paper');
 		$query->condition('proposal_id', $proposal_id);
 		$preference4_q = $query->execute();
@@ -31,7 +31,7 @@ function paper_submission_form($form_state, $proposal_id)
 			$args = array(
 			":proposal_id"=>$proposal_id, 
 				);
-			$result = db_query($query, $args, array('return' => Database::RETURN_INSERT_ID));	
+			$result = \Drupal::database()->query($query, $args, $query);	
 		}
 		$form['proposal_id'] =array(
 			'#type' => 'hidden',
@@ -65,10 +65,13 @@ function paper_submission_form($form_state, $proposal_id)
 			'#type' => 'submit',
 			'#value' => t('Send Email')
 		);
-		$form['cancel'] = array(
-			'#type' => 'markup',
-			'#value' => l(t('Cancel'), 'manage_proposal/all'),
-		);
+		// @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['cancel'] = array(
+// 			'#type' => 'markup',
+// 			'#value' => l(t('Cancel'), 'manage_proposal/all'),
+// 		);
+
 	return $form;
 }
 
@@ -78,7 +81,7 @@ function paper_submission_form_submit($form, &$form_state)
 		/*$query ="UPDATE {textbook_companion_paper} SET internship_form = ".$form_state['values']['internshipform'].", copyright_form = ".$form_state['values']['copyrighttransferform'].", undertaking_form= ".$form_state['values']['undertakingform'].", reciept_form= ".$form_state['values']['recieptform']." WHERE proposal_id = ".$form_state['values']['proposal_id'];
 		db_query($query);*/
 
-	$query = db_update('textbook_companion_paper');
+	$query = \Drupal::database()->update('textbook_companion_paper');
 	$query->fields(array(
   	'internship_form' => $form_state[ values ][ internshipform ],
   	'copyright_form' => $form_state[ values ][ copyrighttransferform ],
@@ -94,19 +97,19 @@ function paper_submission_form_submit($form, &$form_state)
 		if ($form_state['values']['internshipform'] == 1)
 		{
 			/* sending email */
-			$book_user = user_load($proposal_data->uid);
+			$book_user = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid);
 			$param['proposal_completed']['proposal_id'] = $proposal_id;
 			$param['proposal_completed']['user_id'] = $proposal_data->uid;
 			$email_to = $book_user->mail;
-			if (!drupal_mail('textbook_companion', 'internship_form', $email_to , language_default(), $param, variable_get('textbook_companion_from_email', NULL), TRUE))
-				drupal_set_message('Error sending email message.', 'error');
-			drupal_set_message('Internship Form for Book proposal has been recieved. User has been notified .', 'status');
+			if (!drupal_mail('textbook_companion', 'internship_form', $email_to , language_default(), $param, \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email'), TRUE))
+				\Drupal::messenger()->addError('Error sending email message.');
+			\Drupal::messenger()->addStatus('Internship Form for Book proposal has been recieved. User has been notified .');
 		}
 		else
 		{
-			if (!drupal_mail('textbook_companion', 'internship_form_not', $email_to , language_default(), $param, variable_get('textbook_companion_from_email', NULL), TRUE))
-			drupal_set_message('Error sending email message.', 'error');
-		drupal_set_message('Internship Form for Book proposal has not been recieved. User has been notified .', 'status');
+			if (!drupal_mail('textbook_companion', 'internship_form_not', $email_to , language_default(), $param, \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email'), TRUE))
+			\Drupal::messenger()->addError('Error sending email message.');
+		\Drupal::messenger()->addStatus('Internship Form for Book proposal has not been recieved. User has been notified .');
 		}
   
 		/************************************************
@@ -116,19 +119,19 @@ function paper_submission_form_submit($form, &$form_state)
 		if ($form_state['values']['copyrighttransferform'] == 1)
 		{
 			/* sending email */
-			$book_user = user_load($proposal_data->uid);
+			$book_user = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid);
 			$param['proposal_completed']['proposal_id'] = $proposal_id;
 			$param['proposal_completed']['user_id'] = $proposal_data->uid;
 			$email_to = $book_user->mail;
-			if (!drupal_mail('textbook_companion', 'copyrighttransfer_form', $email_to , language_default(), $param, variable_get('textbook_companion_from_email', NULL), TRUE))
-				drupal_set_message('Error sending email message.', 'error');
-			drupal_set_message('Copyright Form for Book proposal has been recieved. User has been notified .', 'status');
+			if (!drupal_mail('textbook_companion', 'copyrighttransfer_form', $email_to , language_default(), $param, \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email'), TRUE))
+				\Drupal::messenger()->addError('Error sending email message.');
+			\Drupal::messenger()->addStatus('Copyright Form for Book proposal has been recieved. User has been notified .');
 		}
 		else
 		{
-			if (!drupal_mail('textbook_companion', 'copyrighttransfer_form_not', $email_to , language_default(), $param, variable_get('textbook_companion_from_email', NULL), TRUE))
-				drupal_set_message('Error sending email message.', 'error');
-			drupal_set_message('Copyright Transfer Form for Book proposal has not been recieved. User has been notified .', 'status');
+			if (!drupal_mail('textbook_companion', 'copyrighttransfer_form_not', $email_to , language_default(), $param, \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email'), TRUE))
+				\Drupal::messenger()->addError('Error sending email message.');
+			\Drupal::messenger()->addStatus('Copyright Transfer Form for Book proposal has not been recieved. User has been notified .');
 		}
   
 		/************************************************
@@ -138,22 +141,22 @@ function paper_submission_form_submit($form, &$form_state)
 		if ($form_state['values']['undertakingform'] == 1)
 		{
 			/* sending email */
-			$book_user = user_load($proposal_data->uid);
+			$book_user = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid);
 			$param['proposal_completed']['proposal_id'] = $proposal_id;
 			$param['proposal_completed']['user_id'] = $proposal_data->uid;
 			$email_to = $book_user->mail;
-			if (!drupal_mail('textbook_companion', 'undertakingform_form', $email_to , language_default(), $param, variable_get('textbook_companion_from_email', NULL), TRUE))
-				drupal_set_message('Error sending email message.', 'error');
-			drupal_set_message('Undertaking Form for Book proposal has been recieved. User has been notified .', 'status');
+			if (!drupal_mail('textbook_companion', 'undertakingform_form', $email_to , language_default(), $param, \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email'), TRUE))
+				\Drupal::messenger()->addError('Error sending email message.');
+			\Drupal::messenger()->addStatus('Undertaking Form for Book proposal has been recieved. User has been notified .');
 		}
 		else
 		{
-			if (!drupal_mail('textbook_companion', 'undertakingform_form_not', $email_to , language_default(), $param, variable_get('textbook_companion_from_email', NULL), TRUE))
-				drupal_set_message('Error sending email message.', 'error');
-			drupal_set_message('Undertaking Form for Book proposal has not been recieved. User has been notified .', 'status');
+			if (!drupal_mail('textbook_companion', 'undertakingform_form_not', $email_to , language_default(), $param, \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email'), TRUE))
+				\Drupal::messenger()->addError('Error sending email message.');
+			\Drupal::messenger()->addStatus('Undertaking Form for Book proposal has not been recieved. User has been notified .');
 		}
 
-drupal_set_message(t('Proposal Updated'), 'status');
+\Drupal::messenger()->addStatus(t('Proposal Updated'));
 }
 
 
@@ -222,11 +225,11 @@ return;
 
 function cheque_contct_form()
 {
-	global $user;
+	$user = \Drupal::currentUser();
         
 	/*$preference4_q = db_query("SELECT id FROM {textbook_companion_proposal} WHERE uid=".$user->uid);*/
 
-	$query = db_select('textbook_companion_proposal');
+	$query = \Drupal::database()->select('textbook_companion_proposal');
 	$query->fields('id', array(''));
 	$query->condition('uid', $user->uid);
 	$result = $query->execute();
@@ -249,19 +252,25 @@ function cheque_contct_form()
 			'#value' => t('Search')
 		);
 
-		$form['cancel'] = array(
-			'#type' => 'markup',
-			'#value' => l(t('Cancel'), ''),
-		);
+		// @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['cancel'] = array(
+// 			'#type' => 'markup',
+// 			'#value' => l(t('Cancel'), ''),
+// 		);
 
-		$form['submit2'] = array(
-			'#type' => 'markup',
-			'#value' => l(t('Generate Report'), 'cheque_contct/report'),
-			'#attributes' => array('id' => 'perm_report'),
-		);
+
+		// @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['submit2'] = array(
+// 			'#type' => 'markup',
+// 			'#value' => l(t('Generate Report'), 'cheque_contct/report'),
+// 			'#attributes' => array('id' => 'perm_report'),
+// 		);
+
 
 		/*$search_q = db_query("SELECT * FROM textbook_companion_proposal p,textbook_companion_cheque c WHERE c.address_con = 'Submitted' AND (p.id = c.proposal_id)");*/
-		$query = db_select('textbook_companion_proposal', 'p');
+		$query = \Drupal::database()->select('textbook_companion_proposal', 'p');
 		$query->join('textbook_companion_cheque','c','p.id = c.proposal_id');
 		$query->fields('p',array('textbook_companion_proposal'));
 		$query->fields('c',array('textbook_companion_cheque'));
@@ -270,12 +279,24 @@ function cheque_contct_form()
 		
 		while ($search_data = $result->fetchObject())
     	{
-			$search_rows[] = array(l($search_data->full_name, 'cheque_contct/status/' . $search_data->proposal_id),$search_data->address_con,$search_data->cheque_no,$search_data->cheque_dispatch_date); 
+			// @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $search_rows[] = array(l($search_data->full_name, 'cheque_contct/status/' . $search_data->proposal_id),$search_data->address_con,$search_data->cheque_no,$search_data->cheque_dispatch_date);
+ 
 		}
 		if ($search_rows)
 		{
 			$search_header = array('Name Of The Student', 'Application Form Status', 'Cheque No', 'Cheque Clearance Date');
-			$output .= theme('table',array('headers'=>$search_header, 'rows'=>$search_rows));
+			// @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $output .= theme('table',array('headers'=>$search_header, 'rows'=>$search_rows));
+
 			$form['search_results'] = array(
 				'#type' => 'item',
 				'#title' => $_POST['search'] ,
@@ -297,7 +318,7 @@ function cheque_contct_form()
 			$search_quert = '';
 
 			/*$search_q = db_query("SELECT * FROM textbook_companion_proposal p,textbook_companion_cheque c WHERE c.address_con = 'Submitted' AND (p.id = c.proposal_id) AND (p.full_name LIKE '%%%s%%')", $_POST['search']);*/
-			$query = db_select('textbook_companion_proposal', 'p');
+			$query = \Drupal::database()->select('textbook_companion_proposal', 'p');
 			$query->join('textbook_companion_cheque','c','p.id = c.proposal_id');
 			$query->fields('p',array('textbook_companion_proposal'));
 			$query->fields('c',array('textbook_companion_cheque'));
@@ -308,12 +329,24 @@ function cheque_contct_form()
 
 			while ($search_data = $result->fetchObject())
 			{
-				$search_rows[] = array(l($search_data->full_name, 'cheque_contct/status/' . $search_data->proposal_id),$search_data->address_con,$search_data->cheque_no,$search_data->cheque_dispatch_date); 
+				// @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $search_rows[] = array(l($search_data->full_name, 'cheque_contct/status/' . $search_data->proposal_id),$search_data->address_con,$search_data->cheque_no,$search_data->cheque_dispatch_date);
+ 
     		}
 			if ($search_rows)
     		{	
 		    		$search_header = array('Name Of The Student', 'Application Form Status', 'Cheque No', 'Cheque Clearance Date');
-		    		$output .= theme('table',array('headers'=>$search_header,'rows'=>$search_rows));
+		    		// @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $output .= theme('table',array('headers'=>$search_header,'rows'=>$search_rows));
+
 		    		$form['search_results'] = array(
 						'#type' => 'item',
 						'#title' => t('Search results for "') . $_POST['search'] . '"',
@@ -335,7 +368,7 @@ function cheque_contct_form()
 	{
 		/*$preference5_q = db_query("SELECT * FROM {textbook_companion_paper} WHERE proposal_id=".$form1);
 		$data1 = db_fetch_object($preference5_q);*/
-		$query = db_select('textbook_companion_paper');
+		$query = \Drupal::database()->select('textbook_companion_paper');
 		$query->fields('textbook_companion_paper');
 		$query->condition('proposal_id', $form1);
 		$result = $query->execute();
@@ -349,7 +382,7 @@ function cheque_contct_form()
 		/*$chq_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id=".$form1);
 		$data_chq = db_fetch_object($chq_q);*/
 
-		$query = db_select('textbook_companion_proposal');
+		$query = \Drupal::database()->select('textbook_companion_proposal');
 		$query->fields('textbook_companion_proposal');
 		$query->condition('id', $form1);
 		$result = $query->execute();
@@ -436,15 +469,15 @@ function cheque_contct_form()
 		}
 		if (!$form2)
 		{ 
-			drupal_set_message(t('Internship Form has not been recieved.'), 'error');
+			\Drupal::messenger()->addError(t('Internship Form has not been recieved.'));
 		}
 		if(!$form3)
 		{ 
-			drupal_set_message(t('Copyright Form has not been recieved.'), 'error');
+			\Drupal::messenger()->addError(t('Copyright Form has not been recieved.'));
 		}
 		if(!$form4)
 		{ 
-			drupal_set_message(t('Undertaking Form has not been recieved.'), 'error');
+			\Drupal::messenger()->addError(t('Undertaking Form has not been recieved.'));
 		}
 	return $form;
 	}
@@ -453,19 +486,19 @@ function cheque_contct_form()
 
 function cheque_status_form($form_state, $proposal_id)
 {
-	global $user;
+	$user = \Drupal::currentUser();
 
 	/* get current proposal */
 	$proposal_id = arg(2);
 
 	/*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id =".$proposal_id);*/
-		$query = db_select('textbook_companion_proposal');
+		$query = \Drupal::database()->select('textbook_companion_proposal');
 		$query->fields('textbook_companion_proposal');
 		$query->condition('id', $proposal_id);
 		$proposal_q = $query->execute();
 
 	/*$proposal_q1 = db_query("SELECT * FROM {textbook_companion_cheque} WHERE proposal_id =".$proposal_id);*/
-		$query = db_select('textbook_companion_cheque');
+		$query = \Drupal::database()->select('textbook_companion_cheque');
 		$query->fields('textbook_companion_cheque');
 		$query->condition('proposal_id', $proposal_id);
 		$proposal_q1 = $query->execute();
@@ -474,7 +507,7 @@ function cheque_status_form($form_state, $proposal_id)
 	$proposal_data1 = $proposal_q1->fetchObject();
 	if (!$proposal_data = $proposal_q->fetchObject())
 	{
-		drupal_set_message(t('Invalid proposal selected. Please try again.'), 'error');
+		\Drupal::messenger()->addError(t('Invalid proposal selected. Please try again.'));
 		drupal_goto('manage_proposal');
 		return;
 	}
@@ -484,7 +517,7 @@ function cheque_status_form($form_state, $proposal_id)
 	);
 
 	/*$empty = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = ".$proposal_id);*/
-		$query = db_select('textbook_companion_proposal');
+		$query = \Drupal::database()->select('textbook_companion_proposal');
 		$query->fields('textbook_companion_proposal');
 		$query->condition('id', $proposal_id);
 		$empty = $query->execute();
@@ -497,7 +530,7 @@ function cheque_status_form($form_state, $proposal_id)
 		$args = array(
 		":proposal_id"=>$proposal_id, 
 			);
-		$result = db_query($query, $args, array('return' => Database::RETURN_INSERT_ID));	
+		$result = \Drupal::database()->query($query, $args, $query);	
 	}
 	$form['candidate_detail'] = array(
 		'#type' => 'fieldset',
@@ -513,7 +546,7 @@ function cheque_status_form($form_state, $proposal_id)
 	);
 	$form['candidate_detail']['email'] = array(
 		'#type' => 'item',
-		'#markup' => user_load($proposal_data->uid)->mail,
+		'#markup' => \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid)->mail,
 		'#title' => t('Email'),
 	);
 	$form['candidate_detail']['mobile'] = array(
@@ -529,7 +562,7 @@ function cheque_status_form($form_state, $proposal_id)
 	/*$form_q=db_query("SELECT * FROM {textbook_companion_paper} WHERE proposal_id =".$proposal_id);
 	$form_data=db_fetch_object($form_q);*/
 
-	$query = db_select('textbook_companion_paper');
+	$query = \Drupal::database()->select('textbook_companion_paper');
 	$query->fields('textbook_companion_paper');
 	$query->condition('proposal_id', $proposal_id);
 	$result = $query->execute();
@@ -539,7 +572,7 @@ function cheque_status_form($form_state, $proposal_id)
 	$preference_html = '<ul>';
 
 	/*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d ORDER BY pref_number ASC", $proposal_id);*/
-	$query = db_select('textbook_companion_preference');
+	$query = \Drupal::database()->select('textbook_companion_preference');
 	$query->fields('textbook_companion_preference');
 	$query->condition('proposal_id', $proposal_id);
 	$query->orderBy('pref_number', 'ASC');
@@ -568,7 +601,7 @@ function cheque_status_form($form_state, $proposal_id)
 
 	/*$chq_q=db_query("SELECT * FROM {textbook_companion_cheque} WHERE proposal_id = %d", $proposal_id);
 	$chq_data=db_fetch_object($chq_q);*/
-	$query = db_select('textbook_companion_cheque');
+	$query = \Drupal::database()->select('textbook_companion_cheque');
 	$query->fields('textbook_companion_cheque');
 	$query->condition('proposal_id', $proposal_id);
 	$result = $query->execute();
@@ -648,7 +681,7 @@ function cheque_status_form($form_state, $proposal_id)
 		'#attributes' => array('id' => 'commentf'),
 	);
 	/*$chq4_q = db_query("SELECT * FROM {textbook_companion_cheque} WHERE proposal_id=".$proposal_id);*/
-	$query = db_select('textbook_companion_cheque');
+	$query = \Drupal::database()->select('textbook_companion_cheque');
 	$query->fields('textbook_companion_cheque');
 	$query->condition('proposal_id', $proposal_id);
 	$chq4_q = $query->execute();
@@ -878,7 +911,7 @@ function cheque_status_form($form_state, $proposal_id)
 
     /*$preference1_p = db_query("SELECT * FROM {textbook_companion_paper} WHERE proposal_id = %d ORDER BY id ASC", $proposal_id); */
 
-	$query = db_select('textbook_companion_paper');
+	$query = \Drupal::database()->select('textbook_companion_paper');
 	$query->fields('textbook_companion_paper');
 	$query->condition('proposal_id', $proposal_id);
 	$query->orderBy('id', 'ASC');
@@ -886,7 +919,7 @@ function cheque_status_form($form_state, $proposal_id)
 
     if (!($proposal_data1 = $preference1_p->fetchObject()))
     {
-    	drupal_set_message(t('Invalid proposal selected. Please try again.'), 'error');
+    	\Drupal::messenger()->addError(t('Invalid proposal selected. Please try again.'));
     	drupal_goto('manage_proposal');
     	return;
     }
@@ -894,10 +927,13 @@ function cheque_status_form($form_state, $proposal_id)
 	'#type' => 'submit',
 	'#value' => t('Submit')
     );
-    $form['cancel'] = array(
-	'#type' => 'markup',
-	'#value' => l(t('Cancel'), 'manage_proposal/all'),
-    );
+    // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['cancel'] = array(
+// 	'#type' => 'markup',
+// 	'#value' => l(t('Cancel'), 'manage_proposal/all'),
+//     );
+
   return $form;
 }
 /*function cheque_status_form_validate($form, &$form_state) 
@@ -928,7 +964,7 @@ function cheque_status_form($form_state, $proposal_id)
 }*/
 function cheque_status_form_submit($form, &$form_state)
 {
-	global $user;
+	$user = \Drupal::currentUser();
 	$proposal_id=arg(2);
 	
 	
@@ -951,7 +987,7 @@ function cheque_status_form_submit($form, &$form_state)
 	
 	db_query($query);*/
 
-	$query = db_update('textbook_companion_cheque');
+	$query = \Drupal::database()->update('textbook_companion_cheque');
 	$query->fields(array(
   	'cheque_no' => $form_state[ values ][ cheque_no ],
   	'cheque_amt' => $form_state[ values ][ cheq_amt ],
@@ -977,20 +1013,20 @@ function cheque_status_form_submit($form, &$form_state)
 		/*$query ="UPDATE {textbook_companion_cheque} SET cheque_sent = ".$form_state['values']['cheque_sent']." WHERE proposal_id = ".$proposal_id;
 		db_query($query);*/
 
-		$query = db_update('textbook_companion_cheque');
+		$query = \Drupal::database()->update('textbook_companion_cheque');
 		$query->fields(array(
   		'cheque_sent' => $form_state[ values ][ cheque_sent ],
 		));
 		$query->condition('proposal_id', $proposal_id);
 		$num_updated = $query->execute();
 
-		$book_user = user_load($proposal_data->uid);
+		$book_user = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid);
 		$param['proposal_completed']['proposal_id'] = $proposal_id;
 		$param['proposal_completed']['user_id'] = $proposal_data->uid;
 		$email_to = $book_user->mail;
-		if (!drupal_mail('textbook_companion', 'cheque_sent', $email_to , language_default(), $param, variable_get('textbook_companion_from_email', NULL), TRUE))
-			drupal_set_message('Error sending email message.', 'error');
-		drupal_set_message('Cheque for Book proposal has been Sent. User has been notified .', 'status');
+		if (!drupal_mail('textbook_companion', 'cheque_sent', $email_to , language_default(), $param, \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email'), TRUE))
+			\Drupal::messenger()->addError('Error sending email message.');
+		\Drupal::messenger()->addStatus('Cheque for Book proposal has been Sent. User has been notified .');
 	}
 
 
@@ -999,7 +1035,7 @@ function cheque_status_form_submit($form, &$form_state)
 		/*$query ="UPDATE {textbook_companion_cheque} SET cheque_cleared = ".$form_state['values']['cheque_cleared']." WHERE proposal_id = ".$proposal_id;
 		db_query($query);*/
 
-		$query = db_update('textbook_companion_cheque');
+		$query = \Drupal::database()->update('textbook_companion_cheque');
 		$query->fields(array(
   		'cheque_cleared' => $form_state[ values ][ cheque_cleared ],
 		));
@@ -1008,11 +1044,11 @@ function cheque_status_form_submit($form, &$form_state)
 
 		$curtime = MySQL_NOW();
 		echo $curtime;
-		drupal_set_message('Cheque Has Been Debited into User Account.', 'status');
+		\Drupal::messenger()->addStatus('Cheque Has Been Debited into User Account.');
 		/*$queryc ="UPDATE {textbook_companion_cheque} SET cheque_dispatch_date = NOW() WHERE proposal_id = ".$form_state['values']['proposal_id']."";
 		db_query($queryc);*/
 
-		$query = db_update('textbook_companion_cheque');
+		$query = \Drupal::database()->update('textbook_companion_cheque');
 		$query->fields(array(
   		'cheque_dispatch_date' => 'NOW',
 		));
@@ -1026,34 +1062,34 @@ function cheque_status_form_submit($form, &$form_state)
 	if ($form_state['values']['comment_cheque'])
 	{
 		/* sending email */
-    		$book_user = user_load($proposal_data->uid);
+    		$book_user = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid);
 		$param['proposal_completed']['proposal_id'] = $proposal_id;
 		$param['proposal_completed']['user_id'] = $proposal_data->uid;
 		$email_to = $book_user->mail;
-		if (!drupal_mail('textbook_companion', 'remark', $email_to , language_default(), $param, variable_get('textbook_companion_from_email', NULL), TRUE))
-			drupal_set_message('Error sending email message.', 'error');
-		drupal_set_message(t('Remark Updated. User has been notified'), 'status');
+		if (!drupal_mail('textbook_companion', 'remark', $email_to , language_default(), $param, \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email'), TRUE))
+			\Drupal::messenger()->addError('Error sending email message.');
+		\Drupal::messenger()->addStatus(t('Remark Updated. User has been notified'));
 	}
   	else
 	{
-		if (!drupal_mail('textbook_companion', 'remark_not', $email_to , language_default(), $param, variable_get('textbook_companion_from_email', NULL), TRUE))
-			drupal_set_message('Error sending email message.', 'error');
-       		drupal_set_message('No Remarks. User has been notified .', 'status');
+		if (!drupal_mail('textbook_companion', 'remark_not', $email_to , language_default(), $param, \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email'), TRUE))
+			\Drupal::messenger()->addError('Error sending email message.');
+       		\Drupal::messenger()->addStatus('No Remarks. User has been notified .');
 	}
 }
 function MySQL_NOW(){ return date('Y-m-d'); }
 
 function contact_details($form_state)
 {
-	global $user;
+	$user = \Drupal::currentUser();
 	if(!isset($_REQUEST['msg']))
-		drupal_set_message('<strong>Caution</strong>:Please update Contact Detail carefully as this will be used for future reference during <strong>Payment</strong></li></ul>', 'error');
+		\Drupal::messenger()->addError('<strong>Caution</strong>:Please update Contact Detail carefully as this will be used for future reference during <strong>Payment</strong></li></ul>');
 
 	$x = $user->uid;
         /*$query2 = db_query("SELECT * FROM {textbook_companion_proposal} WHERE uid=".$x);
         $data2 = db_fetch_object($query2);*/
 
-	$query = db_select('textbook_companion_proposal');
+	$query = \Drupal::database()->select('textbook_companion_proposal');
 	$query->fields('textbook_companion_proposal');
 	$query->condition('uid', $x);
 	$result = $query->execute();
@@ -1062,13 +1098,13 @@ function contact_details($form_state)
 
 	if(!$data2)
 	{
-		drupal_set_message('Fill Up The <a href="proposal">Book Proposal Form</a>', 'error');
+		\Drupal::messenger()->addError('Fill Up The <a href="proposal">Book Proposal Form</a>');
 		return '';
 	}	
 	/*$query3 = db_query("SELECT * FROM {textbook_companion_preference} WHERE approval_status=1 AND proposal_id=".$data2->id);
 	$data3 = db_fetch_object($query3);*/
 
-	$query = db_select('textbook_companion_preference');
+	$query = \Drupal::database()->select('textbook_companion_preference');
 	$query->fields('textbook_companion_preference');
 	$query->condition('approval_status', 1);
 	$query->condition('proposal_id', $data2->id);
@@ -1077,7 +1113,7 @@ function contact_details($form_state)
 	
 	if(!$data3->approval_status)
 	{
-		drupal_set_message('Book Proposal Has Not Been Accpeted .', 'error');
+		\Drupal::messenger()->addError('Book Proposal Has Not Been Accpeted .');
 		return '';
 	}
         
@@ -1086,7 +1122,7 @@ function contact_details($form_state)
 	/*$comment_qx = db_query("SELECT * FROM textbook_companion_cheque c WHERE proposal_id =".$proposal_id);
 	$commentv = db_fetch_object($comment_qx);*/
 
-	$query = db_select('textbook_companion_cheque', 'c');
+	$query = \Drupal::database()->select('textbook_companion_cheque', 'c');
 	$query->fields('c');
 	$query->condition('proposal_id', $proposal_id);
 	$result = $query->execute();
@@ -1097,7 +1133,7 @@ function contact_details($form_state)
 	$full_name = $data2->full_name;
 
 	/*$query1 = db_query("SELECT * FROM {textbook_companion_cheque} WHERE proposal_id=".$proposal_id);*/
-	$query = db_select('textbook_companion_cheque');
+	$query = \Drupal::database()->select('textbook_companion_cheque');
 	$query->fields('textbook_companion_cheque');
 	$query->condition('proposal_id', $proposal_id);
 	$result = $query->execute();
@@ -1138,7 +1174,7 @@ function contact_details($form_state)
 		$args = array(
 		":proposal_id"=>$proposal_id, 
 			);
-		$result = db_query($query, $args, array('return' => Database::RETURN_INSERT_ID));
+		$result = \Drupal::database()->query($query, $args, $query);
 	}
 	$form['candidate_detail'] = array(
 	     '#type' => 'fieldset',
@@ -1180,7 +1216,7 @@ function contact_details($form_state)
 	/*$chq_q=db_query("SELECT * FROM {textbook_companion_cheque} WHERE proposal_id=".$proposal_id);
         $chq_data=db_fetch_object($chq_q);*/
 
-	$query = db_select('textbook_companion_cheque');
+	$query = \Drupal::database()->select('textbook_companion_cheque');
 	$query->fields('textbook_companion_cheque');
 	$query->condition('proposal_id', $proposal_id);
 	$result = $query->execute();
@@ -1190,7 +1226,7 @@ function contact_details($form_state)
         /*$q_form = db_query("SELECT * FROM {textbook_companion_paper} WHERE proposal_id=".$proposal_id);
         $q_data = db_fetch_object($q_form);*/
 
-	$query = db_select('textbook_companion_paper');
+	$query = \Drupal::database()->select('textbook_companion_paper');
 	$query->fields('textbook_companion_paper');
 	$query->condition('proposal_id', $proposal_id);
 	$result = $query->execute();
@@ -1314,22 +1350,25 @@ function contact_details($form_state)
     		'#type' => 'submit',
 		'#value' => t('Update')
     	);
-    	$form['cancel'] = array(
-		'#type' => 'markup',
-		'#value' => l(t('Cancel'), 'manage_proposal/all'),
-	);
+    	// @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['cancel'] = array(
+// 		'#type' => 'markup',
+// 		'#value' => l(t('Cancel'), 'manage_proposal/all'),
+// 	);
+
     return $form;       
 }
 function contact_details_submit($form, &$form_state)
 {
 
-	global $user;
+	$user = \Drupal::currentUser();
 	$x = $user->uid;
 
 	/*$query2 = db_query("SELECT * FROM {textbook_companion_proposal} WHERE uid=".$x);
 	$data2 = db_fetch_object($query2);*/
 
-	$query = db_select('textbook_companion_proposal');
+	$query = \Drupal::database()->select('textbook_companion_proposal');
 	$query->fields('textbook_companion_proposal');
 	$query->condition('uid', $x);
 	$result = $query->execute();
@@ -1350,7 +1389,7 @@ function contact_details_submit($form, &$form_state)
 	WHERE proposal_id = ".$data2->id;
 	db_query($query);*/
 
-	$query = db_update('textbook_companion_cheque');
+	$query = \Drupal::database()->update('textbook_companion_cheque');
 	$query->fields(array(
   	'alt_mobno' => $form_state[ values ][ mobileno2 ],
   	'address' => $form_state[ values ][ chq_address ],
@@ -1366,7 +1405,7 @@ function contact_details_submit($form, &$form_state)
 	$query->condition('proposal_id', $data2->id);
 	$num_updated = $query->execute();
 
-	drupal_set_message('Contact Details Has Been Updated.....!', 'status');
+	\Drupal::messenger()->addStatus('Contact Details Has Been Updated.....!');
 	drupal_goto('mycontact', array('msg' => 0 ), $fragment = NULL, $http_response_code = 302);
 }
 function copy_address()
@@ -1403,7 +1442,7 @@ function cheque_report_form()
 {
 	/*$search_qx = db_query("SELECT * FROM textbook_companion_proposal p,textbook_companion_cheque c WHERE c.address_con = 'Submitted' AND (p.id = c.proposal_id)");*/
 
-			$query = db_select('textbook_companion_proposal', 'p');
+			$query = \Drupal::database()->select('textbook_companion_proposal', 'p');
 			$query->join('textbook_companion_cheque','c','p.id = c.proposal_id');
 			$query->fields('p',array('textbook_companion_proposal'));
 			$query->fields('c',array('textbook_companion_cheque'));

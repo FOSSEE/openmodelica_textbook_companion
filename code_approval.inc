@@ -3,7 +3,7 @@
 function code_approval()
 {
     /* get a list of unapproved chapters */
-    $query = db_select('textbook_companion_example', 'e');
+    $query = \Drupal::database()->select('textbook_companion_example', 'e');
     $query->fields('c', array(
         'id',
         'number',
@@ -18,35 +18,38 @@ function code_approval()
     $query->condition('e.approval_status', 0);
     $pending_chapter_q = $query->execute();
     if (!$pending_chapter_q) {
-        drupal_set_message(t('There are no pending code approvals.'), 'status');
+        \Drupal::messenger()->addStatus(t('There are no pending code approvals.'));
         return '';
     }
     $rows = array();
     while ($row = $pending_chapter_q->fetchObject()) {
         /* get preference data */
-        $query = db_select('textbook_companion_preference');
+        $query = \Drupal::database()->select('textbook_companion_preference');
         $query->fields('textbook_companion_preference');
         $query->condition('id', $row->c_preference_id);
         $result = $query->execute();
         $preference_data = $result->fetchObject();
         /* get proposal data */
-        $query = db_select('textbook_companion_proposal');
+        $query = \Drupal::database()->select('textbook_companion_proposal');
         $query->fields('textbook_companion_proposal');
         $query->condition('id', $preference_data->proposal_id);
         $result = $query->execute();
         $proposal_data = $result->fetchObject();
         /* setting table row information */
-        $rows[] = array(
-            $preference_data->book,
-            $row->c_number,
-            $row->c_name,
-            $proposal_data->full_name,
-            l('Edit', 'textbook-companion/code-approval/approve/' . $row->c_id)
-        );
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $rows[] = array(
+//             $preference_data->book,
+//             $row->c_number,
+//             $row->c_name,
+//             $proposal_data->full_name,
+//             l('Edit', 'textbook-companion/code-approval/approve/' . $row->c_id)
+//         );
+
     }
     /* check if there are any pending proposals */
     if (!$rows) {
-        drupal_set_message(t('There are no pending proposals'), 'status');
+        \Drupal::messenger()->addStatus(t('There are no pending proposals'));
         return '';
     }
     $header = array(
@@ -56,35 +59,44 @@ function code_approval()
         'Contributor Name',
         'Actions'
     );
-    $output = theme('table', array(
-        'header' => $header,
-        'rows' => $rows
-    ));
+    // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $output = theme('table', array(
+//         'header' => $header,
+//         'rows' => $rows
+//     ));
+
     return $output;
 }
 function code_approval_form($form, &$form_state)
 {
     /* get a list of unapproved chapters */
     $chapter_id = arg(3);
-    $query = db_select('textbook_companion_chapter');
+    $query = \Drupal::database()->select('textbook_companion_chapter');
     $query->fields('textbook_companion_chapter');
     $query->condition('id', $chapter_id);
     $pending_chapter_q = $query->execute();
     if ($pending_chapter_data = $pending_chapter_q->fetchObject()) {
         /* get preference data */
-        $query = db_select('textbook_companion_preference');
+        $query = \Drupal::database()->select('textbook_companion_preference');
         $query->fields('textbook_companion_preference');
         $query->condition('id', $pending_chapter_data->preference_id);
         $result = $query->execute();
         $preference_data = $result->fetchObject();
         /* get proposal data */
-        $query = db_select('textbook_companion_proposal');
+        $query = \Drupal::database()->select('textbook_companion_proposal');
         $query->fields('textbook_companion_proposal');
         $query->condition('id', $preference_data->proposal_id);
         $result = $query->execute();
         $proposal_data = $result->fetchObject();
     } else {
-        drupal_set_message(t('Invalid chapter selected.'), 'error');
+        \Drupal::messenger()->addError(t('Invalid chapter selected.'));
         drupal_goto('textbook-companion/code-approval');
         return;
     }
@@ -109,12 +121,15 @@ function code_approval_form($form, &$form_state)
         '#markup' => $pending_chapter_data->name,
         '#title' => t('Title of the Chapter')
     );
-    $form['book_details']['back_to_list'] = array(
-        '#type' => 'item',
-        '#markup' => l('Back to Code Approval List', 'textbook-companion/code-approval')
-    );
+    // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['book_details']['back_to_list'] = array(
+//         '#type' => 'item',
+//         '#markup' => l('Back to Code Approval List', 'textbook-companion/code-approval')
+//     );
+
     /* get example data */
-    $query = db_select('textbook_companion_example');
+    $query = \Drupal::database()->select('textbook_companion_example');
     $query->fields('textbook_companion_example');
     $query->condition('chapter_id', $chapter_id);
     $query->condition('approval_status', 0);
@@ -135,10 +150,13 @@ function code_approval_form($form, &$form_state)
             '#markup' => $example_data->caption,
             '#title' => t('Example Caption')
         );
-        $form['example_details'][$example_data->id]['download'] = array(
-            '#type' => 'markup',
-            '#markup' => l('Download Example', 'textbook-companion/download/example/' . $example_data->id)
-        );
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['example_details'][$example_data->id]['download'] = array(
+//             '#type' => 'markup',
+//             '#markup' => l('Download Example', 'textbook-companion/download/example/' . $example_data->id)
+//         );
+
         $form['example_details'][$example_data->id]['approved'] = array(
             '#type' => 'radios',
             '#options' => array(
@@ -175,36 +193,36 @@ function code_approval_form_validate($form, &$form_state){
 }
 function code_approval_form_submit($form, &$form_state)
 {
-    global $user;
+    $user = \Drupal::currentUser();
     foreach ($form_state['values']['example_details'] as $ex_id => $ex_data) {
-        $query = db_select('textbook_companion_example');
+        $query = \Drupal::database()->select('textbook_companion_example');
         $query->fields('textbook_companion_example');
         $query->condition('id', $ex_data['example_id']);
         $query->range(0, 1);
         $result = $query->execute();
         $example_data = $result->fetchObject();
-        $query = db_select('textbook_companion_chapter');
+        $query = \Drupal::database()->select('textbook_companion_chapter');
         $query->fields('textbook_companion_chapter');
         $query->condition('id', $example_data->chapter_id);
         $query->range(0, 1);
         $result = $query->execute();
         $chapter_data = $result->fetchObject();
-        $query = db_select('textbook_companion_preference');
+        $query = \Drupal::database()->select('textbook_companion_preference');
         $query->fields('textbook_companion_preference');
         $query->condition('id', $chapter_data->preference_id);
         $query->range(0, 1);
         $result = $query->execute();
         $preference_data = $result->fetchObject();
-        $query = db_select('textbook_companion_proposal');
+        $query = \Drupal::database()->select('textbook_companion_proposal');
         $query->fields('textbook_companion_proposal');
         $query->condition('id', $preference_data->proposal_id);
         $query->range(0, 1);
         $result = $query->execute();
         $proposal_data = $result->fetchObject();
-        $user_data = user_load($proposal_data->uid);
+        $user_data = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid);
         del_book_pdf($preference_data->id);
         if ($ex_data['approved'] == "0") {
-            $query = db_update('textbook_companion_example');
+            $query = \Drupal::database()->update('textbook_companion_example');
             $query->fields(array(
                 'approval_status' => 1,
                 'approver_uid' => $user->uid,
@@ -214,9 +232,9 @@ function code_approval_form_submit($form, &$form_state)
             $num_updated = $query->execute();
             /* sending email */
             $email_to = $user_data->mail;
-            $from = variable_get('textbook_companion_from_email', '');
-            $bcc = variable_get('textbook_companion_emails', '');
-            $cc = variable_get('textbook_companion_cc_emails', '');
+            $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
+            $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
+            $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
             $param['example_approved']['example_id'] = $ex_data['example_id'];
             $param['example_approved']['user_id'] = $user_data->uid;
             $param['example_approved']['headers'] = array(
@@ -229,14 +247,14 @@ function code_approval_form_submit($form, &$form_state)
                 'Bcc' => $bcc
             );
             if (!drupal_mail('textbook_companion', 'example_approved', $email_to, language_default(), $param, $from, TRUE))
-                drupal_set_message('Error sending email message.', 'error');
+                \Drupal::messenger()->addError('Error sending email message.');
         } else if ($ex_data['approved'] == "1") {
             if (delete_example($ex_data['example_id'])) {
                 /* sending email */
                 $email_to = $user_data->mail;
-                $from = variable_get('textbook_companion_from_email', '');
-                $bcc = variable_get('textbook_companion_emails', '');
-                $cc = variable_get('textbook_companion_cc_emails', '');
+                $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
+                $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
+                $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
                 $param['example_disapproved']['preference_id'] = $chapter_data->preference_id;
                 $param['example_disapproved']['chapter_id'] = $example_data->chapter_id;
                 $param['example_disapproved']['example_number'] = $example_data->number;
@@ -253,13 +271,13 @@ function code_approval_form_submit($form, &$form_state)
                     'Bcc' => $bcc
                 );
                 if (!drupal_mail('textbook_companion', 'example_disapproved', $email_to, language_default(), $param, $from, TRUE))
-                    drupal_set_message('Error sending email message.', 'error');
+                    \Drupal::messenger()->addError('Error sending email message.');
             } else {
-                drupal_set_message('Error disapproving and deleting example. Please contact administrator.', 'error');
+                \Drupal::messenger()->addError('Error disapproving and deleting example. Please contact administrator.');
             }
         }
     }
-    drupal_set_message('Updated successfully.', 'status');
+    \Drupal::messenger()->addStatus('Updated successfully.');
     drupal_goto('textbook-companion/code-approval');
 }
 /********************************* BULK APPROVAL ******************************/
@@ -469,38 +487,38 @@ function bulk_approval_form($form, &$form_state)
 }
 function bulk_approval_form_submit($form, &$form_state)
 {
-    global $user;
+    $user = \Drupal::currentUser();
     $root_path = textbook_companion_path();
     if ($form_state['clicked_button']['#value'] == 'Submit') {
         if ($form_state['values']['book'])
             del_book_pdf($form_state['values']['book']);
-        if (user_access('bulk manage code')) {
-            $query = db_select('textbook_companion_preference');
+        if (\Drupal::currentUser()->hasPermission('bulk manage code')) {
+            $query = \Drupal::database()->select('textbook_companion_preference');
             $query->fields('textbook_companion_preference');
             $query->condition('id', $form_state['values']['book']);
             $result = $query->execute();
             $pref_data = $result->fetchObject();
             $prop_id = $pref_data->proposal_id;
-            $query = db_select('textbook_companion_proposal');
+            $query = \Drupal::database()->select('textbook_companion_proposal');
             $query->fields('textbook_companion_proposal');
             $query->condition('id', $prop_id);
             $user_query = $query->execute();
             $user_info = $user_query->fetchObject();
-            $user_data = user_load($user_info->uid);
+            $user_data = \Drupal::entityTypeManager()->getStorage('user')->load($user_info->uid);
             if (($form_state['values']['book_actions'] == 1) && ($form_state['values']['chapter_actions'] == 0) && ($form_state['values']['example_actions'] == 0)) {
                 /* approving entire book */
-                $query = db_select('textbook_companion_preference');
+                $query = \Drupal::database()->select('textbook_companion_preference');
                 $query->fields('textbook_companion_preference');
                 $query->condition('id', $form_state['values']['book']);
                 $query->condition('approval_status', 1);
                 $result = $query->execute();
                 $preference_data = $result->fetchObject();
-                $query = db_select('textbook_companion_chapter');
+                $query = \Drupal::database()->select('textbook_companion_chapter');
                 $query->fields('textbook_companion_chapter');
                 $query->condition('preference_id', $form_state['values']['book']);
                 $chapter_q = $query->execute();
                 while ($chapter_data = $chapter_q->fetchObject()) {
-                    $query = db_update('textbook_companion_example');
+                    $query = \Drupal::database()->update('textbook_companion_example');
                     $query->fields(array(
                         'approval_status' => 1,
                         'approver_uid' => $user->uid
@@ -509,107 +527,127 @@ function bulk_approval_form_submit($form, &$form_state)
                     $query->condition('approval_status', 0);
                     $num_updated = $query->execute();
                 }
-                $query = db_update('textbook_companion_preference');
+                $query = \Drupal::database()->update('textbook_companion_preference');
                 $query->fields(array(
                     'submited_all_examples_code' => 2
                 ));
                 $query->condition('id', $form_state['values']['book']);
                 $num_updated = $query->execute();
-                drupal_set_message(t('Approved Entire Book.'), 'status');
+                \Drupal::messenger()->addStatus(t('Approved Entire Book.'));
                 /* email */
-                $email_subject = t('[!site_name][Textbook Companion] Your uploaded Textbook Companion examples have been approved', array(
-                    '!site_name' => variable_get('site_name', '')
-                ));
-                $email_body = array(
-                    0 => t('
+                // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $email_subject = t('[!site_name][Textbook Companion] Your uploaded Textbook Companion examples have been approved', array(
+//                     '!site_name' => variable_get('site_name', '')
+//                 ));
 
-Dear !user_name,
+                // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $email_body = array(
+//                     0 => t('
+// 
+// Dear !user_name,
+// 
+// Your all the uploaded examples for the book have been approved.
+// 
+// Title of the book : ' . $preference_data->book . '
+// Author name : ' . $preference_data->author . '
+// ISBN No. : ' . $preference_data->isbn . '
+// Publisher and Place : ' . $preference_data->publisher . '
+// Edition : ' . $preference_data->edition . '
+// Year of publication : ' . $preference_data->year . '
+// 
+// Best Wishes,
+// 
+// !site_name Team,
+// FOSSEE,IIT Bombay', array(
+//                         '!site_name' => variable_get('site_name', ''),
+//                         '!user_name' => $user_data->name
+//                     ))
+//                 );
 
-Your all the uploaded examples for the book have been approved.
-
-Title of the book : ' . $preference_data->book . '
-Author name : ' . $preference_data->author . '
-ISBN No. : ' . $preference_data->isbn . '
-Publisher and Place : ' . $preference_data->publisher . '
-Edition : ' . $preference_data->edition . '
-Year of publication : ' . $preference_data->year . '
-
-Best Wishes,
-
-!site_name Team,
-FOSSEE,IIT Bombay', array(
-                        '!site_name' => variable_get('site_name', ''),
-                        '!user_name' => $user_data->name
-                    ))
-                );
             } elseif (($form_state['values']['book_actions'] == 2) && ($form_state['values']['chapter_actions'] == 0) && ($form_state['values']['example_actions'] == 0)) {
                 /* pending entire book */
-                $query = db_select('textbook_companion_preference');
+                $query = \Drupal::database()->select('textbook_companion_preference');
                 $query->fields('textbook_companion_preference');
                 $query->condition('id', $form_state['values']['book']);
                 $query->condition('approval_status', 1);
                 $result = $query->execute();
                 $preference_data = $result->fetchObject();
-                $query = db_select('textbook_companion_chapter');
+                $query = \Drupal::database()->select('textbook_companion_chapter');
                 $query->fields('textbook_companion_chapter');
                 $query->condition('preference_id', $form_state['values']['book']);
                 $chapter_q = $query->execute();
                 while ($chapter_data = $chapter_q->fetchObject()) {
-                    $query = db_update('textbook_companion_example');
+                    $query = \Drupal::database()->update('textbook_companion_example');
                     $query->fields(array(
                         'approval_status' => 0
                     ));
                     $query->condition('chapter_id', $chapter_data->id);
                     $num_updated = $query->execute();
                 }
-                drupal_set_message(t('Pending Review Entire Book.'), 'status');
+                \Drupal::messenger()->addStatus(t('Pending Review Entire Book.'));
                 /* email */
-                $email_subject = t('[!site_name] Your uploaded Textbook Companion examples have been marked as pending', array(
-                    '!site_name' => variable_get('site_name', '')
-                ));
-                $email_body = array(
-                    0 => t('
+                // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $email_subject = t('[!site_name] Your uploaded Textbook Companion examples have been marked as pending', array(
+//                     '!site_name' => variable_get('site_name', '')
+//                 ));
 
-Dear !user_name,
+                // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $email_body = array(
+//                     0 => t('
+// 
+// Dear !user_name,
+// 
+// Your all the uploaded examples for the book have been marked as pending to be reviewed.
+// You will be able to see the examples after they have been approved by one of our reviewers.
+// 
+// Title of the book : ' . $preference_data->book . '
+// Author name : ' . $preference_data->author . '
+// ISBN No. : ' . $preference_data->isbn . '
+// Publisher and Place : ' . $preference_data->publisher . '
+// Edition : ' . $preference_data->edition . '
+// Year of publication : ' . $preference_data->year . '
+// 
+// Best Wishes,
+// 
+// !site_name Team,
+// FOSSEE,IIT Bombay', array(
+//                         '!site_name' => variable_get('site_name', ''),
+//                         '!user_name' => $user_data->name
+//                     ))
+//                 );
 
-Your all the uploaded examples for the book have been marked as pending to be reviewed. 
-You will be able to see the examples after they have been approved by one of our reviewers.
-
-Title of the book : ' . $preference_data->book . '
-Author name : ' . $preference_data->author . '
-ISBN No. : ' . $preference_data->isbn . '
-Publisher and Place : ' . $preference_data->publisher . '
-Edition : ' . $preference_data->edition . '
-Year of publication : ' . $preference_data->year . '
-
-Best Wishes,
-
-!site_name Team,
-FOSSEE,IIT Bombay', array(
-                        '!site_name' => variable_get('site_name', ''),
-                        '!user_name' => $user_data->name
-                    ))
-                );
             } elseif (($form_state['values']['book_actions'] == 3) && ($form_state['values']['chapter_actions'] == 0) && ($form_state['values']['example_actions'] == 0)) {
                 if (strlen(trim($form_state['values']['message'])) <= 30) {
                     form_set_error('message', t(''));
-                    drupal_set_message("Please mention the reason for disapproval. Minimum 30 character required", 'error');
+                    \Drupal::messenger()->addError("Please mention the reason for disapproval. Minimum 30 character required");
                     return;
                 }
-                $query = db_select('textbook_companion_preference');
+                $query = \Drupal::database()->select('textbook_companion_preference');
                 $query->fields('textbook_companion_preference');
                 $query->condition('id', $form_state['values']['book']);
                 $query->condition('approval_status', 1);
                 $result = $query->execute();
                 $preference_data = $result->fetchObject();
-                if (!user_access('bulk delete code')) {
-                    drupal_set_message(t('You do not have permission to Bulk Dis-Approved and Deleted Entire Book.'), 'error');
+                if (!\Drupal::currentUser()->hasPermission('bulk delete code')) {
+                    \Drupal::messenger()->addError(t('You do not have permission to Bulk Dis-Approved and Deleted Entire Book.'));
                     return;
                 }
                 if (delete_book($form_state['values']['book'])) {
-                    drupal_set_message(t('Dis-Approved and Deleted Entire Book.'), 'status');
+                    \Drupal::messenger()->addStatus(t('Dis-Approved and Deleted Entire Book.'));
                 } else {
-                    drupal_set_message(t('Error Dis-Approving and Deleting Entire Book.'), 'error');
+                    \Drupal::messenger()->addError(t('Error Dis-Approving and Deleting Entire Book.'));
                 }
                 /* email */
                 /*$email_subject = t('Your uploaded examples have been marked as dis-approved');
@@ -618,124 +656,144 @@ FOSSEE,IIT Bombay', array(
                 Reason for dis-approval:
                 
                 ' . $form_state['values']['message']));*/
-                $email_subject = t('[!site_name] Your uploaded Textbook Companion examples have been marked as
-				dis-approved', array(
-                    '!site_name' => variable_get('site_name', '')
-                ));
-                $email_body = array(
-                    0 => t('
+                // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $email_subject = t('[!site_name] Your uploaded Textbook Companion examples have been marked as
+// 				dis-approved', array(
+//                     '!site_name' => variable_get('site_name', '')
+//                 ));
 
-Dear !user_name,
+                // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $email_body = array(
+//                     0 => t('
+// 
+// Dear !user_name,
+// 
+// Your all the uploaded examples for the whole book have been marked as dis-approved.
+// 
+// Title of the book : ' . $preference_data->book . '
+// Author name : ' . $preference_data->author . '
+// ISBN No. : ' . $preference_data->isbn . '
+// Publisher and Place : ' . $preference_data->publisher . '
+// Edition : ' . $preference_data->edition . '
+// Year of publication : ' . $preference_data->year . '
+// 
+// 
+// Reason for dis-approval:' . $form_state['values']['message'] . '
+// 
+// Best Wishes,
+// 
+// !site_name Team,
+// FOSSEE,IIT Bombay', array(
+//                         '!site_name' => variable_get('site_name', ''),
+//                         '!user_name' => $user_data->name
+//                     ))
+//                 );
 
-Your all the uploaded examples for the whole book have been marked as dis-approved.
-
-Title of the book : ' . $preference_data->book . '
-Author name : ' . $preference_data->author . '
-ISBN No. : ' . $preference_data->isbn . '
-Publisher and Place : ' . $preference_data->publisher . '
-Edition : ' . $preference_data->edition . '
-Year of publication : ' . $preference_data->year . '
-
-
-Reason for dis-approval:' . $form_state['values']['message'] . '
-
-Best Wishes,
-
-!site_name Team,
-FOSSEE,IIT Bombay', array(
-                        '!site_name' => variable_get('site_name', ''),
-                        '!user_name' => $user_data->name
-                    ))
-                );
             } elseif (($form_state['values']['book_actions'] == 4) && ($form_state['values']['chapter_actions'] == 0) && ($form_state['values']['example_actions'] == 0)) {
                 if (strlen(trim($form_state['values']['message'])) <= 30) {
                     form_set_error('message', t(''));
-                    drupal_set_message("Please mention the reason for disapproval/deletion. Minimum 30 character required", 'error');
+                    \Drupal::messenger()->addError("Please mention the reason for disapproval/deletion. Minimum 30 character required");
                     return;
                 }
-                $query = db_select('textbook_companion_preference');
+                $query = \Drupal::database()->select('textbook_companion_preference');
                 $query->fields('textbook_companion_preference');
                 $query->condition('id', $form_state['values']['book']);
                 $query->condition('approval_status', 1);
                 $result = $query->execute();
                 $pref_data = $result->fetchObject();
-                if (!user_access('bulk delete code')) {
-                    drupal_set_message(t('You do not have permission to Bulk Delete Entire Book Including Proposal.'), 'error');
+                if (!\Drupal::currentUser()->hasPermission('bulk delete code')) {
+                    \Drupal::messenger()->addError(t('You do not have permission to Bulk Delete Entire Book Including Proposal.'));
                     return;
                 }
                 if (delete_book($form_state['values']['book'])) {
-                    drupal_set_message(t('Dis-Approved and Deleted Entire Book examples.'), 'status');
+                    \Drupal::messenger()->addStatus(t('Dis-Approved and Deleted Entire Book examples.'));
                     $dir_path = $root_path . $form_state['values']['book'];
                     if (is_dir($dir_path)) {
                         $res = rmdir($dir_path);
                         if (!$res) {
-                            drupal_set_message(t("Cannot delete Book directory : " . $dir_path . ". Please contact administrator."), 'error');
+                            \Drupal::messenger()->addError(t("Cannot delete Book directory : " . $dir_path . ". Please contact administrator."));
                             return;
                         }
                     } else {
-                        drupal_set_message(t("Book directory not present : " . $dir_path . ". Skipping deleting book directory."), 'status');
+                        \Drupal::messenger()->addStatus(t("Book directory not present : " . $dir_path . ". Skipping deleting book directory."));
                     }
                     /* deleting preference and proposal */
-                    $query = db_select('textbook_companion_preference');
+                    $query = \Drupal::database()->select('textbook_companion_preference');
                     $query->fields('textbook_companion_preference');
                     $query->condition('id', $form_state['values']['book']);
                     $result = $query->execute();
                     $preference_data = $result->fetchObject();
                     $proposal_id = $preference_data->proposal_id;
-                    $query = db_delete('textbook_companion_preference');
+                    $query = \Drupal::database()->delete('textbook_companion_preference');
                     $query->condition('proposal_id', $proposal_id);
                     $num_deleted = $query->execute();
-                    $query = db_delete('textbook_companion_proposal');
+                    $query = \Drupal::database()->delete('textbook_companion_proposal');
                     $query->condition('id', $proposal_id);
                     $num_deleted = $query->execute();
-                    drupal_set_message(t('Deleted Book Proposal.'), 'status');
+                    \Drupal::messenger()->addStatus(t('Deleted Book Proposal.'));
                     /* email */
-                    $email_subject = t('[!site_name] Your uploaded Textbook Companion examples including the book proposal 					have been deleted', array(
-                        '!site_name' => variable_get('site_name', '')
-                    ));
-                    $email_body = array(
-                        0 => t('
+                    // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $email_subject = t('[!site_name] Your uploaded Textbook Companion examples including the book proposal 					have been deleted', array(
+//                         '!site_name' => variable_get('site_name', '')
+//                     ));
 
-Dear !user_name,
+                    // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $email_body = array(
+//                         0 => t('
+// 
+// Dear !user_name,
+// 
+// We regret to inform you that all the uploaded examples including the book with following details have been deleted permanently.
+// 
+// 
+// Title of the book : ' . $pref_data->book . '
+// Author name : ' . $pref_data->author . '
+// ISBN No. : ' . $pref_data->isbn . '
+// Publisher and Place : ' . $pref_data->publisher . '
+// Edition : ' . $pref_data->edition . '
+// Year of publication : ' . $pref_data->year . '
+// 
+// Reason for deletion:' . $form_state['values']['message'] . '
+// 
+// 
+// Best Wishes,
+// 
+// !site_name Team,
+// FOSSEE,IIT Bombay', array(
+//                             '!site_name' => variable_get('site_name', ''),
+//                             '!user_name' => $user_data->name
+//                         ))
+//                     );
 
-We regret to inform you that all the uploaded examples including the book with following details have been deleted permanently.
-
-
-Title of the book : ' . $pref_data->book . '
-Author name : ' . $pref_data->author . '
-ISBN No. : ' . $pref_data->isbn . '
-Publisher and Place : ' . $pref_data->publisher . '
-Edition : ' . $pref_data->edition . '
-Year of publication : ' . $pref_data->year . '
-
-Reason for deletion:' . $form_state['values']['message'] . '
-
-
-Best Wishes,
-
-!site_name Team,
-FOSSEE,IIT Bombay', array(
-                            '!site_name' => variable_get('site_name', ''),
-                            '!user_name' => $user_data->name
-                        ))
-                    );
                 } else {
-                    drupal_set_message(t('Error Dis-Approving and Deleting Entire Book.'), 'error');
+                    \Drupal::messenger()->addError(t('Error Dis-Approving and Deleting Entire Book.'));
                 }
             } elseif (($form_state['values']['book_actions'] == 0) && ($form_state['values']['chapter_actions'] == 1) && ($form_state['values']['example_actions'] == 0)) {
-                $query = db_select('textbook_companion_preference');
+                $query = \Drupal::database()->select('textbook_companion_preference');
                 $query->fields('textbook_companion_preference');
                 $query->condition('id', $form_state['values']['book']);
                 $query->condition('approval_status', 1);
                 $result = $query->execute();
                 $pref_data = $result->fetchObject();
-                $query = db_select('textbook_companion_chapter');
+                $query = \Drupal::database()->select('textbook_companion_chapter');
                 $query->fields('textbook_companion_chapter');
                 $query->condition('preference_id', $form_state['values']['book']);
                 $query->condition('id', $form_state['values']['chapter']);
                 $result = $query->execute();
                 $chap_data = $result->fetchObject();
-                $query = db_update('textbook_companion_example');
+                $query = \Drupal::database()->update('textbook_companion_example');
                 $query->fields(array(
                     'approval_status' => 1,
                     'approver_uid' => $user->uid
@@ -743,80 +801,100 @@ FOSSEE,IIT Bombay', array(
                 $query->condition('chapter_id', $form_state['values']['chapter']);
                 $query->condition('approval_status', 0);
                 $num_updated = $query->execute();
-                drupal_set_message(t('Approved Entire Chapter.'), 'status');
+                \Drupal::messenger()->addStatus(t('Approved Entire Chapter.'));
                 /* email */
-                $email_subject = t('[!site_name] Your uploaded Textbook Companion examples have been approved', array(
-                    '!site_name' => variable_get('site_name', '')
-                ));
-                $email_body = array(
-                    0 => t('
+                // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $email_subject = t('[!site_name] Your uploaded Textbook Companion examples have been approved', array(
+//                     '!site_name' => variable_get('site_name', '')
+//                 ));
 
-Dear !user_name,
+                // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $email_body = array(
+//                     0 => t('
+// 
+// Dear !user_name,
+// 
+// Your all the uploaded examples for the chapter have been approved.
+// 
+// Title of the book : ' . $pref_data->book . '
+// Title of the chapter : ' . $chap_data->name . '
+// 
+// Best Wishes,
+// 
+// !site_name Team,
+// FOSSEE,IIT Bombay', array(
+//                         '!site_name' => variable_get('site_name', ''),
+//                         '!user_name' => $user_data->name
+//                     ))
+//                 );
 
-Your all the uploaded examples for the chapter have been approved. 
-
-Title of the book : ' . $pref_data->book . '
-Title of the chapter : ' . $chap_data->name . '
-
-Best Wishes,
-
-!site_name Team,
-FOSSEE,IIT Bombay', array(
-                        '!site_name' => variable_get('site_name', ''),
-                        '!user_name' => $user_data->name
-                    ))
-                );
             } elseif (($form_state['values']['book_actions'] == 0) && ($form_state['values']['chapter_actions'] == 2) && ($form_state['values']['example_actions'] == 0)) {
                 /*db_query("UPDATE {textbook_companion_example} SET approval_status = 0 WHERE chapter_id = %d", $form_state['values']['chapter']);*/
-                $query = db_select('textbook_companion_preference');
+                $query = \Drupal::database()->select('textbook_companion_preference');
                 $query->fields('textbook_companion_preference');
                 $query->condition('id', $form_state['values']['book']);
                 $query->condition('approval_status', 1);
                 $result = $query->execute();
                 $pref_data = $result->fetchObject();
-                $query = db_select('textbook_companion_chapter');
+                $query = \Drupal::database()->select('textbook_companion_chapter');
                 $query->fields('textbook_companion_chapter');
                 $query->condition('preference_id', $form_state['values']['book']);
                 $query->condition('id', $form_state['values']['chapter']);
                 $result = $query->execute();
                 $chap_data = $result->fetchObject();
-                $query = db_update('textbook_companion_example');
+                $query = \Drupal::database()->update('textbook_companion_example');
                 $query->fields(array(
                     'approval_status' => 0
                 ));
                 $query->condition('chapter_id', $form_state['values']['chapter']);
                 $num_updated = $query->execute();
-                drupal_set_message(t('Entire Chapter marked as Pending Review.'), 'status');
+                \Drupal::messenger()->addStatus(t('Entire Chapter marked as Pending Review.'));
                 /* email */
-                $email_subject = t('[!site_name] Your uploaded Textbook Companion examples have been marked as pending', array(
-                    '!site_name' => variable_get('site_name', '')
-                ));
-                $email_body = array(
-                    0 => t('
+                // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $email_subject = t('[!site_name] Your uploaded Textbook Companion examples have been marked as pending', array(
+//                     '!site_name' => variable_get('site_name', '')
+//                 ));
 
-Dear !user_name,
+                // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $email_body = array(
+//                     0 => t('
+// 
+// Dear !user_name,
+// 
+// Your all the uploaded examples for the chapter have been marked as pending to be reviewed.
+// 
+// Title of the book : ' . $pref_data->book . '
+// Title of the chapter : ' . $chap_data->name . '
+// 
+// Best Wishes,
+// 
+// !site_name Team,
+// FOSSEE,IIT Bombay', array(
+//                         '!site_name' => variable_get('site_name', ''),
+//                         '!user_name' => $user_data->name
+//                     ))
+//                 );
 
-Your all the uploaded examples for the chapter have been marked as pending to be reviewed.
-
-Title of the book : ' . $pref_data->book . '
-Title of the chapter : ' . $chap_data->name . '
-
-Best Wishes,
-
-!site_name Team,
-FOSSEE,IIT Bombay', array(
-                        '!site_name' => variable_get('site_name', ''),
-                        '!user_name' => $user_data->name
-                    ))
-                );
             } elseif (($form_state['values']['book_actions'] == 0) && ($form_state['values']['chapter_actions'] == 3) && ($form_state['values']['example_actions'] == 0)) {
-                $query = db_select('textbook_companion_preference');
+                $query = \Drupal::database()->select('textbook_companion_preference');
                 $query->fields('textbook_companion_preference');
                 $query->condition('id', $form_state['values']['book']);
                 $query->condition('approval_status', 1);
                 $result = $query->execute();
                 $pref_data = $result->fetchObject();
-                $query = db_select('textbook_companion_chapter');
+                $query = \Drupal::database()->select('textbook_companion_chapter');
                 $query->fields('textbook_companion_chapter');
                 $query->condition('preference_id', $form_state['values']['book']);
                 $query->condition('id', $form_state['values']['chapter']);
@@ -824,207 +902,247 @@ FOSSEE,IIT Bombay', array(
                 $chap_data = $result->fetchObject();
                 if (strlen(trim($form_state['values']['message'])) <= 30) {
                     form_set_error('message', t(''));
-                    drupal_set_message("Please mention the reason for disapproval. Minimum 30 character required", 'error');
+                    \Drupal::messenger()->addError("Please mention the reason for disapproval. Minimum 30 character required");
                     return;
                 }
-                if (!user_access('bulk delete code')) {
-                    drupal_set_message(t('You do not have permission to Bulk Dis-Approved and Deleted Entire Chapter.'), 'error');
+                if (!\Drupal::currentUser()->hasPermission('bulk delete code')) {
+                    \Drupal::messenger()->addError(t('You do not have permission to Bulk Dis-Approved and Deleted Entire Chapter.'));
                     return;
                 }
                 if (delete_chapter($form_state['values']['chapter'])) {
-                    drupal_set_message(t('Dis-Approved and Deleted Entire Chapter.'), 'status');
+                    \Drupal::messenger()->addStatus(t('Dis-Approved and Deleted Entire Chapter.'));
                 } else {
-                    drupal_set_message(t('Error Dis-Approving and Deleting Entire Chapter.'), 'error');
+                    \Drupal::messenger()->addError(t('Error Dis-Approving and Deleting Entire Chapter.'));
                 }
                 /* email */
-                $email_subject = t('[!site_name] Your uploaded Textbook Companion example have been marked as 					dis-approved', array(
-                    '!site_name' => variable_get('site_name', '')
-                ));
-                $email_body = array(
-                    0 => t('
+                // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $email_subject = t('[!site_name] Your uploaded Textbook Companion example have been marked as 					dis-approved', array(
+//                     '!site_name' => variable_get('site_name', '')
+//                 ));
 
-Dear !user_name,
+                // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $email_body = array(
+//                     0 => t('
+// 
+// Dear !user_name,
+// 
+// Your uploaded example for the entire chapter have been marked as dis-approved.
+// 
+// Title of the book : ' . $pref_data->book . '
+// Title of the chapter : ' . $chap_data->name . '
+// 
+// 
+// Reason for dis-approval:' . $form_state['values']['message'] . '
+// 
+// Best Wishes,
+// 
+// !site_name Team,
+// FOSSEE,IIT Bombay', array(
+//                         '!site_name' => variable_get('site_name', ''),
+//                         '!user_name' => $user_data->name
+//                     ))
+//                 );
 
-Your uploaded example for the entire chapter have been marked as dis-approved.
-
-Title of the book : ' . $pref_data->book . '
-Title of the chapter : ' . $chap_data->name . '
-
-
-Reason for dis-approval:' . $form_state['values']['message'] . '
-
-Best Wishes,
-
-!site_name Team,
-FOSSEE,IIT Bombay', array(
-                        '!site_name' => variable_get('site_name', ''),
-                        '!user_name' => $user_data->name
-                    ))
-                );
             } elseif (($form_state['values']['book_actions'] == 0) && ($form_state['values']['chapter_actions'] == 0) && ($form_state['values']['example_actions'] == 1)) {
-                $query = db_select('textbook_companion_preference');
+                $query = \Drupal::database()->select('textbook_companion_preference');
                 $query->fields('textbook_companion_preference');
                 $query->condition('id', $form_state['values']['book']);
                 $query->condition('approval_status', 1);
                 $result = $query->execute();
                 $pref_data = $result->fetchObject();
-                $query = db_select('textbook_companion_chapter');
+                $query = \Drupal::database()->select('textbook_companion_chapter');
                 $query->fields('textbook_companion_chapter');
                 $query->condition('preference_id', $form_state['values']['book']);
                 $query->condition('id', $form_state['values']['chapter']);
                 $result = $query->execute();
                 $chap_data = $result->fetchObject();
-                $query = db_select('textbook_companion_example');
+                $query = \Drupal::database()->select('textbook_companion_example');
                 $query->fields('textbook_companion_example');
                 $query->condition('id', $form_state['values']['example']);
                 $result = $query->execute();
                 $examp_data = $result->fetchObject();
-                $query = db_update('textbook_companion_example');
+                $query = \Drupal::database()->update('textbook_companion_example');
                 $query->fields(array(
                     'approval_status' => 1,
                     'approver_uid' => $user->uid
                 ));
                 $query->condition('id', $form_state['values']['example']);
                 $num_updated = $query->execute();
-                drupal_set_message(t('Example approved.'), 'status');
+                \Drupal::messenger()->addStatus(t('Example approved.'));
                 /* email */
-                $email_subject = t('[!site_name] Your uploaded Textbook Companion example have been approved', array(
-                    '!site_name' => variable_get('site_name', '')
-                ));
-                $email_body = array(
-                    0 => t('
+                // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $email_subject = t('[!site_name] Your uploaded Textbook Companion example have been approved', array(
+//                     '!site_name' => variable_get('site_name', '')
+//                 ));
 
-Dear !user_name,
+                // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $email_body = array(
+//                     0 => t('
+// 
+// Dear !user_name,
+// 
+// Your example for OpenModelica Textbook Companion with the following details is approved.
+// 
+// Title of the book : ' . $pref_data->book . '
+// Title of the chapter : ' . $chap_data->name . '
+// Example number : ' . $examp_data->number . '
+// Caption : ' . $examp_data->caption . '
+// 
+// Best Wishes,
+// 
+// !site_name Team,
+// FOSSEE,IIT Bombay', array(
+//                         '!site_name' => variable_get('site_name', ''),
+//                         '!user_name' => $user_data->name
+//                     ))
+//                 );
 
-Your example for OpenModelica Textbook Companion with the following details is approved.
-
-Title of the book : ' . $pref_data->book . '
-Title of the chapter : ' . $chap_data->name . '
-Example number : ' . $examp_data->number . '
-Caption : ' . $examp_data->caption . '
-
-Best Wishes,
-
-!site_name Team,
-FOSSEE,IIT Bombay', array(
-                        '!site_name' => variable_get('site_name', ''),
-                        '!user_name' => $user_data->name
-                    ))
-                );
             } elseif (($form_state['values']['book_actions'] == 0) && ($form_state['values']['chapter_actions'] == 0) && ($form_state['values']['example_actions'] == 2)) {
-                $query = db_select('textbook_companion_preference');
+                $query = \Drupal::database()->select('textbook_companion_preference');
                 $query->fields('textbook_companion_preference');
                 $query->condition('id', $form_state['values']['book']);
                 $query->condition('approval_status', 1);
                 $result = $query->execute();
                 $pref_data = $result->fetchObject();
-                $query = db_select('textbook_companion_chapter');
+                $query = \Drupal::database()->select('textbook_companion_chapter');
                 $query->fields('textbook_companion_chapter');
                 $query->condition('preference_id', $form_state['values']['book']);
                 $query->condition('id', $form_state['values']['chapter']);
                 $result = $query->execute();
                 $chap_data = $result->fetchObject();
-                $query = db_select('textbook_companion_example');
+                $query = \Drupal::database()->select('textbook_companion_example');
                 $query->fields('textbook_companion_example');
                 $query->condition('id', $form_state['values']['example']);
                 $result = $query->execute();
                 $examp_data = $result->fetchObject();
-                $query = db_update('textbook_companion_example');
+                $query = \Drupal::database()->update('textbook_companion_example');
                 $query->fields(array(
                     'approval_status' => 0
                 ));
                 $query->condition('id', $form_state['values']['example']);
                 $num_updated = $query->execute();
-                drupal_set_message(t('Example marked as Pending Review.'), 'status');
+                \Drupal::messenger()->addStatus(t('Example marked as Pending Review.'));
                 /* email */
-                $email_subject = t('[!site_name] Your uploaded Textbook Companion example has been marked as pending', array(
-                    '!site_name' => variable_get('site_name', '')
-                ));
-                $email_body = array(
-                    0 => t('
+                // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $email_subject = t('[!site_name] Your uploaded Textbook Companion example has been marked as pending', array(
+//                     '!site_name' => variable_get('site_name', '')
+//                 ));
 
-Dear !user_name,
+                // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $email_body = array(
+//                     0 => t('
+// 
+// Dear !user_name,
+// 
+// Your uploaded example for OpenModelica Textbook Companion with the following details has been marked as pending to be reviewed.
+// 
+// Title of the book : ' . $pref_data->book . '
+// Title of the chapter : ' . $chap_data->name . '
+// Example number : ' . $examp_data->number . '
+// Caption : ' . $examp_data->caption . '
+// 
+// Best Wishes,
+// 
+// !site_name Team,
+// FOSSEE,IIT Bombay', array(
+//                         '!site_name' => variable_get('site_name', ''),
+//                         '!user_name' => $user_data->name
+//                     ))
+//                 );
 
-Your uploaded example for OpenModelica Textbook Companion with the following details has been marked as pending to be reviewed.
-
-Title of the book : ' . $pref_data->book . '
-Title of the chapter : ' . $chap_data->name . '
-Example number : ' . $examp_data->number . '
-Caption : ' . $examp_data->caption . '
-
-Best Wishes,
-
-!site_name Team,
-FOSSEE,IIT Bombay', array(
-                        '!site_name' => variable_get('site_name', ''),
-                        '!user_name' => $user_data->name
-                    ))
-                );
             } elseif (($form_state['values']['book_actions'] == 0) && ($form_state['values']['chapter_actions'] == 0) && ($form_state['values']['example_actions'] == 3)) {
                 if (strlen(trim($form_state['values']['message'])) <= 30) {
                     form_set_error('message', t(''));
-                    drupal_set_message("Please mention the reason for disapproval. Minimum 30 character required", 'error');
+                    \Drupal::messenger()->addError("Please mention the reason for disapproval. Minimum 30 character required");
                     return;
                 }
-                $query = db_select('textbook_companion_preference');
+                $query = \Drupal::database()->select('textbook_companion_preference');
                 $query->fields('textbook_companion_preference');
                 $query->condition('id', $form_state['values']['book']);
                 $query->condition('approval_status', 1);
                 $result = $query->execute();
                 $pref_data = $result->fetchObject();
-                $query = db_select('textbook_companion_chapter');
+                $query = \Drupal::database()->select('textbook_companion_chapter');
                 $query->fields('textbook_companion_chapter');
                 $query->condition('preference_id', $form_state['values']['book']);
                 $query->condition('id', $form_state['values']['chapter']);
                 $result = $query->execute();
                 $chap_data = $result->fetchObject();
-                $query = db_select('textbook_companion_example');
+                $query = \Drupal::database()->select('textbook_companion_example');
                 $query->fields('textbook_companion_example');
                 $query->condition('id', $form_state['values']['example']);
                 $result = $query->execute();
                 $examp_data = $result->fetchObject();
                 if (delete_example($form_state['values']['example'])) {
-                    drupal_set_message(t('Example Dis-Approved and Deleted.'), 'status');
+                    \Drupal::messenger()->addStatus(t('Example Dis-Approved and Deleted.'));
                 } else {
-                    drupal_set_message(t('Error Dis-Approving and Deleting Example.'), 'error');
+                    \Drupal::messenger()->addError(t('Error Dis-Approving and Deleting Example.'));
                 }
                 /* email */
-                $email_subject = t('[!site_name] Your uploaded Textbook Companion example has been marked as 
-				dis-approved', array(
-                    '!site_name' => variable_get('site_name', '')
-                ));
-                $email_body = array(
-                    0 => t('
+                // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $email_subject = t('[!site_name] Your uploaded Textbook Companion example has been marked as
+// 				dis-approved', array(
+//                     '!site_name' => variable_get('site_name', '')
+//                 ));
 
-Dear !user_name,
+                // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $email_body = array(
+//                     0 => t('
+// 
+// Dear !user_name,
+// 
+// Your example for OpenModelica Textbook Companion has been marked as dis-approved and deleted.
+// 
+// Title of the book : ' . $pref_data->book . '
+// Title of the chapter : ' . $chap_data->name . '
+// Example number : ' . $examp_data->number . '
+// Caption : ' . $examp_data->caption . '
+// 
+// Reason for dis-approval:' . $form_state['values']['message'] . '
+// 
+// Best Wishes,
+// 
+// !site_name Team,
+// FOSSEE,IIT Bombay', array(
+//                         '!site_name' => variable_get('site_name', ''),
+//                         '!user_name' => $user_data->name
+//                     ))
+//                 );
 
-Your example for OpenModelica Textbook Companion has been marked as dis-approved and deleted.
-
-Title of the book : ' . $pref_data->book . '
-Title of the chapter : ' . $chap_data->name . '
-Example number : ' . $examp_data->number . '
-Caption : ' . $examp_data->caption . '
-
-Reason for dis-approval:' . $form_state['values']['message'] . '
-
-Best Wishes,
-
-!site_name Team,
-FOSSEE,IIT Bombay', array(
-                        '!site_name' => variable_get('site_name', ''),
-                        '!user_name' => $user_data->name
-                    ))
-                );
             } else {
-                drupal_set_message(t('Please select only one action at a time'), 'error');
+                \Drupal::messenger()->addError(t('Please select only one action at a time'));
                 return;
             }
             /****** sending email when everything done ******/
             if ($email_subject) {
                 $email_to = $user_data->mail;
-                $from = variable_get('textbook_companion_from_email', '');
-                $bcc = variable_get('textbook_companion_emails', '');
-                $cc = variable_get('textbook_companion_cc_emails', '');
+                $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
+                $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
+                $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
                 $param['standard']['subject'] = $email_subject;
                 $param['standard']['body'] = $email_body;
                 $param['standard']['headers'] = array(
@@ -1037,10 +1155,10 @@ FOSSEE,IIT Bombay', array(
                     'Bcc' => $bcc
                 );
                 if (!drupal_mail('textbook_companion', 'standard', $email_to, language_default(), $param, $from, TRUE))
-                    drupal_set_message('Error sending email message.', 'error');
+                    \Drupal::messenger()->addError('Error sending email message.');
             }
         } else {
-            drupal_set_message(t('You do not have permission to bulk manage code.'), 'error');
+            \Drupal::messenger()->addError(t('You do not have permission to bulk manage code.'));
         }
     }
 }
@@ -1049,7 +1167,7 @@ function _bulk_list_of_books()
     $book_titles = array(
         '0' => 'Please select...'
     );
-    $query = db_select('textbook_companion_preference', 'pp');
+    $query = \Drupal::database()->select('textbook_companion_preference', 'pp');
     $query->join('textbook_companion_proposal', 'p', 'pp.proposal_id=p.id');
     $query->join('users', 'u', 'p.uid=u.uid');
     $query->fields('u', array(
@@ -1076,7 +1194,7 @@ function _ajax_bulk_get_chapter_list($preference_id = 0)
     $book_chapters = array(
         '0' => 'Please select...'
     );
-    $query = db_select('textbook_companion_chapter');
+    $query = \Drupal::database()->select('textbook_companion_chapter');
     $query->fields('textbook_companion_chapter');
     $query->condition('preference_id', $preference_id);
     $query->orderBy('number', 'ASC');
@@ -1091,7 +1209,7 @@ function _ajax_bulk_get_examples($chapter_id = 0)
     $book_examples = array(
         '0' => 'Please select...'
     );
-    $query = db_select('textbook_companion_example');
+    $query = \Drupal::database()->select('textbook_companion_example');
     $query->fields('textbook_companion_example');
     $query->condition('chapter_id', $chapter_id);
     $book_examples_q = $query->execute();
@@ -1137,48 +1255,51 @@ function ajax_bulk_chapter_list_callback($form, $form_state)
     $commands = array();
     $book_default_value = $form_state['values']['book'];
     if ($book_default_value > 0) {
-        $commands[] = ajax_command_html('#ajax_selected_book', l('Download', 'textbook-companion/full-download/book/' . $book_default_value) . ' ' . t('(Download all the approved and unapproved examples of the entire book)'));
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $commands[] = ajax_command_html('#ajax_selected_book', l('Download', 'textbook-companion/full-download/book/' . $book_default_value) . ' ' . t('(Download all the approved and unapproved examples of the entire book)'));
+
         $form['book_actions']['#options'] = _bulk_list_book_actions();
-        $commands[] = ajax_command_replace('#ajax_selected_book_action', drupal_render($form['book_actions']));
+        $commands[] = ajax_command_replace('#ajax_selected_book_action', \Drupal::service("renderer")->render($form['book_actions']));
         $form['chapter']['#options'] = _ajax_bulk_get_chapter_list($book_default_value);
-        $commands[] = ajax_command_replace('#ajax_select_chapter_list', drupal_render($form['chapter']));
+        $commands[] = ajax_command_replace('#ajax_select_chapter_list', \Drupal::service("renderer")->render($form['chapter']));
         $commands[] = ajax_command_html('#ajax_download_chapter', '');
         $form['chapter_actions']['#options'] = _bulk_list_book_actions();
-        $commands[] = ajax_command_replace('#ajax_selected_chapter_action', drupal_render($form['chapter_actions']));
+        $commands[] = ajax_command_replace('#ajax_selected_chapter_action', \Drupal::service("renderer")->render($form['chapter_actions']));
         $commands[] = ajax_command_html('#ajax_selected_chapter_action', '');
         $commands[] = ajax_command_html('#ajax_selected_example', '');
         $form['example_actions']['#options'] = _bulk_list_example_actions();
-        $commands[] = ajax_command_replace('#ajax_selected_example_action', drupal_render($form['example_actions']));
+        $commands[] = ajax_command_replace('#ajax_selected_example_action', \Drupal::service("renderer")->render($form['example_actions']));
         $commands[] = ajax_command_html('#ajax_selected_example_action', '');
         $commands[] = ajax_command_html('#ajax_download_selected_example', '');
         $commands[] = ajax_command_html('#ajax_edit_selected_example', '');
         $form['example_files']['#title'] = '';
         $form['example_files']['#markup'] = '';
-        $commands[] = ajax_command_replace('#ajax_example_files_list', drupal_render($form['example_files']));
+        $commands[] = ajax_command_replace('#ajax_example_files_list', \Drupal::service("renderer")->render($form['example_files']));
     } else {
         $commands[] = ajax_command_html('#ajax_selected_book', '');
         $commands[] = ajax_command_html('#ajax_selected_book_pdf', '');
         $commands[] = ajax_command_html('#ajax_selected_book_regenerate_pdf', '');
         $commands[] = ajax_command_html('#ajax_selected_book_notes', '');
         $form['chapter']['#options'] = _ajax_bulk_get_chapter_list();
-        $commands[] = ajax_command_replace('#ajax_select_chapter_list', drupal_render($form['chapter']));
+        $commands[] = ajax_command_replace('#ajax_select_chapter_list', \Drupal::service("renderer")->render($form['chapter']));
         $commands[] = ajax_command_html('#ajax_select_chapter_list', '');
         $form['book_actions']['#options'] = _bulk_list_book_actions();
-        $commands[] = ajax_command_replace('#ajax_selected_book_action', drupal_render($form['book_actions']));
+        $commands[] = ajax_command_replace('#ajax_selected_book_action', \Drupal::service("renderer")->render($form['book_actions']));
         $commands[] = ajax_command_html('#ajax_selected_book_action', '');
         $form['chapter_actions']['#options'] = _bulk_list_chapter_actions();
-        $commands[] = ajax_command_replace('#ajax_selected_chapter_action', drupal_render($form['chapter_actions']));
+        $commands[] = ajax_command_replace('#ajax_selected_chapter_action', \Drupal::service("renderer")->render($form['chapter_actions']));
         $commands[] = ajax_command_html('#ajax_selected_chapter_action', '');
         $commands[] = ajax_command_html('#ajax_download_chapter', '');
         $commands[] = ajax_command_html('#ajax_selected_example', '');
         $form['example_actions']['#options'] = _bulk_list_example_actions();
-        $commands[] = ajax_command_replace('#ajax_selected_example_action', drupal_render($form['example_actions']));
+        $commands[] = ajax_command_replace('#ajax_selected_example_action', \Drupal::service("renderer")->render($form['example_actions']));
         $commands[] = ajax_command_html('#ajax_selected_example_action', '');
         $commands[] = ajax_command_html('#ajax_download_selected_example', '');
         $commands[] = ajax_command_html('#ajax_edit_selected_example', '');
         $form['example_files']['#title'] = '';
         $form['example_files']['#markup'] = '';
-        $commands[] = ajax_command_replace('#ajax_example_files_list', drupal_render($form['example_files']));
+        $commands[] = ajax_command_replace('#ajax_example_files_list', \Drupal::service("renderer")->render($form['example_files']));
     }
     return array(
         '#type' => 'ajax',
@@ -1190,34 +1311,37 @@ function ajax_bulk_example_list_callback($form, $form_state)
     $commands = array();
     $chapter_default_value = $form_state['values']['chapter'];
     if ($chapter_default_value > 0) {
-        $commands[] = ajax_command_html('#ajax_download_chapter', l('Download', 'textbook-companion/full-download/chapter/' . $chapter_default_value) . ' ' . t('(Download all the approved and unapproved examples of the entire chapter)'));
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $commands[] = ajax_command_html('#ajax_download_chapter', l('Download', 'textbook-companion/full-download/chapter/' . $chapter_default_value) . ' ' . t('(Download all the approved and unapproved examples of the entire chapter)'));
+
         $form['chapter_actions']['#options'] = _bulk_list_chapter_actions();
-        $commands[] = ajax_command_replace('#ajax_selected_chapter_action', drupal_render($form['chapter_actions']));
+        $commands[] = ajax_command_replace('#ajax_selected_chapter_action', \Drupal::service("renderer")->render($form['chapter_actions']));
         $form['example']['#options'] = _ajax_bulk_get_examples($chapter_default_value);
-        $commands[] = ajax_command_replace('#ajax_selected_example', drupal_render($form['example']));
+        $commands[] = ajax_command_replace('#ajax_selected_example', \Drupal::service("renderer")->render($form['example']));
         $commands[] = ajax_command_html('#ajax_download_selected_example', '');
         $commands[] = ajax_command_html('#ajax_edit_selected_example', '');
         $form['example_actions']['#options'] = _bulk_list_example_actions();
-        $commands[] = ajax_command_replace('#ajax_selected_example_action', drupal_render($form['example_actions']));
+        $commands[] = ajax_command_replace('#ajax_selected_example_action', \Drupal::service("renderer")->render($form['example_actions']));
         $commands[] = ajax_command_html('#ajax_selected_example_action', '');
         $form['example_files']['#title'] = '';
         $form['example_files']['#markup'] = '';
-        $commands[] = ajax_command_replace('#ajax_example_files_list', drupal_render($form['example_files']));
+        $commands[] = ajax_command_replace('#ajax_example_files_list', \Drupal::service("renderer")->render($form['example_files']));
     } else {
         $commands[] = ajax_command_html('#ajax_download_chapter', '');
         $form['chapter_actions']['#options'] = _bulk_list_chapter_actions();
-        $commands[] = ajax_command_replace('#ajax_selected_chapter_action', drupal_render($form['chapter_actions']));
+        $commands[] = ajax_command_replace('#ajax_selected_chapter_action', \Drupal::service("renderer")->render($form['chapter_actions']));
         $commands[] = ajax_command_html('#ajax_selected_chapter_action', '');
         $form['example']['#options'] = _ajax_bulk_get_examples();
-        $commands[] = ajax_command_replace('#ajax_selected_example', drupal_render($form['example']));
+        $commands[] = ajax_command_replace('#ajax_selected_example', \Drupal::service("renderer")->render($form['example']));
         $commands[] = ajax_command_html('#ajax_selected_example', '');
         $commands[] = ajax_command_html('#ajax_download_selected_example', '');
         $commands[] = ajax_command_html('#ajax_edit_selected_example', '');
         $form['example_files']['#title'] = '';
         $form['example_files']['#markup'] = '';
-        $commands[] = ajax_command_replace('#ajax_example_files_list', drupal_render($form['example_files']));
+        $commands[] = ajax_command_replace('#ajax_example_files_list', \Drupal::service("renderer")->render($form['example_files']));
         $form['example_actions']['#options'] = _bulk_list_example_actions();
-        $commands[] = ajax_command_replace('#ajax_selected_example_action', drupal_render($form['example_actions']));
+        $commands[] = ajax_command_replace('#ajax_selected_example_action', \Drupal::service("renderer")->render($form['example_actions']));
         $commands[] = ajax_command_html('#ajax_selected_example_action', '');
     }
     return array(
@@ -1231,7 +1355,7 @@ function ajax_bulk_example_files_callback($form, $form_state)
     $example_list_default_value = $form_state['values']['example'];
     //var_dump($example_list_default_value);
     if ($example_list_default_value > 0) {
-        $query = db_select('textbook_companion_example_files');
+        $query = \Drupal::database()->select('textbook_companion_example_files');
         $query->fields('textbook_companion_example_files');
         $query->condition('example_id', $example_list_default_value);
         $example_list_q = $query->execute();
@@ -1253,36 +1377,54 @@ function ajax_bulk_example_files_callback($form, $form_state)
                         $example_file_type = 'Unknown';
                         break;
                 }
-                $example_files_rows[] = array(
-                    l($example_list_data->filename, 'textbook-companion/download/file/' . $example_list_data->id),
-                    $example_file_type
-                );
+                // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $example_files_rows[] = array(
+//                     l($example_list_data->filename, 'textbook-companion/download/file/' . $example_list_data->id),
+//                     $example_file_type
+//                 );
+
             }
             /* creating list of files table */
             $example_files_header = array(
                 'Filename',
                 'Type'
             );
-            $example_files = theme('table', array(
-                'header' => $example_files_header,
-                'rows' => $example_files_rows
-            ));
+            // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $example_files = theme('table', array(
+//                 'header' => $example_files_header,
+//                 'rows' => $example_files_rows
+//             ));
+
             $form['example_files']['#title'] = 'List of example files';
             $form['example_files']['#markup'] = $example_files;
-            $commands[] = ajax_command_replace('#ajax_example_files_list', drupal_render($form['example_files']));
-            $commands[] = ajax_command_html('#ajax_download_selected_example', l('Download Example', 'textbook-companion/download/example/' . $example_list_default_value));
-            $commands[] = ajax_command_html('#ajax_edit_selected_example', l('Edit Example', 'code_approval/editcode/' . $example_list_default_value));
+            $commands[] = ajax_command_replace('#ajax_example_files_list', \Drupal::service("renderer")->render($form['example_files']));
+            // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $commands[] = ajax_command_html('#ajax_download_selected_example', l('Download Example', 'textbook-companion/download/example/' . $example_list_default_value));
+
+            // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $commands[] = ajax_command_html('#ajax_edit_selected_example', l('Edit Example', 'code_approval/editcode/' . $example_list_default_value));
+
             $form['example_actions']['#options'] = _bulk_list_example_actions();
-            $commands[] = ajax_command_replace('#ajax_selected_example_action', drupal_render($form['example_actions']));
+            $commands[] = ajax_command_replace('#ajax_selected_example_action', \Drupal::service("renderer")->render($form['example_actions']));
         }
     } else {
         $commands[] = ajax_command_html('#ajax_download_selected_example', '');
         $commands[] = ajax_command_html('#ajax_edit_selected_example', '');
         $form['example_files']['#title'] = '';
         $form['example_files']['#markup'] = '';
-        $commands[] = ajax_command_replace('#ajax_example_files_list', drupal_render($form['example_files']));
+        $commands[] = ajax_command_replace('#ajax_example_files_list', \Drupal::service("renderer")->render($form['example_files']));
         $form['example_actions']['#options'] = _bulk_list_example_actions();
-        $commands[] = ajax_command_replace('#ajax_selected_example_action', drupal_render($form['example_actions']));
+        $commands[] = ajax_command_replace('#ajax_selected_example_action', \Drupal::service("renderer")->render($form['example_actions']));
         $commands[] = ajax_command_html('#ajax_selected_example_action', '');
     }
     return array(
@@ -1301,14 +1443,14 @@ function edit_code_submission()
 {
     /* get pending proposals to be approved */
     $proposal_rows = array();
-    $query = db_select('textbook_companion_proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('proposal_status', 1);
     $query->orderBy('id', 'DESC');
     $proposal_q = $query->execute();
     while ($proposal_data = $proposal_q->fetchObject()) {
         /* get preference */
-        $query = db_select('textbook_companion_preference');
+        $query = \Drupal::database()->select('textbook_companion_preference');
         $query->fields('textbook_companion_preference');
         $query->condition('proposal_id', $proposal_data->id);
         $query->condition('approval_status', 1);
@@ -1317,7 +1459,7 @@ function edit_code_submission()
         $preference_q = $query->execute();
         $preference_data = $preference_q->fetchObject();
         if (!$preference_data) {
-            $query = db_select('textbook_companion_preference');
+            $query = \Drupal::database()->select('textbook_companion_preference');
             $query->fields('textbook_companion_preference');
             $query->condition('proposal_id', $proposal_data->id);
             $query->condition('pref_number', 1);
@@ -1335,17 +1477,20 @@ function edit_code_submission()
                 $proposal_status = 'Submitted code for all exmample for book';
                 break;
         }
-        $proposal_rows[] = array(
-            "{$preference_data->book} <br> 
-<em>by {$preference_data->author}</em>",
-            l($proposal_data->full_name, 'user/' . $proposal_data->uid),
-            $proposal_status,
-            l('Edit', 'textbook-companion/code-approval/edit-code-submission/edit/' . $preference_data->id)
-        );
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $proposal_rows[] = array(
+//             "{$preference_data->book} <br>
+// <em>by {$preference_data->author}</em>",
+//             l($proposal_data->full_name, 'user/' . $proposal_data->uid),
+//             $proposal_status,
+//             l('Edit', 'textbook-companion/code-approval/edit-code-submission/edit/' . $preference_data->id)
+//         );
+
     }
     /* check if there are any pending proposals */
     if (!$proposal_rows) {
-        drupal_set_message(t('There are no proposals.'), 'status');
+        \Drupal::messenger()->addStatus(t('There are no proposals.'));
         return '';
     }
     $proposal_header = array(
@@ -1354,16 +1499,25 @@ function edit_code_submission()
         'Status',
         'Action'
     );
-    $output = theme('table', array(
-        'header' => $proposal_header,
-        'rows' => $proposal_rows
-    ));
+    // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $output = theme('table', array(
+//         'header' => $proposal_header,
+//         'rows' => $proposal_rows
+//     ));
+
     return $output;
 }
 function get_edit_code_submission($id = NULL)
 {
     if ($id) {
-        return drupal_get_form('edit_code_submission_form', $id);
+        return \Drupal::formBuilder()->getForm('edit_code_submission_form', $id);
     } else {
         return 'Access denied';
     }
@@ -1372,12 +1526,12 @@ function edit_code_submission_form($form, $form_state, $preference_id)
 {
     /* get current proposal */
     $preference_id = arg(4);
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('id', $preference_id);
     $preference_data = $query->execute()->fetchObject();
     if (!$preference_data) {
-        drupal_set_message(t('Invalid book selected. Please try again.'), 'error');
+        \Drupal::messenger()->addError(t('Invalid book selected. Please try again.'));
         drupal_goto('textbook-companion/code-approval/edit-code-submission');
         return;
     }
@@ -1426,10 +1580,13 @@ function edit_code_submission_form($form, $form_state, $preference_id)
         '#type' => 'submit',
         '#value' => t('Submit')
     );
-    $form['cancle'] = array(
-        '#type' => 'item',
-        '#markup' => l('Cancle', 'textbook-companion/code-approval/edit-code-submission')
-    );
+    // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['cancle'] = array(
+//         '#type' => 'item',
+//         '#markup' => l('Cancle', 'textbook-companion/code-approval/edit-code-submission')
+//     );
+
     return $form;
 }
 function edit_code_submission_form_validate($form, $form_state)
@@ -1441,28 +1598,28 @@ function edit_code_submission_form_validate($form, $form_state)
 }
 function edit_code_submission_form_submit($form, $form_state)
 {
-    global $user;
+    $user = \Drupal::currentUser();
     if ($form_state['values']['all_example_submitted'] == 1) {
-        if (db_query('UPDATE textbook_companion_preference SET submited_all_examples_code = 0 WHERE id = :preference_id', array(
+        if (\Drupal::database()->query('UPDATE textbook_companion_preference SET submited_all_examples_code = 0 WHERE id = :preference_id', array(
             ':preference_id' => $form_state['values']['hidden_preference_id']
         ))) {
             $query = ("SELECT proposal_id FROM textbook_companion_preference WHERE id= :preference_id");
             $args = array(
                 ":preference_id" => $form_state['values']['hidden_preference_id']
             );
-            $proposal_data = db_query($query, $args);
+            $proposal_data = \Drupal::database()->query($query, $args);
             $proposal_data_result = $proposal_data->fetchObject();
-            $proposal_query = db_select('textbook_companion_proposal');
+            $proposal_query = \Drupal::database()->select('textbook_companion_proposal');
             $proposal_query->fields('textbook_companion_proposal');
             $proposal_query->condition('proposal_status', 1);
             $proposal_query->condition('id', $proposal_data_result->proposal_id);
             $proposal_data_query = $proposal_query->execute()->fetchObject();
             /* sending email */
-            $book_user = user_load($proposal_data_query->uid);
+            $book_user = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data_query->uid);
             $email_to = $book_user->mail;
-            $from = variable_get('textbook_companion_from_email', '');
-            $bcc = variable_get('textbook_companion_emails', '');
-            $cc = variable_get('textbook_companion_cc_emails', '');
+            $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
+            $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
+            $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
             $param['all_code_submitted_status_changed']['proposal_id'] = $proposal_data_result->proposal_id;
             $param['all_code_submitted_status_changed']['user_id'] = $user->uid;
             $param['all_code_submitted_status_changed']['headers'] = array(
@@ -1475,8 +1632,8 @@ function edit_code_submission_form_submit($form, $form_state)
                 'Bcc' => $bcc
             );
             if (!drupal_mail('textbook_companion', 'all_code_submitted_status_changed', $email_to, language_default(), $param, $from, TRUE))
-                drupal_set_message('Error sending email message.', 'error');
-            drupal_set_message('Enabled code submission interface for user');
+                \Drupal::messenger()->addError('Error sending email message.');
+            \Drupal::messenger()->addMessage('Enabled code submission interface for user');
             drupal_goto('textbook-companion/code-approval/edit-code-submission');
         }
     }

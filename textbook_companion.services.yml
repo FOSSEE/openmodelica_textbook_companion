@@ -1,0 +1,3 @@
+services:
+  textbook_companion_global:
+    class: '\Drupal\textbook_companion\Services\TextbookCompanionGlobalFunction'

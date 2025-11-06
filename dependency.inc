@@ -2,11 +2,11 @@
 // $Id$
 function upload_dependency_form($form_state)
   {
-    global $user;
+    $user = \Drupal::currentUser();
     /************************ start approve book details ************************/
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE uid = %d ORDER BY id DESC LIMIT 1", $user->uid);
     $proposal_data = db_fetch_object($proposal_q);*/
-    $query = db_select('textbook_companion_proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('uid', $user->uid);
     $query->orderBy('id', 'DESC');
@@ -15,7 +15,10 @@ function upload_dependency_form($form_state)
     $proposal_data = $result->fetchObject();
     if (!$proposal_data)
       {
-        drupal_set_message("Please submit a " . l('proposal', 'proposal') . ".", 'error');
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message("Please submit a " . l('proposal', 'proposal') . ".", 'error');
+
         drupal_goto('');
       }
     if ($proposal_data->proposal_status != 1 && $proposal_data->proposal_status != 4)
@@ -23,22 +26,28 @@ function upload_dependency_form($form_state)
         switch ($proposal_data->proposal_status)
         {
             case 0:
-                drupal_set_message(t('We have already received your proposal. We will get back to you soon.'), 'status');
+                \Drupal::messenger()->addStatus(t('We have already received your proposal. We will get back to you soon.'));
                 drupal_goto('');
                 return;
                 break;
             case 2:
-                drupal_set_message(t('Your proposal has been dis-approved. Please create another proposal ' . l('here', 'proposal') . '.'), 'error');
+                // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message(t('Your proposal has been dis-approved. Please create another proposal ' . l('here', 'proposal') . '.'), 'error');
+
                 drupal_goto('');
                 return;
                 break;
             case 3:
-                drupal_set_message(t('Congratulations! You have completed your last book proposal. You have to create another proposal ' . l('here', 'proposal') . '.'), 'status');
+                // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message(t('Congratulations! You have completed your last book proposal. You have to create another proposal ' . l('here', 'proposal') . '.'), 'status');
+
                 drupal_goto('');
                 return;
                 break;
             default:
-                drupal_set_message(t('Invalid proposal state. Please contact site administrator for further information.'), 'error');
+                \Drupal::messenger()->addError(t('Invalid proposal state. Please contact site administrator for further information.'));
                 drupal_goto('');
                 return;
                 break;
@@ -46,7 +55,7 @@ function upload_dependency_form($form_state)
       }
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d AND approval_status = 1 LIMIT 1", $proposal_data->id);
     $preference_data = db_fetch_object($preference_q);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('proposal_id', $proposal_data->id);
     $query->condition('approval_status', 1);
@@ -55,7 +64,7 @@ function upload_dependency_form($form_state)
     $preference_data = $result->fetchObject();
     if (!$preference_data)
       {
-        drupal_set_message(t('Invalid Book Preference status. Please contact site administrator for further information.'), 'error');
+        \Drupal::messenger()->addError(t('Invalid Book Preference status. Please contact site administrator for further information.'));
         drupal_goto('');
         return;
       }
@@ -87,7 +96,7 @@ function upload_dependency_form($form_state)
     $form['depfile']['depfile1'] = array(
         '#type' => 'file',
         '#title' => t('Upload dependency file'),
-        '#description' => t("Allowed file extensions : ") . variable_get('textbook_companion_dependency_extensions', '')
+        '#description' => t("Allowed file extensions : ") . \Drupal::config('textbook_companion.settings')->get('textbook_companion_dependency_extensions')
     );
     $form['depfile']['depfile1_caption'] = array(
         '#type' => 'textfield',
@@ -104,19 +113,22 @@ function upload_dependency_form($form_state)
         '#type' => 'submit',
         '#value' => t('Submit')
     );
-    $form['cancel'] = array(
-        '#type' => 'item',
-        '#markup' => l(t('Back'), 'textbook_companion/code/upload')
-    );
+    // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['cancel'] = array(
+//         '#type' => 'item',
+//         '#markup' => l(t('Back'), 'textbook_companion/code/upload')
+//     );
+
     return $form;
   }
 function upload_dependency_form_validate($form, &$form_state)
   {
-    global $user;
+    $user = \Drupal::currentUser();
     /* get approved book details */
     /*$book_q = db_query("SELECT pro.id as pro_id, pre.id as pre_id, pre.book as pre_book, pro.full_name as pro_full_name FROM {textbook_companion_proposal} pro JOIN {textbook_companion_preference} pre ON pro.id = pre.proposal_id WHERE pro.proposal_status = 1 AND pre.approval_status = 1 AND pro.uid = %d", $user->uid);
     $book_data = db_fetch_object($book_q);*/
-    $query = db_select('textbook_companion_proposal', 'pro');
+    $query = \Drupal::database()->select('textbook_companion_proposal', 'pro');
     $query->fields('pro', array(
         'id',
         'full_name'
@@ -134,19 +146,19 @@ function upload_dependency_form_validate($form, &$form_state)
     if (isset($_FILES['files']))
       {
         /* check for valid filename extensions */
-        $allowed_extensions = explode(',', variable_get('textbook_companion_dependency_extensions', ''));
+        $allowed_extensions = explode(',', \Drupal::config('textbook_companion.settings')->get('textbook_companion_dependency_extensions'));
         foreach ($_FILES['files']['name'] as $file_form_name => $file_name)
           {
             if ($file_name)
               {
                 $temp_extension = end(explode('.', strtolower($_FILES['files']['name'][$file_form_name])));
                 if (!in_array($temp_extension, $allowed_extensions))
-                    form_set_error($file_form_name, t('Only ' . variable_get('textbook_companion_dependency_extensions', '') . ' extensions can be uploaded.'));
+                    form_set_error($file_form_name, t('Only ' . \Drupal::config('textbook_companion.settings')->get('textbook_companion_dependency_extensions') . ' extensions can be uploaded.'));
                 if ($_FILES['files']['size'][$file_form_name] <= 0)
                     form_set_error($file_form_name, t('File size cannot be zero.'));
                 /* check if file already exists */
                 /*$dep_exists_data = db_fetch_object(db_query("SELECT * FROM {textbook_companion_dependency_files} WHERE filename = '%s'", $_FILES['files']['name'][$file_form_name]));*/
-                $query = db_select('textbook_companion_dependency_files');
+                $query = \Drupal::database()->select('textbook_companion_dependency_files');
                 $query->fields('textbook_companion_dependency_files');
                 $query->condition('filename', $_FILES['files']['name'][$file_form_name]);
                 $result = $query->execute();
@@ -162,12 +174,12 @@ function upload_dependency_form_validate($form, &$form_state)
   }
 function upload_dependency_form_submit($form, &$form_state)
   {
-    global $user;
+    $user = \Drupal::currentUser();
     $root_path = textbook_companion_path();
     /* get approved book details */
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE uid = %d ORDER BY id DESC LIMIT 1", $user->uid);
     $proposal_data = db_fetch_object($proposal_q);*/
-    $query = db_select('textbook_companion_proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('uid', $user->uid);
     $query->orderBy('id', 'DESC');
@@ -176,7 +188,10 @@ function upload_dependency_form_submit($form, &$form_state)
     $proposal_data = $result->fetchObject();
     if (!$proposal_data)
       {
-        drupal_set_message("Please submit a " . l('proposal', 'proposal') . ".", 'error');
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message("Please submit a " . l('proposal', 'proposal') . ".", 'error');
+
         drupal_goto('');
       }
     if ($proposal_data->proposal_status != 1 && $proposal_data->proposal_status != 4)
@@ -184,22 +199,28 @@ function upload_dependency_form_submit($form, &$form_state)
         switch ($proposal_data->proposal_status)
         {
             case 0:
-                drupal_set_message(t('We have already received your proposal. We will get back to you soon.'), 'status');
+                \Drupal::messenger()->addStatus(t('We have already received your proposal. We will get back to you soon.'));
                 drupal_goto('');
                 return;
                 break;
             case 2:
-                drupal_set_message(t('Your proposal has been dis-approved. Please create another proposal ' . l('here', 'proposal') . '.'), 'error');
+                // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message(t('Your proposal has been dis-approved. Please create another proposal ' . l('here', 'proposal') . '.'), 'error');
+
                 drupal_goto('');
                 return;
                 break;
             case 3:
-                drupal_set_message(t('Congratulations! You have completed your last book proposal. You have to create another proposal ' . l('here', 'proposal') . '.'), 'status');
+                // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message(t('Congratulations! You have completed your last book proposal. You have to create another proposal ' . l('here', 'proposal') . '.'), 'status');
+
                 drupal_goto('');
                 return;
                 break;
             default:
-                drupal_set_message(t('Invalid proposal state. Please contact site administrator for further information.'), 'error');
+                \Drupal::messenger()->addError(t('Invalid proposal state. Please contact site administrator for further information.'));
                 drupal_goto('');
                 return;
                 break;
@@ -207,7 +228,7 @@ function upload_dependency_form_submit($form, &$form_state)
       }
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d AND approval_status = 1 LIMIT 1", $proposal_data->id);
     $preference_data = db_fetch_object($preference_q);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('proposal_id', $proposal_data->id);
     $query->condition('approval_status', 1);
@@ -216,7 +237,7 @@ function upload_dependency_form_submit($form, &$form_state)
     $preference_data = $result->fetchObject();
     if (!$preference_data)
       {
-        drupal_set_message(t('Invalid Book Preference status. Please contact site administrator for further information.'), 'error');
+        \Drupal::messenger()->addError(t('Invalid Book Preference status. Please contact site administrator for further information.'));
         drupal_goto('');
         return;
       }
@@ -262,10 +283,8 @@ function upload_dependency_form_submit($form, &$form_state)
                     ":description" => $form_state['values'][$file_form_name . '_description'],
                     ":timestamp" => time()
                 );
-                $result = db_query($query, $args, array(
-                    'return' => Database::RETURN_INSERT_ID
-                ));
-                drupal_set_message($file_name . ' uploaded successfully.', 'status');
+                $result = \Drupal::database()->query($query, $args, $query);
+                \Drupal::messenger()->addStatus($file_name . ' uploaded successfully.');
                 //$dependency_ids[] = db_last_insert_id('textbook_companion_dependency_files', 'id');
                 $dependency_ids[] = $result;
                 $dependency_names[] = $_FILES['files']['name'][$file_form_name];
@@ -273,19 +292,19 @@ function upload_dependency_form_submit($form, &$form_state)
               }
             else
               {
-                drupal_set_message('Error uploading dependency : ' . $dest_path . '/' . $_FILES['files']['name'][$file_form_name], 'error');
+                \Drupal::messenger()->addError('Error uploading dependency : ' . $dest_path . '/' . $_FILES['files']['name'][$file_form_name]);
               }
           }
       }
     if ($file_upload_counter > 0)
       {
-        drupal_set_message('Dependencies uploaded successfully.', 'status');
+        \Drupal::messenger()->addStatus('Dependencies uploaded successfully.');
         /* sending email */
         $param['dependency_uploaded']['user_id'] = $user->uid;
         $param['dependency_uploaded']['dependency_names'] = $dependency_names;
         $email_to = $user->mail;
-        if (!drupal_mail('textbook_companion', 'dependency_uploaded', $email_to, language_default(), $param, variable_get('textbook_companion_from_email', NULL), TRUE))
-            drupal_set_message('Error sending email message.', 'error');
+        if (!drupal_mail('textbook_companion', 'dependency_uploaded', $email_to, language_default(), $param, \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email'), TRUE))
+            \Drupal::messenger()->addError('Error sending email message.');
       }
     drupal_goto('textbook_companion/code/upload_dep');
   }
@@ -295,7 +314,7 @@ function _list_existing_dependency($book_id)
     $return_html = "";
     /*$query = "SELECT * FROM textbook_companion_dependency_files WHERE preference_id = %d ORDER BY filename ASC";
     $result = db_query($query, $book_id);*/
-    $query = db_select('textbook_companion_dependency_files');
+    $query = \Drupal::database()->select('textbook_companion_dependency_files');
     $query->fields('textbook_companion_dependency_files');
     $query->condition('preference_id', $book_id);
     $query->orderBy('filename', 'ASC');
@@ -319,26 +338,38 @@ function _list_existing_dependency($book_id)
     $rows = array();
     while ($row = $result->fetchObject())
       {
-        $item = array(
-            l($row->filename . $temp_caption, 'download/dependency/' . $row->id),
-            l("Edit", "textbook_companion/code/edit_dep/{$row->id}") . " | " . l("Delete", "textbook_companion/code/delete_dep/{$row->id}")
-        );
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $item = array(
+//             l($row->filename . $temp_caption, 'download/dependency/' . $row->id),
+//             l("Edit", "textbook_companion/code/edit_dep/{$row->id}") . " | " . l("Delete", "textbook_companion/code/delete_dep/{$row->id}")
+//         );
+
         array_push($rows, $item);
       }
-    $return_html .= theme("table", array(
-        "headers" => $headers,
-        "rows" => $rows
-    ));
+    // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $return_html .= theme("table", array(
+//         "headers" => $headers,
+//         "rows" => $rows
+//     ));
+
     return $return_html;
   }
 /******************** edit dependency section ********************/
 function edit_dependency_form($form_state, $dependency_id = 0)
   {
-    global $user;
+    $user = \Drupal::currentUser();
     /************************ start approve book details ************************/
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE uid = %d ORDER BY id DESC LIMIT 1", $user->uid);
     $proposal_data = db_fetch_object($proposal_q);*/
-    $query = db_select('textbook_companion_proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('uid', $user->uid);
     $query->orderBy('id', 'DESC');
@@ -347,7 +378,10 @@ function edit_dependency_form($form_state, $dependency_id = 0)
     $proposal_data = $result->fetchObject();
     if (!$proposal_data)
       {
-        drupal_set_message("Please submit a " . l('proposal', 'proposal') . ".", 'error');
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message("Please submit a " . l('proposal', 'proposal') . ".", 'error');
+
         drupal_goto('');
       }
     if ($proposal_data->proposal_status != 1 && $proposal_data->proposal_status != 4)
@@ -355,22 +389,28 @@ function edit_dependency_form($form_state, $dependency_id = 0)
         switch ($proposal_data->proposal_status)
         {
             case 0:
-                drupal_set_message(t('We have already received your proposal. We will get back to you soon.'), 'status');
+                \Drupal::messenger()->addStatus(t('We have already received your proposal. We will get back to you soon.'));
                 drupal_goto('');
                 return;
                 break;
             case 2:
-                drupal_set_message(t('Your proposal has been dis-approved. Please create another proposal ' . l('here', 'proposal') . '.'), 'error');
+                // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message(t('Your proposal has been dis-approved. Please create another proposal ' . l('here', 'proposal') . '.'), 'error');
+
                 drupal_goto('');
                 return;
                 break;
             case 3:
-                drupal_set_message(t('Congratulations! You have completed your last book proposal. You have to create another proposal ' . l('here', 'proposal') . '.'), 'status');
+                // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message(t('Congratulations! You have completed your last book proposal. You have to create another proposal ' . l('here', 'proposal') . '.'), 'status');
+
                 drupal_goto('');
                 return;
                 break;
             default:
-                drupal_set_message(t('Invalid proposal state. Please contact site administrator for further information.'), 'error');
+                \Drupal::messenger()->addError(t('Invalid proposal state. Please contact site administrator for further information.'));
                 drupal_goto('');
                 return;
                 break;
@@ -378,7 +418,7 @@ function edit_dependency_form($form_state, $dependency_id = 0)
       }
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d AND approval_status = 1 LIMIT 1", $proposal_data->id);
     $preference_data = db_fetch_object($preference_q);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('proposal_id', $proposal_data->id);
     $query->condition('approval_status', 1);
@@ -387,7 +427,7 @@ function edit_dependency_form($form_state, $dependency_id = 0)
     $preference_data = $result->fetchObject();
     if (!$preference_data)
       {
-        drupal_set_message(t('Invalid Book Preference status. Please contact site administrator for further information.'), 'error');
+        \Drupal::messenger()->addError(t('Invalid Book Preference status. Please contact site administrator for further information.'));
         drupal_goto('');
         return;
       }
@@ -399,7 +439,7 @@ function edit_dependency_form($form_state, $dependency_id = 0)
     ";
     $result = db_query($query);
     $row = db_fetch_object($result);*/
-    $query = db_select('textbook_companion_dependency_files');
+    $query = \Drupal::database()->select('textbook_companion_dependency_files');
     $query->fields('textbook_companion_dependency_files');
     $query->condition('id', $dependency_id);
     $result = $query->execute();
@@ -416,7 +456,7 @@ function edit_dependency_form($form_state, $dependency_id = 0)
     $form['depfile']['depfile1'] = array(
         '#type' => 'file',
         '#title' => t('Upload dependency file'),
-        '#description' => t("Allowed file extensions : ") . variable_get('textbook_companion_dependency_extensions', '')
+        '#description' => t("Allowed file extensions : ") . \Drupal::config('textbook_companion.settings')->get('textbook_companion_dependency_extensions')
     );
     $form['depfile']['depfile1_caption'] = array(
         '#type' => 'textfield',
@@ -439,26 +479,29 @@ function edit_dependency_form($form_state, $dependency_id = 0)
         '#type' => 'submit',
         '#value' => t('Submit')
     );
-    $form['cancel'] = array(
-        '#type' => 'markup',
-        '#value' => l(t('Back'), 'textbook_companion/code/upload_dep')
-    );
+    // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['cancel'] = array(
+//         '#type' => 'markup',
+//         '#value' => l(t('Back'), 'textbook_companion/code/upload_dep')
+//     );
+
     return $form;
   }
 function edit_dependency_form_validate($form, &$form_state)
   {
-    global $user;
+    $user = \Drupal::currentUser();
     if (isset($_FILES['files']))
       {
         /* check for valid filename extensions */
-        $allowed_extensions = explode(',', variable_get('textbook_companion_dependency_extensions', ''));
+        $allowed_extensions = explode(',', \Drupal::config('textbook_companion.settings')->get('textbook_companion_dependency_extensions'));
         foreach ($_FILES['files']['name'] as $file_form_name => $file_name)
           {
             if ($file_name)
               {
                 $temp_extension = end(explode('.', strtolower($_FILES['files']['name'][$file_form_name])));
                 if (!in_array($temp_extension, $allowed_extensions))
-                    form_set_error($file_form_name, t('Only ' . variable_get('textbook_companion_dependency_extensions', '') . ' extensions can be uploaded.'));
+                    form_set_error($file_form_name, t('Only ' . \Drupal::config('textbook_companion.settings')->get('textbook_companion_dependency_extensions') . ' extensions can be uploaded.'));
                 if ($_FILES['files']['size'][$file_form_name] <= 0)
                     form_set_error($file_form_name, t('File size cannot be zero.'));
                 /* check if file already exists */
@@ -469,7 +512,7 @@ function edit_dependency_form_validate($form, &$form_state)
                 $form_state["values"]["dependency_id"]
                 )
                 );*/
-                $query = db_select('textbook_companion_dependency_files');
+                $query = \Drupal::database()->select('textbook_companion_dependency_files');
                 $query->fields('textbook_companion_dependency_files');
                 $query->condition('filename', $_FILES['files']['name'][$file_form_name]);
                 $query->condition('id', $form_state["values"]["dependency_id"], '<>');
@@ -486,12 +529,12 @@ function edit_dependency_form_validate($form, &$form_state)
   }
 function edit_dependency_form_submit($form, &$form_state)
   {
-    global $user;
+    $user = \Drupal::currentUser();
     $root_path = textbook_companion_path();
     /* get approved book details */
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE uid = %d ORDER BY id DESC LIMIT 1", $user->uid);
     $proposal_data = db_fetch_object($proposal_q);*/
-    $query = db_select('textbook_companion_proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('uid', $user->uid);
     $query->orderBy('id', 'DESC');
@@ -500,7 +543,10 @@ function edit_dependency_form_submit($form, &$form_state)
     $proposal_data = $result->fetchObject();
     if (!$proposal_data)
       {
-        drupal_set_message("Please submit a " . l('proposal', 'proposal') . ".", 'error');
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message("Please submit a " . l('proposal', 'proposal') . ".", 'error');
+
         drupal_goto('');
       }
     if ($proposal_data->proposal_status != 1 && $proposal_data->proposal_status != 4)
@@ -508,22 +554,28 @@ function edit_dependency_form_submit($form, &$form_state)
         switch ($proposal_data->proposal_status)
         {
             case 0:
-                drupal_set_message(t('We have already received your proposal. We will get back to you soon.'), 'status');
+                \Drupal::messenger()->addStatus(t('We have already received your proposal. We will get back to you soon.'));
                 drupal_goto('');
                 return;
                 break;
             case 2:
-                drupal_set_message(t('Your proposal has been dis-approved. Please create another proposal ' . l('here', 'proposal') . '.'), 'error');
+                // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message(t('Your proposal has been dis-approved. Please create another proposal ' . l('here', 'proposal') . '.'), 'error');
+
                 drupal_goto('');
                 return;
                 break;
             case 3:
-                drupal_set_message(t('Congratulations! You have completed your last book proposal. You have to create another proposal ' . l('here', 'proposal') . '.'), 'status');
+                // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message(t('Congratulations! You have completed your last book proposal. You have to create another proposal ' . l('here', 'proposal') . '.'), 'status');
+
                 drupal_goto('');
                 return;
                 break;
             default:
-                drupal_set_message(t('Invalid proposal state. Please contact site administrator for further information.'), 'error');
+                \Drupal::messenger()->addError(t('Invalid proposal state. Please contact site administrator for further information.'));
                 drupal_goto('');
                 return;
                 break;
@@ -531,7 +583,7 @@ function edit_dependency_form_submit($form, &$form_state)
       }
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d AND approval_status = 1 LIMIT 1", $proposal_data->id);
     $preference_data = db_fetch_object($preference_q);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('proposal_id', $proposal_data->id);
     $query->condition('approval_status', 1);
@@ -540,7 +592,7 @@ function edit_dependency_form_submit($form, &$form_state)
     $preference_data = $result->fetchObject();
     if (!$preference_data)
       {
-        drupal_set_message(t('Invalid Book Preference status. Please contact site administrator for further information.'), 'error');
+        \Drupal::messenger()->addError(t('Invalid Book Preference status. Please contact site administrator for further information.'));
         drupal_goto('');
         return;
       }
@@ -562,7 +614,7 @@ function edit_dependency_form_submit($form, &$form_state)
     ";
     $result = db_query($query, $form_state["values"]["dependency_id"]);
     $row = db_fetch_object($result);*/
-    $query = db_select('textbook_companion_dependency_files');
+    $query = \Drupal::database()->select('textbook_companion_dependency_files');
     $query->fields('textbook_companion_dependency_files');
     $query->condition('id', $form_state["values"]["dependency_id"]);
     $result = $query->execute();
@@ -596,7 +648,7 @@ function edit_dependency_form_submit($form, &$form_state)
                 time(),
                 $form_state["values"]["dependency_id"]
                 );*/
-                $query = db_update('textbook_companion_dependency_files');
+                $query = \Drupal::database()->update('textbook_companion_dependency_files');
                 $query->fields(array(
                     'filename' => $_FILES['files']['name'][$file_form_name],
                     'filepath' => $dest_path . $_FILES['files']['name'][$file_form_name],
@@ -608,26 +660,26 @@ function edit_dependency_form_submit($form, &$form_state)
                 ));
                 $query->condition('id', $form_state["values"]["dependency_id"]);
                 $num_updated = $query->execute();
-                drupal_set_message($file_name . ' uploaded successfully.', 'status');
+                \Drupal::messenger()->addStatus($file_name . ' uploaded successfully.');
                 $dependency_ids[] = db_last_insert_id('textbook_companion_dependency_files', 'id');
                 $dependency_names[] = $_FILES['files']['name'][$file_form_name];
                 $file_upload_counter++;
               }
             else
               {
-                drupal_set_message('Error uploading dependency : ' . $dest_path . '/' . $_FILES['files']['name'][$file_form_name], 'error');
+                \Drupal::messenger()->addError('Error uploading dependency : ' . $dest_path . '/' . $_FILES['files']['name'][$file_form_name]);
               }
           }
       }
     if ($file_upload_counter > 0)
       {
-        drupal_set_message('Dependencies uploaded successfully.', 'status');
+        \Drupal::messenger()->addStatus('Dependencies uploaded successfully.');
         /* sending email */
         $param['dependency_uploaded']['user_id'] = $user->uid;
         $param['dependency_uploaded']['dependency_names'] = $dependency_names;
         $email_to = $user->mail;
-        if (!drupal_mail('textbook_companion', 'dependency_uploaded', $email_to, language_default(), $param, variable_get('textbook_companion_from_email', NULL), TRUE))
-            drupal_set_message('Error sending email message.', 'error');
+        if (!drupal_mail('textbook_companion', 'dependency_uploaded', $email_to, language_default(), $param, \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email'), TRUE))
+            \Drupal::messenger()->addError('Error sending email message.');
       }
     drupal_goto('textbook_companion/code/upload_dep');
   }
@@ -636,7 +688,7 @@ function edit_dependency($dependency_id = 0)
     if ($dependency_id)
       {
         $page_content = "";
-        $page_content .= drupal_get_form("edit_dependency_form", $dependency_id);
+        $page_content .= \Drupal::formBuilder()->getForm("edit_dependency_form", $dependency_id);
         return $page_content;
       }
     else
@@ -647,11 +699,11 @@ function edit_dependency($dependency_id = 0)
 /******************** delete dependency section ********************/
 function delete_dependency($dependency_id = 0, $confirm = "")
   {
-    global $user;
+    $user = \Drupal::currentUser();
     /************************ start approve book details ************************/
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE uid = %d ORDER BY id DESC LIMIT 1", $user->uid);
     $proposal_data = db_fetch_object($proposal_q);*/
-    $query = db_select('textbook_companion_proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('uid', $user->uid);
     $query->orderBy('id', 'DESC');
@@ -660,7 +712,10 @@ function delete_dependency($dependency_id = 0, $confirm = "")
     $proposal_data = $result->fetchObject();
     if (!$proposal_data)
       {
-        drupal_set_message("Please submit a " . l('proposal', 'proposal') . ".", 'error');
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message("Please submit a " . l('proposal', 'proposal') . ".", 'error');
+
         drupal_goto('');
       }
     if ($proposal_data->proposal_status != 1 && $proposal_data->proposal_status != 4)
@@ -668,22 +723,28 @@ function delete_dependency($dependency_id = 0, $confirm = "")
         switch ($proposal_data->proposal_status)
         {
             case 0:
-                drupal_set_message(t('We have already received your proposal. We will get back to you soon.'), 'status');
+                \Drupal::messenger()->addStatus(t('We have already received your proposal. We will get back to you soon.'));
                 drupal_goto('');
                 return;
                 break;
             case 2:
-                drupal_set_message(t('Your proposal has been dis-approved. Please create another proposal ' . l('here', 'proposal') . '.'), 'error');
+                // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message(t('Your proposal has been dis-approved. Please create another proposal ' . l('here', 'proposal') . '.'), 'error');
+
                 drupal_goto('');
                 return;
                 break;
             case 3:
-                drupal_set_message(t('Congratulations! You have completed your last book proposal. You have to create another proposal ' . l('here', 'proposal') . '.'), 'status');
+                // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// drupal_set_message(t('Congratulations! You have completed your last book proposal. You have to create another proposal ' . l('here', 'proposal') . '.'), 'status');
+
                 drupal_goto('');
                 return;
                 break;
             default:
-                drupal_set_message(t('Invalid proposal state. Please contact site administrator for further information.'), 'error');
+                \Drupal::messenger()->addError(t('Invalid proposal state. Please contact site administrator for further information.'));
                 drupal_goto('');
                 return;
                 break;
@@ -691,7 +752,7 @@ function delete_dependency($dependency_id = 0, $confirm = "")
       }
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d AND approval_status = 1 LIMIT 1", $proposal_data->id);
     $preference_data = db_fetch_object($preference_q);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('proposal_id', $proposal_data->id);
     $query->condition('approval_status', 1);
@@ -700,7 +761,7 @@ function delete_dependency($dependency_id = 0, $confirm = "")
     $preference_data = $result->fetchObject();
     if (!$preference_data)
       {
-        drupal_set_message(t('Invalid Book Preference status. Please contact site administrator for further information.'), 'error');
+        \Drupal::messenger()->addError(t('Invalid Book Preference status. Please contact site administrator for further information.'));
         drupal_goto('');
         return;
       }
@@ -715,7 +776,7 @@ function delete_dependency($dependency_id = 0, $confirm = "")
         ";
         $result = db_query($query);
         $row = db_fetch_object($result);*/
-        $query = db_select('textbook_companion_dependency_files');
+        $query = \Drupal::database()->select('textbook_companion_dependency_files');
         $query->fields('textbook_companion_dependency_files');
         $query->condition('id', $dependency_id);
         $result = $query->execute();
@@ -732,7 +793,7 @@ function delete_dependency($dependency_id = 0, $confirm = "")
             WHERE id = {$dependency_id}
             ";
             db_query($query);*/
-            $query = db_delete('textbook_companion_dependency_files');
+            $query = \Drupal::database()->delete('textbook_companion_dependency_files');
             $query->condition('id', $dependency_id);
             $num_deleted = $query->execute();
             /* deleting entries from textbook_companion_example_dependency */
@@ -741,15 +802,15 @@ function delete_dependency($dependency_id = 0, $confirm = "")
             WHERE dependency_id = {$dependency_id}
             ";
             db_query($query);*/
-            $query = db_delete('textbook_companion_example_dependency');
+            $query = \Drupal::database()->delete('textbook_companion_example_dependency');
             $query->condition('dependency_id', $dependency_id);
             $num_deleted = $query->execute();
-            drupal_set_message("Dependency deleted successfully.");
+            \Drupal::messenger()->addMessage("Dependency deleted successfully.");
             drupal_goto("textbook_companion/code/upload_dep");
           }
         else
           {
-            drupal_set_message("Cannot delete other users dependency.", "error");
+            \Drupal::messenger()->addError("Cannot delete other users dependency.");
             drupal_goto("textbook_companion/code/upload_dep");
           }
       }
@@ -761,7 +822,7 @@ function delete_dependency($dependency_id = 0, $confirm = "")
         ";
         $result = db_query($query, $dependency_id);
         $row = db_fetch_object($result);*/
-        $query = db_select('textbook_companion_dependency_files');
+        $query = \Drupal::database()->select('textbook_companion_dependency_files');
         $query->fields('textbook_companion_dependency_files');
         $query->condition('id', $dependency_id);
         $result = $query->execute();
@@ -777,7 +838,7 @@ function delete_dependency($dependency_id = 0, $confirm = "")
             WHERE dep.id = %d
             ";
             $result = db_query($query, $dependency_id);*/
-            $query = db_select('textbook_companion_example_dependency', 'dep');
+            $query = \Drupal::database()->select('textbook_companion_example_dependency', 'dep');
             $query->fields('dep');
             $query->leftJoin('textbook_companion_example', 'exa', 'exa.id = dep.example_id');
             $query->condition('dep.id', $dependency_id);
@@ -792,13 +853,19 @@ function delete_dependency($dependency_id = 0, $confirm = "")
                 $page_content .= "List of examples linking to this dependency are:";
                 $page_content .= "<ul>{$list}</ul>";
               }
-            $page_content .= l("Delete dependency", "textbook_companion/code/delete_dep/{$dependency_id}/yes");
+            // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $page_content .= l("Delete dependency", "textbook_companion/code/delete_dep/{$dependency_id}/yes");
+
             $page_content .= " | ";
-            $page_content .= l("Cancel", "textbook_companion/code/upload_dep");
+            // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $page_content .= l("Cancel", "textbook_companion/code/upload_dep");
+
           }
         else
           {
-            drupal_set_message("Cannot delete other users dependency.", "error");
+            \Drupal::messenger()->addError("Cannot delete other users dependency.");
             drupal_goto("textbook_companion/code/upload_dep");
           }
       }

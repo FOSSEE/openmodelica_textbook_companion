@@ -1,0 +1,302 @@
+textbook_companion.book_proposal_form:
+  path: /textbook-companion/proposal
+  defaults:
+    _title: 'Book Proposal Form'
+    _form: \Drupal\textbook_companion\Form\BookProposalForm
+  requirements:
+    _permission: 'create book proposal'
+textbook_companion.aicte_proposal_all:
+  path: /textbook-companion/all_proposal
+  defaults:
+    _title: 'Book Proposal'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_aicte_proposal_all'
+  requirements:
+    _permission: 'create book proposal'
+textbook_companion._proposal_pending:
+  path: /textbook-companion/manage-proposal/pending
+  defaults:
+    _title: 'Pending Proposals'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::_proposal_pending'
+  requirements:
+    _permission: 'approve book proposal'
+textbook_companion._proposal_all:
+  path: /textbook-companion/manage-proposal/all
+  defaults:
+    _title: 'All Proposals'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::_proposal_all'
+  requirements:
+    _permission: 'approve book proposal'
+textbook_companion._failed_all:
+  path: /textbook-companion/manage-proposal/failed
+  defaults:
+    _title: 'Failed Proposals'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::_failed_all'
+  requirements:
+    _permission: 'approve book proposal'
+textbook_companion.proposal_approval_form:
+  path: /textbook-companion/manage-proposal/approve/{id}
+  defaults:
+    _title: 'Proposal Approval'
+    _form: \Drupal\textbook_companion\Form\ProposalApprovalForm
+  requirements:
+    _permission: 'approve book proposal'
+textbook_companion.proposal_status_form:
+  path: /textbook-companion/manage-proposal/status
+  defaults:
+    _title: 'Proposal Status'
+    _form: \Drupal\textbook_companion\Form\ProposalStatusForm
+  requirements:
+    _permission: 'approve book proposal'
+textbook_companion.proposal_edit_form:
+  path: /textbook-companion/manage-proposal/edit/{id}
+  defaults:
+    _title: 'Edit Proposal'
+    _form: \Drupal\textbook_companion\Form\ProposalEditForm
+  requirements:
+    _permission: 'edit book proposal'
+textbook_companion.code_approval:
+  path: /textbook-companion/code-approval
+  defaults:
+    _title: 'Manage Code Approval'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::code_approval'
+  requirements:
+    _permission: 'approve code'
+textbook_companion.code_approval_form:
+  path: /textbook-companion/code-approval/approve
+  defaults:
+    _title: 'Code Approval'
+    _form: \Drupal\textbook_companion\Form\CodeApprovalForm
+  requirements:
+    _permission: 'approve code'
+textbook_companion.bulk_approval_form:
+  path: /textbook-companion/code-approval/bulk
+  defaults:
+    _title: 'Bulk Manage'
+    _form: \Drupal\textbook_companion\Form\BulkApprovalForm
+  requirements:
+    _permission: 'bulk manage code'
+textbook_companion.edit_code_submission_form:
+  path: /textbook-companion/code-approval/edit-code-submission/edit
+  defaults:
+    _title: 'Edit Code Submission'
+    _form: \Drupal\textbook_companion\Form\EditCodeSubmissionForm
+  requirements:
+    _permission: 'bulk manage code'
+textbook_companion.upload_examples_admin_edit_form:
+  path: /textbook-companion/code-approval/editcode
+  defaults:
+    _title: 'Admin Edit Example'
+    _form: \Drupal\textbook_companion\Form\UploadExamplesAdminEditForm
+  requirements:
+    _permission: 'approve code'
+textbook_companion.book_notes_form:
+  path: /textbook-companion/code-approval/notes
+  defaults:
+    _title: 'Notes for Reviewers'
+    _form: \Drupal\textbook_companion\Form\BookNotesForm
+  requirements:
+    _permission: 'bulk manage code'
+textbook_companion.list_chapters:
+  path: /textbook-companion/code/list-chapters
+  defaults:
+    _title: 'List Chapters'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::list_chapters'
+  requirements:
+    _permission: 'upload code'
+textbook_companion.upload_examples:
+  path: /textbook-companion/code/upload
+  defaults:
+    _title: 'Code Submission'
+    _form: \Drupal\textbook_companion\Form\UploadExamplesForm
+    # _controller: '\Drupal\textbook_companion\Controller\DefaultController::upload_examples'
+  requirements:
+    _permission: 'upload code'
+textbook_companion.upload_examples_edit_form:
+  path: /textbook-companion/code/edit
+  defaults:
+    _title: 'Edit Example'
+    _form: \Drupal\textbook_companion\Form\UploadExamplesEditForm
+  requirements:
+    _permission: 'edit uploaded code'
+textbook_companion._upload_examples_delete:
+  path: /textbook-companion/code/delete
+  defaults:
+    _title: 'Delete Example'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::_upload_examples_delete'
+  requirements:
+    _permission: 'upload code'
+textbook_companion.edit_chapter_title_form:
+  path: /textbook-companion/code/chapter/edit
+  defaults:
+    _title: 'Edit Chapter Title'
+    _form: \Drupal\textbook_companion\Form\EditChapterTitleForm
+  requirements:
+    _permission: 'upload code'
+textbook_companion.list_examples:
+  path: /textbook-companion/code/list-examples
+  defaults:
+    _title: 'List Examples'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::list_examples'
+  requirements:
+    _permission: 'upload code'
+textbook_companion.search_form:
+  path: /textbook-companion/textbook-search/search
+  defaults:
+    _title: 'Book Search'
+    _form: \Drupal\textbook_companion\Form\TextbookCompanionSearchForm
+  requirements:
+    _permission: 'access content'
+textbook_companion.browse_book:
+  path: /textbook-companion/textbook-search/book
+  defaults:
+    _title: 'By Book Title'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_browse_book'
+  requirements:
+    _permission: 'access content'
+textbook_companion.browse_author:
+  path: /textbook-companion/textbook-search/author
+  defaults:
+    _title: 'By Author'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_browse_author'
+  requirements:
+    _permission: 'access content'
+textbook_companion.browse_college_form:
+  path: /textbook-companion/textbook-search/college
+  defaults:
+    _title: 'By College'
+    _form: \Drupal\textbook_companion\Form\TextbookCompanionBrowseCollegeForm
+  requirements:
+    _permission: 'access content'
+textbook_companion.browse_student:
+  path: /textbook-companion/textbook-search/student
+  defaults:
+    _title: 'By Student'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_browse_student'
+  requirements:
+    _permission: 'access content'
+textbook_companion.completed_books:
+  path: /textbook-companion/completed-books
+  defaults:
+    _title: 'Completed Books'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_completed_books'
+  requirements:
+    _permission: 'textbook companion  download code'
+textbook_companion.run_form:
+  path: /textbook-companion/textbook-run/{book_pref_id?}
+  defaults:
+    _title: 'Download Codes'
+    _form: \Drupal\textbook_companion\Form\TextbookCompanionRunForm
+  requirements:
+    _permission: 'access content'
+textbook_companion.download_example_file:
+  path: /textbook-companion/download/file
+  defaults:
+    _title: 'Code Download'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_download_example_file'
+  requirements:
+    _permission: 'download code'
+textbook_companion.download_sample_code:
+  path: /textbook-companion/download/samplecode/{id}
+  defaults:
+    _title: 'Sample Code Download'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_download_sample_code'
+  requirements:
+    _permission: 'download code'
+textbook_companion.download_example:
+  path: /textbook-companion/download/example/
+  defaults:
+    _title: 'Code Download'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_download_example'
+  requirements:
+    _permission: 'download code'
+textbook_companion.download_chapter:
+  path: /textbook-companion/download/chapter/
+  defaults:
+    _title: 'Code Download'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_download_chapter'
+  requirements:
+    _permission: 'download code'
+textbook_companion.download_book:
+  path: /textbook-companion/generate-book
+  defaults:
+    _title: 'Generate Book'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_download_book'
+  requirements:
+    _permission: 'generate book'
+textbook_companion.download_full_chapter:
+  path: /textbook-companion/full-download-external/chapter
+  defaults:
+    _title: 'Code Download'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_download_full_chapter'
+  requirements:
+    _permission: 'download books to review'
+textbook_companion.download_full_book:
+  path: /textbook-companion/full-download-external/book
+  defaults:
+    _title: 'Code Download'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_download_full_book'
+  requirements:
+    _permission: 'download books to review'
+textbook_companion.delete_book:
+  path: /textbook-companion/delete-book
+  defaults:
+    _title: 'Delete Book PDF'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_delete_book'
+  requirements:
+    _permission: 'approve code'
+textbook_companion.ajax:
+  path: /textbook-companion/ajax
+  defaults:
+    _title: Ajax
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_ajax'
+  requirements:
+    _permission: 'access content'
+textbook_companion.settings_form:
+  path: /admin/settings/book-companion
+  defaults:
+    _title: 'Book Companion Settings'
+    _form: \Drupal\textbook_companion\Form\TextbookCompanionSettingsForm
+  requirements:
+    _permission: 'administer book companion'
+textbook_companion._data_entry_proposal_all:
+  path: /textbook-companion/dataentry-book
+  defaults:
+    _title: 'Approved books list'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::_data_entry_proposal_all'
+  requirements:
+    _permission: 'dataentry book proposal'
+textbook_companion.dataentry_edit:
+  path: /textbook-companion/dataentry-edit
+  defaults:
+    _title: 'Edit book details'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::dataentry_edit'
+  requirements:
+    _permission: 'dataentry book proposal'
+textbook_companion._list_all_certificates:
+  path: /textbook-companion/certificate
+  defaults:
+    _title: 'List Of All Certificates'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::_list_all_certificates'
+  requirements:
+    _permission: 'list all certificates'
+textbook_companion.generate_pdf:
+  path: /textbook-companion/certificate/generate-pdf
+  defaults:
+    _title: 'Download Certificate'
+    _form: \Drupal\textbook_companion\Form\GeneratePdf
+  requirements:
+    _permission: 'generate pdf'
+textbook_companion.verify_certificates:
+  path: /textbook-companion/certificate/verify
+  defaults:
+    _title: 'Certificate Verification'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::verify_certificates'
+  requirements:
+    _permission: 'verify certificates'
+textbook_companion.nonaicte_proposal_all:
+  path: /textbook-companion/nonaicte-proposal
+  defaults:
+    _title: 'Book Suggestion Form '
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_nonaicte_proposal_all'
+  requirements:
+    _permission: 'create book proposal'

@@ -4,24 +4,24 @@ function generate_pdf()
 	$mpath = drupal_get_path('module', 'textbook_companion');
 	require($mpath . '/pdf/fpdf/fpdf.php');
 	require($mpath . '/pdf/phpqrcode/qrlib.php');
-	global $user;
+	$user = \Drupal::currentUser();
 	$x                 = $user->uid;
 	$proposal_id       = arg(3);
-	$query2            = db_query("SELECT * FROM {textbook_companion_preference} WHERE approval_status=1 AND  proposal_id= :prop_id", array(
+	$query2            = \Drupal::database()->query("SELECT * FROM {textbook_companion_preference} WHERE approval_status=1 AND  proposal_id= :prop_id", array(
 		':prop_id' => $proposal_id
 	));
 	$data2             = $query2->fetchObject();
-	$query3            = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id= :prop_id AND proposal_status =3", array(
+	$query3            = \Drupal::database()->query("SELECT * FROM {textbook_companion_proposal} WHERE id= :prop_id AND proposal_status =3", array(
 		':prop_id' => $proposal_id
 	));
 	$data3             = $query3->fetchObject();
 	if($data3){
 	if($data3->uid != $x){
-		drupal_set_message('Certificate is not available','error');
+		\Drupal::messenger()->addError('Certificate is not available');
 		return;
 	}
 	}
-	$query4            = db_query("SELECT COUNT( tce.id ) AS example_count FROM textbook_companion_example tce
+	$query4            = \Drupal::database()->query("SELECT COUNT( tce.id ) AS example_count FROM textbook_companion_example tce
 						LEFT JOIN textbook_companion_chapter tcc ON tce.chapter_id = tcc.id
 						LEFT JOIN textbook_companion_preference tcpe ON tcc.preference_id = tcpe.id
 						LEFT JOIN textbook_companion_proposal tcpo ON tcpe.proposal_id = tcpo.id
@@ -30,7 +30,7 @@ function generate_pdf()
 	));
 	$data4             = $query4->fetchObject();
 	if($data4->example_count == 0) {
-		drupal_set_message('Certificate is not available','error');
+		\Drupal::messenger()->addError('Certificate is not available');
 		return;
 	}
 	$number_of_example = $data4->example_count;
@@ -110,7 +110,7 @@ function generate_pdf()
 	$proposal_get_id = 0;
 	$UniqueString    = "";
 	$tempDir         = $path . "/pdf/temp_prcode/";
-	$query           = db_select('textbook_companion_qr_code');
+	$query           = \Drupal::database()->select('textbook_companion_qr_code');
 	$query->fields('textbook_companion_qr_code');
 	$query->condition('proposal_id', $proposal_id);
 	$result          = $query->execute();
@@ -129,9 +129,7 @@ function generate_pdf()
 			":proposal_id" => $proposal_id,
 			":qr_code" => $UniqueString
 		);
-		$result       = db_query($query, $args, array(
-			'return' => Database::RETURN_INSERT_ID
-		));
+		$result       = \Drupal::database()->query($query, $args, $query);
 	} //$DBString == "" || $DBString == "null"
 	else {
 		$UniqueString = $DBString;
@@ -219,14 +217,14 @@ function generate_copyright_form_pdf()
 {
 	$mpath = drupal_get_path('module', 'textbook_companion');
 	require($mpath . '/pdf/fpdf/fpdf.php');
-	global $user;
+	$user = \Drupal::currentUser();
 	$x           = $user->uid;
 	$proposal_id = arg(3);
-	$query2      = db_query("SELECT * FROM {textbook_companion_preference} WHERE approval_status=1 AND  proposal_id= :prop_id", array(
+	$query2      = \Drupal::database()->query("SELECT * FROM {textbook_companion_preference} WHERE approval_status=1 AND  proposal_id= :prop_id", array(
 		':prop_id' => $proposal_id
 	));
 	$data2       = $query2->fetchObject();
-	$query3      = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id= :prop_id", array(
+	$query3      = \Drupal::database()->query("SELECT * FROM {textbook_companion_proposal} WHERE id= :prop_id", array(
 		':prop_id' => $proposal_id
 	));
 	$data3       = $query3->fetchObject();
@@ -307,14 +305,14 @@ function generate_undertaking_form_pdf()
 {
 	$mpath = drupal_get_path('module', 'textbook_companion');
 	require($mpath . '/pdf/fpdf/fpdf.php');
-	global $user;
+	$user = \Drupal::currentUser();
 	$x           = $user->uid;
 	$proposal_id = arg(3);
-	$query2      = db_query("SELECT * FROM {textbook_companion_preference} WHERE approval_status=1 AND  proposal_id= :prop_id", array(
+	$query2      = \Drupal::database()->query("SELECT * FROM {textbook_companion_preference} WHERE approval_status=1 AND  proposal_id= :prop_id", array(
 		':prop_id' => $proposal_id
 	));
 	$data2       = $query2->fetchObject();
-	$query3      = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id= :prop_id", array(
+	$query3      = \Drupal::database()->query("SELECT * FROM {textbook_companion_proposal} WHERE id= :prop_id", array(
 		':prop_id' => $proposal_id
 	));
 	$data3       = $query3->fetchObject();

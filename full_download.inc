@@ -9,7 +9,7 @@ function textbook_companion_download_full_chapter()
     /* get example data */
     /*$chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE id = %d", $chapter_id);
     $chapter_data = db_fetch_object($chapter_q);*/
-    $query = db_select('textbook_companion_chapter');
+    $query = \Drupal::database()->select('textbook_companion_chapter');
     $query->fields('textbook_companion_chapter');
     $query->condition('id', $chapter_id);
     $chapter_q = $query->execute();
@@ -22,7 +22,7 @@ function textbook_companion_download_full_chapter()
     $zip->open($zip_filename, ZipArchive::CREATE);
     /* approved examples */
     /*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE chapter_id = %d AND approval_status = 1", $chapter_id);*/
-    $query = db_select('textbook_companion_example');
+    $query = \Drupal::database()->select('textbook_companion_example');
     $query->fields('textbook_companion_example');
     $query->condition('chapter_id', $chapter_id);
     $query->condition('approval_status', 1);
@@ -31,7 +31,7 @@ function textbook_companion_download_full_chapter()
       {
         $EX_PATH = 'EX' . $example_row->number . '/';
         /*$example_files_q = db_query("SELECT * FROM {textbook_companion_example_files} WHERE example_id = %d", $example_row->id);*/
-        $query = db_select('textbook_companion_example_files');
+        $query = \Drupal::database()->select('textbook_companion_example_files');
         $query->fields('textbook_companion_example_files');
         $query->condition('example_id', $example_row->id);
         $example_files_q = $query->execute();
@@ -42,7 +42,7 @@ function textbook_companion_download_full_chapter()
       }
     /* unapproved examples */
     /*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE chapter_id = %d AND approval_status = 0", $chapter_id);*/
-    $query = db_select('textbook_companion_example');
+    $query = \Drupal::database()->select('textbook_companion_example');
     $query->fields('textbook_companion_example');
     $query->condition('chapter_id', $chapter_id);
     $query->condition('approval_status', 0);
@@ -51,7 +51,7 @@ function textbook_companion_download_full_chapter()
       {
         $EX_PATH = 'EX' . $example_row->number . '/';
         /*$example_files_q = db_query("SELECT * FROM {textbook_companion_example_files} WHERE example_id = %d", $example_row->id);*/
-        $example_files_q = db_query("select * from textbook_companion_preference tcp join textbook_companion_chapter tcc on tcp.id=tcc.preference_id join textbook_companion_example tce ON tcc.id=tce.chapter_id join textbook_companion_example_files tcef on tce.id=tcef.example_id where tcef.example_id= :example_id", array(
+        $example_files_q = \Drupal::database()->query("select * from textbook_companion_preference tcp join textbook_companion_chapter tcc on tcp.id=tcc.preference_id join textbook_companion_example tce ON tcc.id=tce.chapter_id join textbook_companion_example_files tcef on tce.id=tcef.example_id where tcef.example_id= :example_id", array(
             ':example_id' => $example_row->id
         ));
         /*$query = db_select('textbook_companion_example_files');
@@ -82,7 +82,7 @@ function textbook_companion_download_full_chapter()
       }
     else
       {
-        drupal_set_message("There are no examples in this chapter to download", 'error');
+        \Drupal::messenger()->addError("There are no examples in this chapter to download");
         drupal_goto('textbook-companion/code-approval/bulk');
       }
   }
@@ -95,7 +95,7 @@ function textbook_companion_download_full_book()
     /* get example data */
     /*$book_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE id = %d", $book_id);
     $book_data = db_fetch_object($book_q);*/
-    $query = db_select('textbook_companion_preference');
+    $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('id', $book_id);
     $book_q = $query->execute();
@@ -110,7 +110,7 @@ function textbook_companion_download_full_book()
     $zip->open($zip_filename, ZipArchive::CREATE);
     /* approved examples */
     /*$chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE preference_id = %d", $book_id);*/
-    $query = db_select('textbook_companion_chapter');
+    $query = \Drupal::database()->select('textbook_companion_chapter');
     $query->fields('textbook_companion_chapter');
     $query->condition('preference_id', $book_id);
     $chapter_q = $query->execute();
@@ -118,7 +118,7 @@ function textbook_companion_download_full_book()
       {
         $CH_PATH = 'CH' . $chapter_row->number . '/';
         /*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE chapter_id = %d AND approval_status = 1", $chapter_row->id);*/
-        $query = db_select('textbook_companion_example');
+        $query = \Drupal::database()->select('textbook_companion_example');
         $query->fields('textbook_companion_example');
         $query->condition('chapter_id', $chapter_row->id);
         $query->condition('approval_status', 1);
@@ -127,7 +127,7 @@ function textbook_companion_download_full_book()
           {
             $EX_PATH = 'EX' . $example_row->number . '/';
             /*$example_files_q = db_query("SELECT * FROM {textbook_companion_example_files} WHERE example_id = %d", $example_row->id);*/
-            $example_files_q = db_query("select * from textbook_companion_preference tcp join textbook_companion_chapter tcc on tcp.id=tcc.preference_id join textbook_companion_example tce ON tcc.id=tce.chapter_id join textbook_companion_example_files tcef on tce.id=tcef.example_id where tcef.example_id= :example_id", array(
+            $example_files_q = \Drupal::database()->query("select * from textbook_companion_preference tcp join textbook_companion_chapter tcc on tcp.id=tcc.preference_id join textbook_companion_example tce ON tcc.id=tce.chapter_id join textbook_companion_example_files tcef on tce.id=tcef.example_id where tcef.example_id= :example_id", array(
                 ':example_id' => $example_row->id
             ));
             /*$query = db_select('textbook_companion_example_files');
@@ -141,7 +141,7 @@ function textbook_companion_download_full_book()
           }
         /* unapproved examples */
         /* $example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE chapter_id = %d AND approval_status = 0", $chapter_row->id);*/
-        $query = db_select('textbook_companion_example');
+        $query = \Drupal::database()->select('textbook_companion_example');
         $query->fields('textbook_companion_example');
         $query->condition('chapter_id', $chapter_row->id);
         $query->condition('approval_status', 0);
@@ -150,7 +150,7 @@ function textbook_companion_download_full_book()
           {
             $EX_PATH = 'EX' . $example_row->number . '/';
             /*$example_files_q = db_query("SELECT * FROM {textbook_companion_example_files} WHERE example_id = %d", $example_row->id);*/
-            $example_files_q = db_query("select * from textbook_companion_preference tcp join textbook_companion_chapter tcc on tcp.id=tcc.preference_id join textbook_companion_example tce ON tcc.id=tce.chapter_id join textbook_companion_example_files tcef on tce.id=tcef.example_id where tcef.example_id= :example_id", array(
+            $example_files_q = \Drupal::database()->query("select * from textbook_companion_preference tcp join textbook_companion_chapter tcc on tcp.id=tcc.preference_id join textbook_companion_example tce ON tcc.id=tce.chapter_id join textbook_companion_example_files tcef on tce.id=tcef.example_id where tcef.example_id= :example_id", array(
                 ':example_id' => $example_row->id
             ));
             /*$query = db_select('textbook_companion_example_files');
@@ -177,7 +177,7 @@ function textbook_companion_download_full_book()
       }
     else
       {
-        drupal_set_message("There are no examples in this book to download", 'error');
+        \Drupal::messenger()->addError("There are no examples in this book to download");
         drupal_goto('textbook-companion/code-approval/bulk');
       }
   }

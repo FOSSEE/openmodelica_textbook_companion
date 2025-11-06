@@ -4,7 +4,7 @@ function textbook_companion_run_form($form, &$form_state)
     $url_book_pref_id = (int) arg(2);
     //  var_dump($url_book_pref_id);die;
     if ($url_book_pref_id) {
-        $query = db_select('textbook_companion_preference');
+        $query = \Drupal::database()->select('textbook_companion_preference');
         $query->fields('textbook_companion_preference', array(
             'category'
         ));
@@ -47,10 +47,13 @@ function textbook_companion_run_form($form, &$form_state)
             '#type' => 'item',
             '#markup' => '<div id="ajax-book-details-replace">' . _html_book_info($book_default_value) . '</div>'
         );
-        $form['download_book'] = array(
-            '#type' => 'item',
-            '#markup' => '<div id="ajax-download-book-replace">' . l('Download', 'textbook-companion/download/book/' . $book_default_value) . ' ' . t('(Download the OpenModelica codes for all the solved examples)') . '</div>'
-        );
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['download_book'] = array(
+//             '#type' => 'item',
+//             '#markup' => '<div id="ajax-download-book-replace">' . l('Download', 'textbook-companion/download/book/' . $book_default_value) . ' ' . t('(Download the OpenModelica codes for all the solved examples)') . '</div>'
+//         );
+
         /*$book_pref_id_array = array("19");
         if(in_array($book_default_value, $book_pref_id_array)){
         $form['freeeda_download_book'] = array(
@@ -213,13 +216,13 @@ function ajax_book_list_callback($form, $form_state)
     if ($category_default_value == 0) {
    
         $form['book']['#options'] = _list_of_books($category_default_value);
-        $commands[] = ajax_command_replace("#ajax-book-list-replace", drupal_render($form['book']));
+        $commands[] = ajax_command_replace("#ajax-book-list-replace", \Drupal::service("renderer")->render($form['book']));
         $commands[] = ajax_command_html("#ajax-chapter-list-replace", '');
         $commands[] = ajax_command_html("#ajax-example-list-replace", '');
     } else {
     	 
         $form['book']['#options'] = _list_of_books();
-        $commands[] = ajax_command_replace("#ajax-book-list-replace", drupal_render($form['book']));
+        $commands[] = ajax_command_replace("#ajax-book-list-replace", \Drupal::service("renderer")->render($form['book']));
         $commands[] = ajax_command_html("#ajax-book-list-replace", '');
         $commands[] = ajax_command_html("#ajax-chapter-list-replace", '');
         $commands[] = ajax_command_html("#ajax-example-list-replace", '');
@@ -242,16 +245,22 @@ function ajax_chapter_list_callback($form, $form_state)
     if ($book_list_default_value > 0) {
         $commands[] = ajax_command_html("#ajax-book-details-replace", _html_book_info($book_list_default_value));
         $form['chapter']['#options'] = _list_of_chapters($book_list_default_value);
-        $commands[] = ajax_command_html("#ajax-download-book-replace", l('Download', 'textbook-companion/download/book/' . $book_list_default_value) . ' ' . t('(Download the OpenModelica codes for all the solved examples)'));
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $commands[] = ajax_command_html("#ajax-download-book-replace", l('Download', 'textbook-companion/download/book/' . $book_list_default_value) . ' ' . t('(Download the OpenModelica codes for all the solved examples)'));
+
         $book_pref_id_array = array(
             "19"
         );
         if (in_array($book_list_default_value, $book_pref_id_array)) {
-            $commands[] = ajax_command_html("#ajax-download-freeeda-book-replace", l('Download FreeEDA Version', 'textbook-companion/uploads/Microelectronic_Circuits___Theory_And_Applications_FreeEDA_Version.zip') . ' ' . t('(Download the FreeEDA codes for all the solved examples)'));
+            // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $commands[] = ajax_command_html("#ajax-download-freeeda-book-replace", l('Download FreeEDA Version', 'textbook-companion/uploads/Microelectronic_Circuits___Theory_And_Applications_FreeEDA_Version.zip') . ' ' . t('(Download the FreeEDA codes for all the solved examples)'));
+
         } else {
             $commands[] = ajax_command_html("#ajax-download-freeeda-book-replace", '');
         }
-        $commands[] = ajax_command_replace("#ajax-chapter-list-replace", drupal_render($form['chapter']));
+        $commands[] = ajax_command_replace("#ajax-chapter-list-replace", \Drupal::service("renderer")->render($form['chapter']));
         $commands[] = ajax_command_html("#ajax-example-list-replace", '');
         $commands[] = ajax_command_html("#ajax-download-example-code-replace", '');
         $commands[] = ajax_command_html("#ajax-download-example-files-replace", '');
@@ -259,7 +268,7 @@ function ajax_chapter_list_callback($form, $form_state)
     } else {
         $commands[] = ajax_command_html("#ajax-book-details-replace", '');
         $form['chapter']['#options'] = _list_of_chapters();
-        $commands[] = ajax_command_replace("#ajax-chapter-list-replace", drupal_render($form['chapter']));
+        $commands[] = ajax_command_replace("#ajax-chapter-list-replace", \Drupal::service("renderer")->render($form['chapter']));
         $commands[] = ajax_command_html("#ajax-chapter-list-replace", '');
         $commands[] = ajax_command_html("#ajax-download-book-replace", '');
         $commands[] = ajax_command_html("#ajax-download-chapter-replace", '');
@@ -278,13 +287,16 @@ function ajax_example_list_callback($form, $form_state)
     $chapter_list_default_value = $form_state['values']['chapter'];
     if ($chapter_list_default_value > 0) {
         $form['examples']['#options'] = _list_of_examples($chapter_list_default_value);
-        $commands[] = ajax_command_replace("#ajax-example-list-replace", drupal_render($form['examples']));
-        $commands[] = ajax_command_html("#ajax-download-chapter-replace", l('Download', 'textbook-companion/download/chapter/' . $chapter_list_default_value) . ' ' . t('(Download the OpenModelica codes for all the solved examples from the Chapter)'));
+        $commands[] = ajax_command_replace("#ajax-example-list-replace", \Drupal::service("renderer")->render($form['examples']));
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $commands[] = ajax_command_html("#ajax-download-chapter-replace", l('Download', 'textbook-companion/download/chapter/' . $chapter_list_default_value) . ' ' . t('(Download the OpenModelica codes for all the solved examples from the Chapter)'));
+
         $commands[] = ajax_command_html("#ajax-download-example-code-replace", '');
         $commands[] = ajax_command_html("#ajax-download-example-files-replace", '');
     } else {
         $form['examples']['#options'] = _list_of_examples();
-        $commands[] = ajax_command_replace("#ajax-example-list-replace", drupal_render($form['examples']));
+        $commands[] = ajax_command_replace("#ajax-example-list-replace", \Drupal::service("renderer")->render($form['examples']));
         $commands[] = ajax_command_html("#ajax-example-list-replace", '');
         $commands[] = ajax_command_html("#ajax-download-chapter-replace", '');
         $commands[] = ajax_command_html("#ajax-download-example-code-replace", '');
@@ -301,7 +313,7 @@ function ajax_example_files_callback($form, $form_state)
     $example_list_default_value = $form_state['values']['examples'];
     if ($example_list_default_value != 0) {
         //  $example_list_q = db_query("SELECT * FROM {textbook_companion_example_files} WHERE example_id = %d", $form_state['values']['run']['example']);
-        $query = db_select('textbook_companion_example_files');
+        $query = \Drupal::database()->select('textbook_companion_example_files');
         $query->fields('textbook_companion_example_files');
         $query->condition('example_id', $example_list_default_value);
         $example_list_q = $query->execute();
@@ -323,22 +335,37 @@ function ajax_example_files_callback($form, $form_state)
                         $example_file_type = 'Unknown';
                         break;
                 }
-                $example_files_rows[] = array(
-                    l($example_list_data->filename, 'textbook-companion/download/file/' . $example_list_data->id),
-                    $example_file_type
-                );
+                // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $example_files_rows[] = array(
+//                     l($example_list_data->filename, 'textbook-companion/download/file/' . $example_list_data->id),
+//                     $example_file_type
+//                 );
+
             }
             /* creating list of files table */
             $example_files_header = array(
                 'Filename',
                 'Type'
             );
-            $example_files = theme('table', array(
-                'header' => $example_files_header,
-                'rows' => $example_files_rows
-            ));
+            // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $example_files = theme('table', array(
+//                 'header' => $example_files_header,
+//                 'rows' => $example_files_rows
+//             ));
+
         }
-        $commands[] = ajax_command_html("#ajax-download-example-code-replace", l('Download OpenModelica code for the example', 'textbook-companion/download/example/' . $example_list_default_value));
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $commands[] = ajax_command_html("#ajax-download-example-code-replace", l('Download OpenModelica code for the example', 'textbook-companion/download/example/' . $example_list_default_value));
+
         $commands[] = ajax_command_html("#ajax-download-example-files-replace", $example_files);
     } else {
         $commands[] = ajax_command_html("#ajax-download-example-code-replace", '');
@@ -402,11 +429,11 @@ function _list_of_books($preference_id = NULL)
         // $book_titles_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE category=".$category_default_value." AND approval_status = 1 OR approval_status = 3 ORDER BY book ASC");
         // $book_titles_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE category=".$category_default_value." AND approval_status = 1 AND proposal_id IN (SELECT id FROM textbook_companion_proposal WHERE proposal_status=3) ORDER BY book ASC");
         // var_dump('ok= '. $category_default_value);
-        $query = db_select('textbook_companion_preference');
+        $query = \Drupal::database()->select('textbook_companion_preference');
         $query->fields('textbook_companion_preference');
         $query->condition('id', $preference_id);
         $query->condition('approval_status', 1);
-        $subquery = db_select('textbook_companion_proposal');
+        $subquery = \Drupal::database()->select('textbook_companion_proposal');
         $subquery->fields('textbook_companion_proposal', array(
             'id'
         ));
@@ -424,11 +451,11 @@ function _list_of_books($preference_id = NULL)
         // $book_titles_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE category=".$category_default_value." AND approval_status = 1 OR approval_status = 3 ORDER BY book ASC");
         // $book_titles_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE category=".$category_default_value." AND approval_status = 1 AND proposal_id IN (SELECT id FROM textbook_companion_proposal WHERE proposal_status=3) ORDER BY book ASC");
         // var_dump('ok= '. $category_default_value);
-        $query = db_select('textbook_companion_preference');
+        $query = \Drupal::database()->select('textbook_companion_preference');
         $query->fields('textbook_companion_preference');
         //$query->condition('id', $preference_id);
         $query->condition('approval_status', 1);
-        $subquery = db_select('textbook_companion_proposal');
+        $subquery = \Drupal::database()->select('textbook_companion_proposal');
         $subquery->fields('textbook_companion_proposal', array(
             'id'
         ));
@@ -450,7 +477,7 @@ function _list_of_chapters($preference_id)
         0 => 'Please select...'
     );
     //$book_chapters_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE preference_id = %d ORDER BY number ASC", $preference_id);
-    $query = db_select('textbook_companion_chapter');
+    $query = \Drupal::database()->select('textbook_companion_chapter');
     $query->fields('textbook_companion_chapter');
     $query->condition('preference_id', $preference_id);
     $query->orderBy('number', 'ASC');
@@ -470,7 +497,7 @@ function _list_of_examples($chapter_id = 0)
     // CAST(SUBSTRING_INDEX(number, '.', 1) AS BINARY) ASC,
     // CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(number , '.', 2), '.', -1) AS UNSIGNED) ASC,
     //  CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(number , '.', -1), '.', 1) AS UNSIGNED) ASC", $chapter_id);
-    $query = db_select('textbook_companion_example');
+    $query = \Drupal::database()->select('textbook_companion_example');
     $query->fields('textbook_companion_example');
     $query->condition('chapter_id', $chapter_id);
     $query->condition('approval_status', 1);
@@ -487,7 +514,7 @@ function _book_information($preference_id)
     preference.book as preference_book, preference.author as preference_author, preference.isbn as preference_isbn, preference.publisher as preference_publisher, preference.edition as preference_edition, preference.year as preference_year,
     proposal.full_name as proposal_full_name, proposal.faculty as proposal_faculty, proposal.reviewer as proposal_reviewer, proposal.course as proposal_course, proposal.branch as proposal_branch, proposal.university as proposal_university
     FROM {textbook_companion_proposal} proposal LEFT JOIN {textbook_companion_preference} preference ON proposal.id = preference.proposal_id WHERE preference.id = %d", $preference_id));*/
-    $query = db_select('textbook_companion_proposal', 'proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal', 'proposal');
     $query->fields('preference', array(
         'book',
         'author',
@@ -515,7 +542,7 @@ function _html_book_info($preference_id)
     preference.book as preference_book, preference.author as preference_author, preference.isbn as preference_isbn, preference.publisher as preference_publisher, preference.edition as preference_edition, preference.year as preference_year,
     proposal.full_name as proposal_full_name, proposal.faculty as proposal_faculty, proposal.reviewer as proposal_reviewer, proposal.course as proposal_course, proposal.branch as proposal_branch, proposal.university as proposal_university
     FROM {textbook_companion_proposal} proposal LEFT JOIN {textbook_companion_preference} preference ON proposal.id = preference.proposal_id WHERE preference.id=".$preference_id));*/
-    $query = db_select('textbook_companion_proposal', 'proposal');
+    $query = \Drupal::database()->select('textbook_companion_proposal', 'proposal');
     $query->addField('preference', 'book', 'preference_book');
     $query->addField('preference', 'author', 'preference_author');
     $query->addField('preference', 'isbn', 'preference_isbn');
