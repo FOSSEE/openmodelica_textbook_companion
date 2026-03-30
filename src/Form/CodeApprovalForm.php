@@ -10,6 +10,12 @@ namespace Drupal\textbook_companion\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Messenger\MessengerInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\Core\Url;
+use Drupal\Core\Link;
+use Drupal\Core\Routing\RouteMatchInterface;
+
 
 class CodeApprovalForm extends FormBase {
 
@@ -22,7 +28,8 @@ class CodeApprovalForm extends FormBase {
 
   public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
     /* get a list of unapproved chapters */
-    $chapter_id = arg(3);
+    $route_match = \Drupal::routeMatch();
+    $chapter_id = (int) $route_match->getParameter('chapter_id');
     $query = \Drupal::database()->select('textbook_companion_chapter');
     $query->fields('textbook_companion_chapter');
     $query->condition('id', $chapter_id);
@@ -42,9 +49,10 @@ class CodeApprovalForm extends FormBase {
       $proposal_data = $result->fetchObject();
     }
     else {
-      \Drupal::messenger()->addError(t('Invalid chapter selected.'));
-      drupal_goto('textbook-companion/code-approval');
-      return;
+      $msg = \Drupal::messenger()->addError(t('Invalid chapter selected.'));
+      $response = new RedirectResponse(Url::fromRoute('textbook_companion.code_approval')->toString());
+  $response->send();
+      return $msg;
     }
     $form['#tree'] = TRUE;
     $form['contributor'] = [
@@ -67,12 +75,12 @@ class CodeApprovalForm extends FormBase {
       '#markup' => $pending_chapter_data->name,
       '#title' => t('Title of the Chapter'),
     ];
-    // @FIXME
-    // l() expects a Url object, created from a route name or external URI.
-    // $form['book_details']['back_to_list'] = array(
-    //         '#type' => 'item',
-    //         '#markup' => l('Back to Code Approval List', 'textbook-companion/code-approval')
-    //     );
+    
+    $form['book_details']['back_to_list'] = array(
+            '#type' => 'link',
+  '#title' => t('Back to Code Approval List'),
+  '#url' => Url::fromUserInput('/textbook-companion/code-approval'),
+        );
 
     /* get example data */
     $query = \Drupal::database()->select('textbook_companion_example');
@@ -96,12 +104,12 @@ class CodeApprovalForm extends FormBase {
         '#markup' => $example_data->caption,
         '#title' => t('Example Caption'),
       ];
-      // @FIXME
-      // l() expects a Url object, created from a route name or external URI.
-      // $form['example_details'][$example_data->id]['download'] = array(
-      //             '#type' => 'markup',
-      //             '#markup' => l('Download Example', 'textbook-companion/download/example/' . $example_data->id)
-      //         );
+     
+      $form['example_details'][$example_data->id]['download'] = array(
+        '#type' => 'link',
+  '#title' => t('Download Example'),
+  '#url' => Url::fromUserInput('/textbook-companion/download/example/' . $example_data->id),
+              );
 
       $form['example_details'][$example_data->id]['approved'] = [
         '#type' => 'radios',
@@ -173,13 +181,13 @@ class CodeApprovalForm extends FormBase {
         $query = \Drupal::database()->update('textbook_companion_example');
         $query->fields([
           'approval_status' => 1,
-          'approver_uid' => $user->uid,
+          'approver_uid' => $user->id(),
           'approval_date' => time(),
         ]);
         $query->condition('id', $ex_data['example_id']);
         $num_updated = $query->execute();
         /* sending email */
-        $email_to = $user_data->mail;
+        $email_to = $user_data->getEmail();
         $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
         $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
         $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
@@ -194,15 +202,16 @@ class CodeApprovalForm extends FormBase {
           'Cc' => $cc,
           'Bcc' => $bcc,
         ];
-        if (!drupal_mail('textbook_companion', 'example_approved', $email_to, language_default(), $param, $from, TRUE)) {
-          \Drupal::messenger()->addError('Error sending email message.');
-        }
+        // if (!drupal_mail('textbook_companion', 'example_approved', $email_to, language_default(), $param, $from, TRUE)) {
+        //   \Drupal::messenger()->addError('Error sending email message.');
+        // }
       }
       else {
         if ($ex_data['approved'] == "1") {
-          if (delete_example($ex_data['example_id'])) {
+          $service = \Drupal::service('textbook_companion_global');
+          if ($service->delete_example($ex_data['example_id'])) {
             /* sending email */
-            $email_to = $user_data->mail;
+            $email_to = $user_data->getEmail();
             $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
             $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
             $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
@@ -221,9 +230,9 @@ class CodeApprovalForm extends FormBase {
               'Cc' => $cc,
               'Bcc' => $bcc,
             ];
-            if (!drupal_mail('textbook_companion', 'example_disapproved', $email_to, language_default(), $param, $from, TRUE)) {
-              \Drupal::messenger()->addError('Error sending email message.');
-            }
+            // if (!drupal_mail('textbook_companion', 'example_disapproved', $email_to, language_default(), $param, $from, TRUE)) {
+            //   \Drupal::messenger()->addError('Error sending email message.');
+            // }
           }
           else {
             \Drupal::messenger()->addError('Error disapproving and deleting example. Please contact administrator.');
@@ -231,8 +240,12 @@ class CodeApprovalForm extends FormBase {
         }
       }
     }
-    \Drupal::messenger()->addStatus('Updated successfully.');
-    drupal_goto('textbook-companion/code-approval');
+    $msg = \Drupal::messenger()->addStatus('Updated successfully.');
+    //drupal_goto('textbook-companion/code-approval');
+    $response = new RedirectResponse(Url::fromRoute('textbook_companion.code_approval')->toString());
+  $response->send();
+  return $msg;
+
   }
 
 }

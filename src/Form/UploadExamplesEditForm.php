@@ -10,6 +10,11 @@ namespace Drupal\textbook_companion\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Url;
+use Drupal\Core\Link;
+use Drupal\Core\Messenger\MessengerInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\Core\Routing\RouteMatchInterface;
 
 class UploadExamplesEditForm extends FormBase {
 
@@ -22,7 +27,8 @@ class UploadExamplesEditForm extends FormBase {
 
   public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
-    $example_id = arg(3);
+    $route_match = \Drupal::routeMatch();
+    $example_id = (int) $route_match->getParameter('example_id');
     /* get example details */
     /*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE id = %d LIMIT 1", $example_id);
     $example_data = db_fetch_object($example_q);*/
@@ -33,14 +39,16 @@ class UploadExamplesEditForm extends FormBase {
     $example_q = $query->execute();
     $example_data = $example_q->fetchObject();
     if (!$example_q) {
-      \Drupal::messenger()->addError(t("Invalid example selected."));
-      drupal_goto('');
-      return;
+      $msg = \Drupal::messenger()->addError(t("Invalid example selected."));
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
+  return $msg;
     }
     if ($example_data->approval_status != 0) {
-      \Drupal::messenger()->addError(t("You cannot edit an example after it has been approved or dis-approved. Please contact site administrator if you want to edit this example."));
-      drupal_goto('');
-      return;
+      $msg= \Drupal::messenger()->addError(t("You cannot edit an example after it has been approved or dis-approved. Please contact site administrator if you want to edit this example."));
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
+  return $msg;
     }
     /* get examples files */
     $source_file = "";
@@ -63,7 +71,10 @@ class UploadExamplesEditForm extends FormBase {
         // @FIXME
 // l() expects a Url object, created from a route name or external URI.
 // $source_file = l($example_files_data->filename, 'textbook-companion/download/file/' . $example_files_data->id);
+$download_url = Url::fromUri('internal:/textbook-companion/download/file/' . $example_files_data->id);
 
+// Create a link for the file.
+$source_file = Link::fromTextAndUrl($example_files_data->filename, $download_url)->toString();
         $source_file_id = $example_files_data->id;
         //var_dump($source_file);die;
       }
@@ -77,9 +88,10 @@ class UploadExamplesEditForm extends FormBase {
     $result = $query->execute();
     $chapter_data = $result->fetchObject();
     if (!$chapter_data) {
-      \Drupal::messenger()->addError(t("Invalid chapter selected."));
-      drupal_goto('');
-      return;
+      $msg = \Drupal::messenger()->addError(t("Invalid chapter selected."));
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
+  return $msg;
     }
     /* get preference details */
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE id = %d", $chapter_data->preference_id);
@@ -90,14 +102,16 @@ class UploadExamplesEditForm extends FormBase {
     $result = $query->execute();
     $preference_data = $result->fetchObject();
     if (!$preference_data) {
-      \Drupal::messenger()->addError(t("Invalid book selected."));
-      drupal_goto('');
-      return;
+      $msg = \Drupal::messenger()->addError(t("Invalid book selected."));
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
+  return $msg;
     }
     if ($preference_data->approval_status != 1) {
-      \Drupal::messenger()->addError(t("Cannot edit example. Either the book proposal has not been approved or it has been rejected."));
-      drupal_goto('');
-      return;
+      $msg = \Drupal::messenger()->addError(t("Cannot edit example. Either the book proposal has not been approved or it has been rejected."));
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
+  return $msg;
     }
     /* get proposal details */
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d", $preference_data->proposal_id);
@@ -108,14 +122,16 @@ class UploadExamplesEditForm extends FormBase {
     $result = $query->execute();
     $proposal_data = $result->fetchObject();
     if (!$proposal_data) {
-      \Drupal::messenger()->addError(t("Invalid proposal selected."));
-      drupal_goto('');
-      return;
+      $msg = \Drupal::messenger()->addError(t("Invalid proposal selected."));
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
+  return $msg;
     }
-    if ($proposal_data->uid != $user->uid) {
-      \Drupal::messenger()->addError(t("You do not have permissions to edit this example."));
-      drupal_goto('');
-      return;
+    if ($proposal_data->uid != $user->id()) {
+      $msg = \Drupal::messenger()->addError(t("You do not have permissions to edit this example."));
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
+  return $msg;
     }
     $user_data = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid);
     $form['#redirect'] = 'textbook-companion/code';
@@ -305,7 +321,8 @@ class UploadExamplesEditForm extends FormBase {
 
   public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
-    $example_id = arg(3);
+    $route_match = \Drupal::routeMatch();
+    $example_id = (int) $route_match->getParameter('example_id');
     /* get example details */
     /*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE id = %d LIMIT 1", $example_id);
     $example_data = db_fetch_object($example_q);*/
@@ -316,14 +333,16 @@ class UploadExamplesEditForm extends FormBase {
     $example_q = $query->execute();
     $example_data = $example_q->fetchObject();
     if (!$example_q) {
-      \Drupal::messenger()->addError(t("Invalid example selected."));
-      drupal_goto('');
-      return;
+      $msg = \Drupal::messenger()->addError(t("Invalid example selected."));
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
+  return $msg;
     }
     if ($example_data->approval_status != 0) {
-      \Drupal::messenger()->addError(t("You cannot edit an example after it has been approved or dis-approved. Please contact site administrator if you want to edit this example."));
-      drupal_goto('');
-      return;
+      $msg = \Drupal::messenger()->addError(t("You cannot edit an example after it has been approved or dis-approved. Please contact site administrator if you want to edit this example."));
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
+  return $msg;
     }
     /* get chapter details */
     /*$chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE id = %d", $example_data->chapter_id);
@@ -334,9 +353,10 @@ class UploadExamplesEditForm extends FormBase {
     $result = $query->execute();
     $chapter_data = $result->fetchObject();
     if (!$chapter_data) {
-      \Drupal::messenger()->addError(t("Invalid chapter selected."));
-      drupal_goto('');
-      return;
+      $msg = \Drupal::messenger()->addError(t("Invalid chapter selected."));
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
+  return $msg;
     }
     /* get preference details */
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE id = %d", $chapter_data->preference_id);
@@ -347,14 +367,16 @@ class UploadExamplesEditForm extends FormBase {
     $result = $query->execute();
     $preference_data = $result->fetchObject();
     if (!$preference_data) {
-      \Drupal::messenger()->addError(t("Invalid book selected."));
-      drupal_goto('');
-      return;
+      $msg = \Drupal::messenger()->addError(t("Invalid book selected."));
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
+  return $msg;
     }
     if ($preference_data->approval_status != 1) {
-      \Drupal::messenger()->addError(t("Cannot edit example. Either the book proposal has not been approved or it has been rejected."));
-      drupal_goto('');
-      return;
+      $msg = \Drupal::messenger()->addError(t("Cannot edit example. Either the book proposal has not been approved or it has been rejected."));
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
+  return $msg;
     }
     /* get proposal details */
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d", $preference_data->proposal_id);
@@ -365,14 +387,16 @@ class UploadExamplesEditForm extends FormBase {
     $result = $query->execute();
     $proposal_data = $result->fetchObject();
     if (!$proposal_data) {
-      \Drupal::messenger()->addError(t("Invalid proposal selected."));
-      drupal_goto('');
-      return;
+      $msg = \Drupal::messenger()->addError(t("Invalid proposal selected."));
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
+  return $msg;
     }
-    if ($proposal_data->uid != $user->uid) {
-      \Drupal::messenger()->addError(t("You do not have permissions to edit this example."));
-      drupal_goto('');
-      return;
+    if ($proposal_data->uid != $user->id()) {
+      $msg = \Drupal::messenger()->addError(t("You do not have permissions to edit this example."));
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
+  return $msg;
     }
     /* creating directories */
     $root_path = textbook_companion_path();
@@ -396,12 +420,14 @@ class UploadExamplesEditForm extends FormBase {
     $query->condition('id', $example_id);
     $num_updated = $query->execute();
     /* handle source file */
-    if (!$form_state->getValue(['cur_source_file_id'])) {
-      $cur_file_id = $form_state->getValue(['cur_source_file_id']);
-    }
-    else {
-      $cur_file_id = !$form_state->getValue(['cur_source_file_id']);
-    }
+    //var_dump($form_state->getValue(['cur_source_file_id']));die;
+    // if ($form_state->getValue(['cur_source_file_id'])) {
+    //   $cur_file_id = !$form_state->getValue(['cur_source_file_id']);
+    // }
+    // else {
+    //   $cur_file_id = $form_state->getValue(['cur_source_file_id']);
+    // }
+    $cur_file_id = $form_state->getValue(['cur_source_file_id']);
     //var_dump($cur_file_id);die;
     if ($cur_file_id > 0) {
       /*$file_q = db_query("SELECT * FROM  {textbook_companion_example_files} WHERE id = %d AND example_id = %d", $cur_file_id, $example_data->id);
@@ -414,31 +440,35 @@ class UploadExamplesEditForm extends FormBase {
       $result = $query->execute();
       $file_data = $result->fetchObject();
       if (!$file_data) {
-        \Drupal::messenger()->addError("Error deleting example source file. File not present in database.");
-        return;
+        $msg = \Drupal::messenger()->addError("Error deleting example source file. File not present in database.");
+        return $msg;
       }
-      if (($form_state->getValue(['cur_source_checkbox']) == 1) && (!$_FILES['files']['name']['sourcefile1'])) {
-        if (!delete_file($cur_file_id)) {
-          \Drupal::messenger()->addError("Error deleting example source file.");
-          return;
+    }
+      $service = \Drupal::service('textbook_companion_global');
+     //var_dump(!$_FILES['files']['name']['sourcefile1']);die;
+     if (($form_state->getValue(['cur_source_checkbox'])==1) && (!$_FILES['files']['name']['sourcefile1'])) {
+        if (!$service->delete_file($cur_file_id)) {
+          $msg = \Drupal::messenger()->addError("Error deleting example source file.");
+          return $msg;
+        }
+      }
+    
+    else if ($_FILES['files']['name']['sourcefile1']) {
+      if ($cur_file_id > 0) {
+        if (!$service->delete_file($cur_file_id)) {
+          $msg = \Drupal::messenger()->addError("Error removing previous example source file.");
+          return $msg;
         }
       }
     }
-    if ($_FILES['files']['name']['sourcefile1']) {
-      if ($cur_file_id > 0) {
-        if (!delete_file($cur_file_id)) {
-          \Drupal::messenger()->addError("Error removing previous example source file.");
-          return;
-        }
-      }
       if (file_exists($root_path . $dest_path . $_FILES['files']['name']['sourcefile1'])) {
-        \Drupal::messenger()->addError(t("Error uploading source file. File !filename already exists.", [
+        $msg = \Drupal::messenger()->addError(t("Error uploading source file. File !filename already exists.", [
           '!filename' => $_FILES['files']['name']['sourcefile1']
           ]));
-        return;
+        return $msg;
       }
       /* uploading file */
-      if (move_uploaded_file($_FILES['files']['tmp_name']['sourcefile1'], $root_path . $dest_path . $_FILES['files']['name']['sourcefile1'])) {
+      else if (move_uploaded_file($_FILES['files']['tmp_name']['sourcefile1'], $root_path . $dest_path . $_FILES['files']['name']['sourcefile1'])) {
         /* for uploaded files making an entry in the database */
         /*db_query("INSERT INTO {textbook_companion_example_files} (example_id, filename, filepath, filemime, filesize, filetype, timestamp)
             VALUES (%d, '%s', '%s', '%s', %d, '%s', %d)",
@@ -450,43 +480,43 @@ class UploadExamplesEditForm extends FormBase {
             'S',
             time()
             );*/
-        $query = "INSERT INTO {textbook_companion_example_files} (example_id, filename, filepath, filemime, filesize, filetype, 		timestamp) VALUES (:example_id, :filename, :filepath, :filemime, :filesize, :filetype,:timestamp)";
-        $args = [
-          ":example_id" => $example_data->id,
-          ":filename" => $_FILES['files']['name']['sourcefile1'],
-          ":filepath" => $filepath . $_FILES['files']['name']['sourcefile1'],
-          ":filemime" => 'application/dwxml',
-          ":filesize" => $_FILES['files']['size']['sourcefile1'],
-          ":filetype" => 'S',
-          ":timestamp" => time(),
-        ];
-        $result = \Drupal::database()->query($query, $args, $query);
+        $query = "INSERT INTO {textbook_companion_example_files} (example_id, filename, filepath, filemime, filesize, filetype, timestamp) VALUES (:example_id, :filename, :filepath, :filemime, :filesize, :filetype, :timestamp)";
+$args = [
+  ':example_id' => $example_data->id,
+  ':filename' => $_FILES['files']['name']['sourcefile1'],
+  ':filepath' => $filepath . $_FILES['files']['name']['sourcefile1'],
+  ':filemime' => 'application/dwxml',
+  ':filesize' => $_FILES['files']['size']['sourcefile1'],
+  ':filetype' => 'S',
+  ':timestamp' => time(),
+];
+$result = \Drupal::database()->query($query, $args);
         \Drupal::messenger()->addStatus($_FILES['files']['name']['sourcefile1'] . ' uploaded successfully.');
       }
       else {
         \Drupal::messenger()->addError('Error uploading file : ' . $dest_path . '/' . $_FILES['files']['name']['sourcefile1']);
       }
-    }
+    
     /* sending email */
-    $email_to = $user->mail;
-    $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
-    $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
-    $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
-    $param['example_updated']['example_id'] = $example_id;
-    $param['example_updated']['user_id'] = $user->uid;
-    $param['example_updated']['headers'] = [
-      'From' => $from,
-      'MIME-Version' => '1.0',
-      'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
-      'Content-Transfer-Encoding' => '8Bit',
-      'X-Mailer' => 'Drupal',
-      'Cc' => $cc,
-      'Bcc' => $bcc,
-    ];
-    if (!drupal_mail('textbook_companion', 'example_updated', $email_to, language_default(), $param, $from, TRUE)) {
-      \Drupal::messenger()->addError('Error sending email message.');
-    }
-    \Drupal::messenger()->addStatus(t("Example successfully udpated."));
+    // $email_to = $user->mail;
+    // $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
+    // $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
+    // $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
+    // $param['example_updated']['example_id'] = $example_id;
+    // $param['example_updated']['user_id'] = $user->id();
+    // $param['example_updated']['headers'] = [
+    //   'From' => $from,
+    //   'MIME-Version' => '1.0',
+    //   'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
+    //   'Content-Transfer-Encoding' => '8Bit',
+    //   'X-Mailer' => 'Drupal',
+    //   'Cc' => $cc,
+    //   'Bcc' => $bcc,
+    // ];
+    // if (!drupal_mail('textbook_companion', 'example_updated', $email_to, language_default(), $param, $from, TRUE)) {
+    //   $msg = \Drupal::messenger()->addError('Error sending email message.');
+    // }
+   \Drupal::messenger()->addStatus(t("Example successfully udpated."));
   }
 
 }

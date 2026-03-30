@@ -107,21 +107,21 @@ class BookProposalForm extends FormBase {
     $form['full_name'] = [
       '#type' => 'textfield',
       '#title' => t('Full Name'),
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 50,
       '#required' => TRUE,
     ];
     $form['email_id'] = [
       '#type' => 'textfield',
       '#title' => t('Email'),
-      '#size' => 30,
+      //'#size' => 30,
       '#value' => $user->getEmail(),
       '#disabled' => TRUE,
     ];
     $form['mobile'] = [
       '#type' => 'textfield',
       '#title' => t('Mobile No.'),
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 15,
       '#required' => TRUE,
     ];
@@ -150,7 +150,7 @@ class BookProposalForm extends FormBase {
     $form['course'] = [
       '#type' => 'textfield',
       '#title' => t('Course'),
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 50,
       '#required' => TRUE,
     ];
@@ -163,7 +163,7 @@ class BookProposalForm extends FormBase {
     $form['university'] = [
       '#type' => 'textfield',
       '#title' => t('University/ Institute'),
-      '#size' => 80,
+      //'#size' => 80,
       '#maxlength' => 200,
       '#required' => TRUE,
       '#attributes' => [
@@ -184,7 +184,7 @@ class BookProposalForm extends FormBase {
     $form['other_country'] = [
       '#type' => 'textfield',
       '#title' => t('Other than India'),
-      '#size' => 100,
+      //'#size' => 100,
       '#attributes' => [
         'placeholder' => t('Enter your country name')
         ],
@@ -199,7 +199,7 @@ class BookProposalForm extends FormBase {
     $form['other_state'] = [
       '#type' => 'textfield',
       '#title' => t('State other than India'),
-      '#size' => 100,
+      //'#size' => 100,
       '#attributes' => [
         'placeholder' => t('Enter your state/region name')
         ],
@@ -214,7 +214,7 @@ class BookProposalForm extends FormBase {
     $form['other_city'] = [
       '#type' => 'textfield',
       '#title' => t('City other than India'),
-      '#size' => 100,
+      //'#size' => 100,
       '#attributes' => [
         'placeholder' => t('Enter your city name')
         ],
@@ -257,7 +257,7 @@ class BookProposalForm extends FormBase {
     $form['pincode'] = [
       '#type' => 'textfield',
       '#title' => t('Pincode'),
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 6,
       '#required' => TRUE,
       '#attributes' => [
@@ -273,7 +273,7 @@ class BookProposalForm extends FormBase {
       '#type' => 'hidden',
       '#value' => 'None',
       '#title' => t('College Teacher/Professor'),
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 50,
       '#required' => TRUE,
     ];
@@ -282,14 +282,14 @@ class BookProposalForm extends FormBase {
       '#value' => 'None',
       '#title' => t('Teacher/Professor Email Id'),
       '#value' => '@email.com',
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 50,
     ];
     $form['reviewer'] = [
       '#type' => 'hidden',
       '#value' => 'OpenModelica TBC Team',
       '#title' => t('Reviewer'),
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 50,
     ];
     $form['version'] = [
@@ -300,7 +300,7 @@ class BookProposalForm extends FormBase {
     ];
     $form['other_version'] = [
       '#type' => 'textfield',
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 50,
       //'#required' => TRUE,
 		'#description' => t('Specify the Older version used'),
@@ -316,14 +316,14 @@ class BookProposalForm extends FormBase {
       '#type' => 'textfield',
       '#title' => t('Expected Date of Completion'),
       '#description' => t('Input date format should be DD-MM-YYYY. Eg: 23-03-2011'),
-      '#size' => 10,
+      //'#size' => 10,
       '#maxlength' => 10,
     ];
     $form['operating_system'] = [
       '#type' => 'textfield',
       '#title' => t('Operating System'),
       '#required' => TRUE,
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 50,
     ];
     $reason = [
@@ -340,7 +340,7 @@ class BookProposalForm extends FormBase {
     ];
     $form['other_reason'] = [
       '#type' => 'textarea',
-      '#size' => 300,
+      //'#size' => 300,
       '#maxlength' => 300,
       '#description' => t('<span style="color:red;">Maximum character limit is 255 characters</span>'),
       '#states' => [
@@ -361,7 +361,7 @@ class BookProposalForm extends FormBase {
       '#type' => 'textfield',
       '#title' => t('Reference'),
       '#required' => TRUE,
-      '#size' => 500,
+      //'#size' => 500,
       '#maxlength' => 500,
       '#attributes' => [
         'placeholder' => 'Links of the syllabus must be provided....'
@@ -380,14 +380,14 @@ class BookProposalForm extends FormBase {
     $form['preference1']['book1'] = [
       '#type' => 'textfield',
       '#title' => t('Title of the book'),
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 100,
       '#required' => TRUE,
     ];
     $form['preference1']['author1'] = [
       '#type' => 'textfield',
       '#title' => t('Author Name'),
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 100,
       '#required' => TRUE,
       //'#value' => $row1->author,
@@ -396,7 +396,7 @@ class BookProposalForm extends FormBase {
     $form['preference1']['isbn1'] = [
       '#type' => 'textfield',
       '#title' => t('ISBN No'),
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 25,
       '#required' => TRUE,
       // '#value' => $row1->isbn,
@@ -405,7 +405,7 @@ class BookProposalForm extends FormBase {
     $form['preference1']['publisher1'] = [
       '#type' => 'textfield',
       '#title' => t('Publisher & Place'),
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 50,
       '#required' => TRUE,
       //'#value' => $row1->publisher,
@@ -413,7 +413,7 @@ class BookProposalForm extends FormBase {
     $form['preference1']['edition1'] = [
       '#type' => 'textfield',
       '#title' => t('Edition'),
-      '#size' => 4,
+      //'#size' => 4,
       '#maxlength' => 2,
       '#required' => TRUE,
       //'#value' => $row1->edition,
@@ -421,7 +421,7 @@ class BookProposalForm extends FormBase {
     $form['preference1']['year1'] = [
       '#type' => 'textfield',
       '#title' => t('Year of publication'),
-      '#size' => 4,
+      //'#size' => 4,
       '#maxlength' => 4,
       '#required' => TRUE,
       //'#value' => $row1->year,
@@ -435,7 +435,7 @@ class BookProposalForm extends FormBase {
     $form['samplefile']['samplefile1'] = [
       '#type' => 'file',
       '#title' => t('Upload sample source file'),
-      '#size' => 48,
+      //'#size' => 48,
       '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' . t('<span style="color:red;">Allowed file extensions: ') . \Drupal::config('textbook_companion.settings')->get('textbook_companion_sample_source_extensions') . '</span>',
     ];
     $form['dir_name'] = [

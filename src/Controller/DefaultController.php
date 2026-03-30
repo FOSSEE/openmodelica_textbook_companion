@@ -21,6 +21,7 @@ use Drupal\Core\Render\Markup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 /**
  * Default controller for the textbook_companion module.
  */
@@ -506,7 +507,7 @@ $pending_rows[] = array(
       'id',
       'number',
       'name',
-      'preference_id',
+      'preference_id'
     ]);
     $query->addField('c', 'id', 'c_id');
     $query->addField('c', 'number', 'c_number');
@@ -514,6 +515,7 @@ $pending_rows[] = array(
     $query->addField('c', 'preference_id', 'c_preference_id');
     $query->innerJoin('textbook_companion_chapter', 'c', 'c.id = e.chapter_id');
     $query->condition('e.approval_status', 0);
+    $query->orderBy('e.timestamp', 'DESC');
     $pending_chapter_q = $query->execute();
     if (!$pending_chapter_q) {
       \Drupal::messenger()->addStatus(t('There are no pending code approvals.'));
@@ -534,15 +536,14 @@ $pending_rows[] = array(
       $result = $query->execute();
       $proposal_data = $result->fetchObject();
       /* setting table row information */
-      // @FIXME
-      // l() expects a Url object, created from a route name or external URI.
-      // $rows[] = array(
-      //             $preference_data->book,
-      //             $row->c_number,
-      //             $row->c_name,
-      //             $proposal_data->full_name,
-      //             l('Edit', 'textbook-companion/code-approval/approve/' . $row->c_id)
-      //         );
+      $edit_link = Link::fromTextAndUrl(t('Edit'),Url::fromUri('internal:/textbook-companion/code-approval/approve/' . $row->c_id))->toString();
+      $rows[] = array(
+                  $preference_data->book,
+                  $row->c_number,
+                  $row->c_name,
+                  $proposal_data->full_name,
+                  $edit_link
+              );
 
     }
     /* check if there are any pending proposals */
@@ -557,18 +558,13 @@ $pending_rows[] = array(
       'Contributor Name',
       'Actions',
     ];
-    // @FIXME
-    // theme() has been renamed to _theme() and should NEVER be called directly.
-    // Calling _theme() directly can alter the expected output and potentially
-    // introduce security issues (see https://www.drupal.org/node/2195739). You
-    // should use renderable arrays instead.
-    // 
-    // 
-    // @see https://www.drupal.org/node/2195739
-    // $output = theme('table', array(
-    //         'header' => $header,
-    //         'rows' => $rows
-    //     ));
+    
+    $output = [
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#empty' => t('No data found')
+  ];
 
     return $output;
   }
@@ -683,11 +679,16 @@ $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
       $example_data = $result->fetchObject();
       // @FIXME
       // l() expects a Url object, created from a route name or external URI.
+      $edit_link = Link::fromTextAndUrl(t('Edit'),Url::fromUri('internal:/textbook-companion/code/chapter/edit/' . $chapter_data->id))->toString();
+$view_link = Link::fromTextAndUrl('View', Url::fromUri('internal:/textbook-companion/code/list-examples/' . $chapter_data->id))->toString();
+// Display the chapter name with the edit link.
+//$chapter_name_with_link = $chapter_data->name;
+$chapter_name_with_link = t('@chapterName | @editLink', array('@chapterName' => $chapter_data->name,'@editLink' => $edit_link));
       $chapter_rows[] = array(
                   $chapter_data->number,
-                  $chapter_data->name . ' (' . Link::fromTextAndUrl('Edit', Url::fromUri('internal:textbook-companion/code/chapter/edit/' . $chapter_data->id))->toString() . ')',
+                  $chapter_name_with_link,
                   $example_data->example_count,
-                  Link::fromTextAndUrl('View', Url::fromUri('internal:textbook-companion/code/list-examples/' . $chapter_data->id))->toString()
+                  $view_link
               );
 
     }
@@ -732,8 +733,10 @@ $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
 
   public function _upload_examples_delete() {
     $user = \Drupal::currentUser();
-    $root_path = textbook_companion_path();
-    $example_id = arg(3);
+    $service = \Drupal::service('textbook_companion_global');
+    $root_path = $service->textbook_companion_path();
+    $route_match = \Drupal::routeMatch();
+    $example_id = (int) $route_match->getParameter('example_id');
     //var_dump($example_id);die;
     /* check example */
     /*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE id = %d LIMIT 1", $example_id);
@@ -745,14 +748,17 @@ $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
     $result = $query->execute();
     $example_data = $result->fetchObject();
     if (!$example_data) {
-      \Drupal::messenger()->addError('Invalid example.');
-      drupal_goto('textbook-companion/code');
-      return;
+     $msg = \Drupal::messenger()->addError(t("Invalid example selected."));
+      $response = new RedirectResponse(Url::fromRoute('textbook_companion.list_chapters')->toString());
+  $response->send();
+  return $msg;
     }
     if ($example_data->approval_status != 0) {
-      \Drupal::messenger()->addError('You cannnot delete an example after it has been approved. Please contact site administrator if you want to delete this example.');
-      drupal_goto('textbook-companion/code');
-      return;
+      $msg = \Drupal::messenger()->addError('You cannnot delete an example after it has been approved. Please contact site administrator if you want to delete this example.');
+      
+      $response = new RedirectResponse(Url::fromRoute('textbook_companion.list_chapters')->toString());
+  $response->send();
+  return $msg;
     }
     /*$chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE id = %d LIMIT 1", $example_data->chapter_id);
     $chapter_data = db_fetch_object($chapter_q);*/
@@ -762,10 +768,12 @@ $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
     $query->range(0, 1);
     $result = $query->execute();
     $chapter_data = $result->fetchObject();
+    //var_dump($chapter_data);die;
     if (!$chapter_data) {
-      \Drupal::messenger()->addError('You do not have permission to delete this example.');
-      drupal_goto('textbook-companion/code');
-      return;
+      $msg = \Drupal::messenger()->addError('You do not have permission to delete this example.');
+      $response = new RedirectResponse(Url::fromRoute('textbook_companion.list_chapters')->toString());
+  $response->send();
+  return $msg;
     }
     /*$preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE id = %d LIMIT 1", $chapter_data->preference_id);
     $preference_data = db_fetch_object($preference_q);*/
@@ -776,23 +784,27 @@ $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
     $result = $query->execute();
     $preference_data = $result->fetchObject();
     if (!$preference_data) {
-      \Drupal::messenger()->addError('You do not have permission to delete this example.');
-      drupal_goto('textbook-companion/code');
-      return;
+      $msg = \Drupal::messenger()->addError('You do not have permission to delete this example.');
+      $response = new RedirectResponse(Url::fromRoute('textbook_companion.list_chapters')->toString());
+  $response->send();
+  return $msg;
     }
+    //var_dump($preference_data);die;
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d AND uid = %d LIMIT 1", $preference_data->proposal_id, $user->uid);
     $proposal_data = db_fetch_object($proposal_q);*/
     $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('id', $preference_data->proposal_id);
-    $query->condition('uid', $user->uid);
+    $query->condition('uid', $user->id());
     $query->range(0, 1);
     $result = $query->execute();
     $proposal_data = $result->fetchObject();
+    //var_dump($proposal_data);die;
     if (!$proposal_data) {
-      \Drupal::messenger()->addError('You do not have permission to delete this example.');
-      drupal_goto('textbook-companion/code');
-      return;
+      $msg = \Drupal::messenger()->addError('You do not have permission to delete this example.');
+       $response = new RedirectResponse(Url::fromRoute('textbook_companion.list_chapters')->toString());
+  $response->send();
+  return $msg;
     }
     /* deleting example files */
     if (delete_example($example_data->id)) {
@@ -818,14 +830,16 @@ $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
         'Cc' => $cc,
         'Bcc' => $bcc,
       ];
-      if (!drupal_mail('textbook_companion', 'example_deleted_user', $email_to, language_default(), $params, $from, TRUE)) {
-        \Drupal::messenger()->addError('Error sending email message.');
-      }
+      // if (!drupal_mail('textbook_companion', 'example_deleted_user', $email_to, language_default(), $params, $from, TRUE)) {
+      //   \Drupal::messenger()->addError('Error sending email message.');
+      // }
     }
     else {
       \Drupal::messenger()->addStatus('Error deleting example.');
     }
-    drupal_goto('textbook-companion/code');
+     $response = new RedirectResponse(Url::fromRoute('textbook_companion.list_chapters')->toString());
+  $response->send();
+  // return $msg;
     return;
   }
 
@@ -836,45 +850,53 @@ $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
     $proposal_data = db_fetch_object($proposal_q);*/
     $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
-    $query->condition('uid', $user->uid);
+    $query->condition('uid', $user->id());
     $query->orderBy('id', 'DESC');
     $query->range(0, 1);
     $result = $query->execute();
     $proposal_data = $result->fetchObject();
     if (!$proposal_data) {
-      // @FIXME
-// l() expects a Url object, created from a route name or external URI.
-// drupal_set_message("Please submit a " . l('proposal', 'textbook-companion/proposal') . ".", 'error');
-
-      drupal_goto('');
+      $url = Url::fromUri('internal:/textbook-companion/proposal');
+$proposal_link = Link::fromTextAndUrl('proposal', $url)->toString();
+$msg = \Drupal::messenger()->addError(t('Please submit a proposal form  at @proposal_form.',['@proposal_form' => $proposal_link]));
+  $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
+  return $msg;
     }
     if ($proposal_data->proposal_status != 1 && $proposal_data->proposal_status != 4) {
       switch ($proposal_data->proposal_status) {
         case 0:
-          \Drupal::messenger()->addStatus(t('We have already received your proposal. We will get back to you soon.'));
-          drupal_goto('');
-          return;
+          $msg = \Drupal::messenger()->addStatus(t('We have already received your proposal. We will get back to you soon.'));
+          //drupal_goto('textbook-companion/code');
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+      $response->send();
+      return $msg;
           break;
         case 2:
           // @FIXME
           // l() expects a Url object, created from a route name or external URI.
-          // drupal_set_message(t('Your proposal has been dis-approved. Please create another proposal ' . l('here', 'textbook-companion/proposal') . '.'), 'error');
-
-          drupal_goto('');
-          return;
+          // drupal_set_message(t('Your proposal has been dis-approved. Please create another proposal ' . l('here', 'proposal') . '.'), 'error');
+$proposal_link = Link::fromTextAndUrl('proposal', $url)->toString();
+$msg = \Drupal::messenger()->addError(t('Your proposal has been disapproved. Please create another proposal here @proposal_form.',['@proposal_form' => $proposal_link]));
+  $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
+  return $msg;
           break;
         case 3:
           // @FIXME
           // l() expects a Url object, created from a route name or external URI.
           // drupal_set_message(t('Congratulations! You have completed your last book proposal. You have to create another proposal ' . l('here', 'textbook-companion/proposal') . '.'), 'status');
-
-          drupal_goto('');
-          return;
+$proposal_link = Link::fromTextAndUrl('proposal', $url)->toString();
+$msg = \Drupal::messenger()->addError(t('Congratulations! You have completed your last book proposal. You have to create another proposal at @proposal_form.',['@proposal_form' => $proposal_link]));
+  $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
+  return $msg;
           break;
         default:
-          \Drupal::messenger()->addError(t('Invalid proposal state. Please contact site administrator for further information.'));
-          drupal_goto('');
-          return;
+          $msg = \Drupal::messenger()->addError(t('Invalid Book Preference status. Please contact site administrator for further information.'));
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+      $response->send();
+      return $msg;
           break;
       }
     }
@@ -888,13 +910,15 @@ $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
     $result = $query->execute();
     $preference_data = $result->fetchObject();
     if (!$preference_data) {
-      \Drupal::messenger()->addError(t('Invalid Book Preference status. Please contact site administrator for further information.'));
-      drupal_goto('');
-      return;
+      $msg = \Drupal::messenger()->addError(t('Invalid Book Preference status. Please contact site administrator for further information.'));
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+      $response->send();
+      return $msg;
     }
     /************************ end approve book details **************************/
     /* get chapter details */
-    $chapter_id = arg(3);
+    $route_match = \Drupal::routeMatch();
+    $chapter_id = (int) $route_match->getParameter('chapter_id');
     /*$chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE id = %d AND preference_id = %d LIMIT 1", $chapter_id, $preference_data->id);*/
     $query = \Drupal::database()->select('textbook_companion_chapter');
     $query->fields('textbook_companion_chapter');
@@ -902,17 +926,25 @@ $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
     $query->condition('preference_id', $preference_data->id);
     $query->range(0, 1);
     $chapter_q = $query->execute();
+    $return_html = [];
     if ($chapter_data = $chapter_q->fetchObject()) {
-      $return_html = '<br />';
-      $return_html .= '<strong>Title of the Book:</strong><br />' . $preference_data->book . '<br /><br />';
-      $return_html .= '<strong>Contributor Name:</strong><br />' . $proposal_data->full_name . '<br /><br />';
-      $return_html .= '<strong>Chapter Number:</strong><br />' . $chapter_data->number . '<br /><br />';
-      $return_html .= '<strong>Title of the Chapter:</strong><br />' . $chapter_data->name . '<br />';
+      $return_html['html_output'] = [
+      '#type' => 'markup',
+      '#markup' => '<strong>Title of the Book:</strong><br />' . $preference_data->book . '<br /><br />
+      <strong>Contributor Name:</strong><br />' . $proposal_data->full_name . '<br /><br />
+      <strong>Chapter Number:</strong><br />' . $chapter_data->number . '<br /><br />
+      <strong>Title of the Chapter:</strong><br />' . $chapter_data->name . '<br />',
+    ];
+      // $return_html .= '<strong>Title of the Book:</strong><br />' . $preference_data->book . '<br /><br />';
+      // $return_html .= '<strong>Contributor Name:</strong><br />' . $proposal_data->full_name . '<br /><br />';
+      // $return_html .= '<strong>Chapter Number:</strong><br />' . $chapter_data->number . '<br /><br />';
+      // $return_html .= '<strong>Title of the Chapter:</strong><br />' . $chapter_data->name . '<br />';
     }
     else {
-      \Drupal::messenger()->addError(t('Invalid chapter.'));
-      drupal_goto('textbook-companion/code');
-      return;
+      $msg = \Drupal::messenger()->addError(t('Invalid chapter.'));
+      $response = new RedirectResponse(Url::fromRoute('textbook_companion.list_chapters')->toString());
+      $response->send();
+      return $msg;
     }
     // @FIXME
     // l() expects a Url object, created from a route name or external URI.
@@ -939,7 +971,7 @@ $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
           break;
       }
       /* example files */
-      $example_files = '';
+      //$example_files = '';
       /*$example_files_q = db_query("SELECT * FROM {textbook_companion_example_files} WHERE example_id = %d ORDER BY filetype", $example_data->id);*/
       $query = \Drupal::database()->select('textbook_companion_example_files');
       $query->fields('textbook_companion_example_files');
@@ -962,41 +994,74 @@ $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
         }
         // @FIXME
         // l() expects a Url object, created from a route name or external URI.
+        $download_url = Url::fromUri('internal:/textbook-companion/download/file/' . $example_files_data->id);
+
+// Create a link for the file.
+$file_link = Link::fromTextAndUrl($example_files_data->filename, $download_url);
+
+// Render the link and append the file type and line break.
+$example_files_link = $file_link->toString();
+$example_files_type = $file_type;
+//$example_files =  $example_files_link . $example_files_markup;
         // $example_files .= l($example_files_data->filename, 'textbook-companion/download/file/' . $example_files_data->id) . ' (' . $file_type . ')<br />';
 
       }
       if ($example_data->approval_status == 0) {
         // @FIXME
 // l() expects a Url object, created from a route name or external URI.
-// $example_rows[] = array(
-//                 'data' => array(
-//                     $example_data->number,
-//                     $example_data->caption,
-//                     $approval_status,
-//                     $example_files,
-//                     l('Edit', 'textbook-companion/code/edit/' . $example_data->id) . ' | ' . l('Delete', 'textbook-companion/code/delete/' . $example_data->id, array(
-//                         'attributes' => array(
-//                             'onClick' => 'return confirm("Are you sure you want to delete the example?")'
-//                         )
-//                     ))
-//                 ),
-//                 'valign' => 'top'
-//             );
+$edit_url = Url::fromUri('internal:/textbook-companion/code/edit/' . $example_data->id);
+$edit_link = Link::fromTextAndUrl(t('Edit'), $edit_url)->toString();
+
+// Create the Delete link with a confirmation dialog.
+// $delete_url = Url::fromUri('internal:/textbook-companion/code/delete/' . $example_data->id);
+// $delete_link = Link::fromTextAndUrl(t('Delete'), $delete_url)
+//   ->toRenderable()
+//   ->setAttribute('onclick', 'return confirm("Are you sure you want to delete the example?");');
+
+// $delete_link = \Drupal::service('renderer')->render($delete_link);
+
+$url = Url::fromUri('internal:/textbook-companion/code/delete/' . $example_data->id);
+
+// Add attributes to the link, including the confirmation dialog.
+$link = Link::fromTextAndUrl(t('Delete'), $url);
+$link = $link->toRenderable();
+$link['#attributes']['class'][] = 'confirm-link';
+$link['#attributes']['onclick'] = 'return confirm("Are you sure you want to proceed?");';
+
+// Render the link.
+$rendered_link = \Drupal::service('renderer')->render($link);
+// Combine the links.
+$mainLink = t('@linkApprove | @linkReject', array('@linkApprove' => $edit_link, '@linkReject' => $rendered_link));
+//$links = $edit_link . '| ' . $rendered_link;
+$example_rows[] = array(
+                'data' => array(
+                    $example_data->number,
+                    $example_data->caption,
+                    $approval_status,
+                    $example_files_link,
+                    $example_files_type,
+                    $mainLink
+                ),
+                'valign' => 'top'
+            );
 
       }
       else {
         // @FIXME
 // l() expects a Url object, created from a route name or external URI.
-// $example_rows[] = array(
-//                 'data' => array(
-//                     $example_data->number,
-//                     $example_data->caption,
-//                     $approval_status,
-//                     $example_files,
-//                     l('Download', 'textbook-companion/download/example/' . $example_data->id)
-//                 ),
-//                 'valign' => 'top'
-//             );
+$url = Url::fromUri('internal:/textbook-companion/download/example/' . $example_data->id);
+$download_link = Link::fromTextAndUrl(t('Download'), $url)->toString();
+$example_rows[] = array(
+                'data' => array(
+                    $example_data->number,
+                    $example_data->caption,
+                    $approval_status,
+                    $example_files_link,
+                    $example_files_type,
+                    $download_link
+                ),
+                'valign' => 'top'
+            );
 
       }
     }
@@ -1005,6 +1070,7 @@ $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
       'Caption',
       'Status',
       'Files',
+      'Type of the file',
       'Action',
     ];
     // @FIXME
@@ -1015,11 +1081,14 @@ $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
     // 
     // 
     // @see https://www.drupal.org/node/2195739
-    // $return_html .= theme('table', array(
-    //         'header' => $example_header,
-    //         'rows' => $example_rows
-    //     ));
+    $return_html['table_output'] = [
+      '#type' => 'table',
+      '#header' => $example_header,
+      '#rows' => $example_rows,
+      '#empty' => $this->t('No data available.'),
+    ];
 
+    
 
     return $return_html;
   }
@@ -1219,25 +1288,46 @@ $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
   }
 
   public function textbook_companion_download_example_file() {
-    $example_file_id = arg(3);
-    $root_path = textbook_companion_path();
-    $root_temp_path = textbook_companion_temp_path();
-    /*$example_files_q = db_query("SELECT * FROM {textbook_companion_example_files} WHERE id = %d LIMIT 1", $example_file_id);
-    $example_file_data = db_fetch_object($example_files_q);*/
-    /*$query = db_select('textbook_companion_example_files');
-    $query->fields('textbook_companion_example_files');
-    $query->condition('id', $example_file_id);
-    $query->range(0, 1);
-    $result = $query->execute();*/
-    $example_files_q = \Drupal::database()->query("select * from textbook_companion_preference tcp join textbook_companion_chapter tcc on tcp.id=tcc.preference_id join textbook_companion_example tce ON tcc.id=tce.chapter_id join textbook_companion_example_files tcef on tce.id=tcef.example_id where tcef.id= :example_id LIMIT 1", [
-      ':example_id' => $example_file_id
-      ]);
+    $route_match = \Drupal::routeMatch();
+    $example_file_id = (int) $route_match->getParameter('example_file_id');
+    $service = \Drupal::service('textbook_companion_global');
+    $root_path = $service->textbook_companion_path();
+    $example_files_q = \Drupal::database()->query(
+      "SELECT tcef.*,tcp.* FROM {textbook_companion_example_files} tcef
+       JOIN {textbook_companion_example} tce ON tcef.example_id = tce.id
+       JOIN {textbook_companion_chapter} tcc ON tce.chapter_id = tcc.id
+       JOIN {textbook_companion_preference} tcp ON tcc.preference_id = tcp.id
+       WHERE tcef.id = :example_id LIMIT 1",
+      [':example_id' => $example_file_id]
+    );
+
     $example_file_data = $example_files_q->fetchObject();
-    header('Content-Type: ' . $example_file_data->filemime);
-    header('Content-disposition: attachment; filename="' . $example_file_data->filename . '"');
-    header('Content-Length: ' . filesize($root_path . $example_file_data->directory_name . '/' . $example_file_data->filepath));
-    ob_clean();
-    readfile($root_path . $example_file_data->directory_name . '/' . $example_file_data->filepath);
+
+    // Check if the file data exists.
+    if (!$example_file_data) {
+      throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException();
+    }
+
+    // Construct the file path.
+    $file_path = $root_path . $example_file_data->directory_name . '/' . $example_file_data->filepath;
+//var_dump($root_path .  ' ' . $example_file_data->filepath);die;
+    // Check if the file exists on the server.
+    if (!file_exists($file_path)) {
+      throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException();
+    }
+
+    // Create a BinaryFileResponse to force download.
+    $response = new BinaryFileResponse($file_path);
+  $response->setContentDisposition(
+    ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+    str_replace(' ', '_', $example_file_data->filename)
+  );
+
+    // Set the content type header.
+   // $response->headers->set('Content-Type', $example_file_data->filemime);
+
+    return $response;
+
   }
 
   public function textbook_companion_download_sample_code() {
@@ -1262,9 +1352,12 @@ $service = \Drupal::service('textbook_companion_global');
   }
 
   public function textbook_companion_download_example() {
-    $example_id = arg(3);
-    $root_path = textbook_companion_path();
-    $root_temp_path = textbook_companion_temp_path();
+    $route_match = \Drupal::routeMatch();
+    $example_id = (int) $route_match->getParameter('example_id');
+    //var_dump("hi");die;
+    $service = \Drupal::service('textbook_companion_global');
+    $root_path = $service->textbook_companion_path();
+    $root_temp_path = $service->textbook_companion_temp_path();
     /* get example data */
     /*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE id = %d", $example_id);
     $example_data = db_fetch_object($example_q);*/
@@ -1294,27 +1387,46 @@ $service = \Drupal::service('textbook_companion_global');
       mkdir($root_temp_path . 'tbc_download_temp');
     }
     $zip_filename = $root_temp_path . 'tbc_download_temp/' . 'zip-' . time() . '-' . rand(0, 999999) . '.zip';
-    /* creating zip archive on the server */
-    $zip = new ZipArchive();
-    $zip->open($zip_filename, ZipArchive::CREATE);
-    while ($example_files_row = $example_files_q->fetchObject()) {
-      $zip->addFile($root_path . $example_files_row->directory_name . '/' . $example_files_row->filepath, $EX_PATH . $example_files_row->filename);
-    }
-    $zip_file_count = $zip->numFiles;
-    $zip->close();
-    if ($zip_file_count > 0) {
-      /* download zip file */
-      header('Content-Type: application/octet-stream');
-      header('Content-disposition: attachment; filename="EX' . $example_data->number . '.zip"');
-      header('Content-Length: ' . filesize($zip_filename));
-      ob_clean();
-      readfile($zip_filename);
-      unlink($zip_filename);
-    }
-    else {
-      \Drupal::messenger()->addError("There are no files in this examples to download");
-      drupal_goto('textbook-companion/textbook-run');
-    }
+
+// Create a zip archive on the server
+$zip = new \ZipArchive();
+if ($zip->open($zip_filename, \ZipArchive::CREATE) !== TRUE) {
+  $msg = \Drupal::messenger()->addError(t('Failed to create zip file.'));
+  return $msg;
+}
+
+// Add files to the zip
+while ($example_files_row = $example_files_q->fetchObject()) {
+  $file_path = $root_path . $example_files_row->directory_name . '/' . $example_files_row->filepath;
+  //var_dump($file_path);die;
+  $entry_name = $EX_PATH . $example_files_row->filename;
+  //var_dump($entry_name);die;
+  if (file_exists($file_path)) {
+    //var_dump($file_path);die;
+    $zip->addFile($file_path, $entry_name);
+  }
+}
+$zip_file_count = $zip->numFiles;
+$zip->close();
+
+//var_dump($zip_file_count);die;
+// Check if files were added to the zip
+if ($zip_file_count > 0 && file_exists($zip_filename)) {
+  // Create a BinaryFileResponse for the download
+ // var_dump("hi");die;
+  $response = new BinaryFileResponse($zip_filename);
+  $response->setContentDisposition(
+    ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+    'EX' . $example_data->number . '.zip'
+  );
+  $response->deleteFileAfterSend(TRUE); // Delete the file after sending it
+
+  return $response;
+} else {
+  \Drupal::messenger()->addError(t('There are no files in this example to download.'));
+  // Redirect back to the previous page
+  return $this->redirect('<current>');
+}
   }
 
   public function textbook_companion_download_chapter() {

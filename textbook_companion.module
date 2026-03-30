@@ -2479,9 +2479,9 @@ WHERE  tcc.id = :chapter_id", array(
 			$email_to = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
 			$params['standard']['subject'] = "[ERROR] Error deleting folder";
 			$params['standard']['body'] = "Error deleting folder " . $dir_path . " by " . $user->uid . " at " . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-			if (!drupal_mail('textbook_companion', 'standard', $email_to, language_default(), $param, \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email'), TRUE))
-				\Drupal::messenger()->addError('Error sending email message.');
-			return FALSE;
+			// if (!drupal_mail('textbook_companion', 'standard', $email_to, language_default(), $param, \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email'), TRUE))
+			// 	\Drupal::messenger()->addError('Error sending email message.');
+			// return FALSE;
 		} //!rmdir($dir_path)
 	} //is_dir($dir_path)
 	else

@@ -16,7 +16,10 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\user\Entity\User;
 use Drupal\Core\Database\Database;
+use Drupal\Service;
 use Drupal\textbook_companion\Services\TextbookCompanionGlobalFunction;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\ReplaceCommand;
 
 
 class UploadExamplesForm extends FormBase {
@@ -156,9 +159,12 @@ $form['book_details']['pref_id'] = array(
     '#size' => 1,
     '#required' => TRUE,  
     '#ajax' => array(
-        'callback' => 'ajax_chapter_name_callback',
+        'callback' => '::ajax_chapter_name_callback',
+        'wrapper' => 'ajax-chapter-name-replace',
         ),
     );
+
+    
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Title of the Chapter'),
@@ -200,7 +206,7 @@ $form['book_details']['pref_id'] = array(
         '#type' => 'file',
         '#title' => t('Upload main or source file'),
         '#size' => 48,
-        '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' . t('<span style="color:red;">Allowed file extensions : ') . \Drupal::config('textbook_companion.settings')->get('textbook_companion_source_extensions') . '</span>'
+        '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' . t('<span style="color:red;">Allowed file extensions: ') . \Drupal::config('textbook_companion.settings')->get('textbook_companion_source_extensions') . '</span>'
     );
     $form['submit'] = array(
         '#type' => 'submit',
@@ -215,20 +221,52 @@ $form['book_details']['pref_id'] = array(
 
     return $form;
   }
+  public function ajax_chapter_name_callback(array &$form, FormStateInterface $form_state) {
+  // Get values from form state
+  $pref_id = $form_state->getValue('pref_id');
+  $chapter_number = $form_state->getValue('number');
+
+  // Query the database
+  $query = \Drupal::database()->select('textbook_companion_chapter', 'tcc')
+    ->fields('tcc')
+    ->condition('preference_id', $pref_id)
+    ->condition('number', $chapter_number);
+  $result = $query->execute();
+ $row = $result->fetchAll();
+  // Update the form element
+  if (count($row) > 0) {
+    foreach($row as $chapter_data){
+    $form['name']['#value'] = $chapter_data->name;
+    $form['name']['#attributes']['readonly'] = 'readonly';
+    $form['name']['#disabled'] = TRUE;
+    }
+  } else {
+    $form['name']['#value'] = '';
+    unset($form['name']['#attributes']['readonly']);
+  }
+
+  // Create AJAX response
+  $response = new AjaxResponse();
+  $response->addCommand(new ReplaceCommand('#ajax-chapter-name-replace', $form['name']));
+
+  return $response;
+}
 public function validateForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
-    if (!check_name($form_state['values']['name']))
-        form_set_error('name', t('Title of the Chapter can contain only alphabets, numbers and spaces.'));
-    if (!check_name($form_state['values']['example_caption']))
-        form_set_error('example_caption', t('Example Caption can contain only alphabets, numbers and spaces.'));
-    if (!check_chapter_number($form_state['values']['example_number']))
-        form_set_error('example_number', t('Invalid Example Number. Example Number can contain only alphabets and numbers sepereated by dot.'));
+  // $service = \Drupal::service('textbook_companion_global');
+  // var_dump($service->check_name($form_state->getValue('name']));die;
+    if (!\Drupal::service('textbook_companion_global')->check_name($form_state->getValue('name')))
+        $form_state->setErrorByName('name', t('Title of the Chapter can contain only alphabets, numbers and spaces.'));
+    if (!\Drupal::service('textbook_companion_global')->check_name($form_state->getValue('example_caption')))
+        $form_state->setErrorByName('example_caption', t('Example Caption can contain only alphabets, numbers and spaces.'));
+    if (!\Drupal::service('textbook_companion_global')->check_chapter_number($form_state->getValue('example_number')))
+        $form_state->setErrorByName('example_number', t('Invalid Example Number. Example Number can contain only alphabets and numbers sepereated by dot.'));
     if (isset($_FILES['files']))
       {
         /* check if atleast one source or result file is uploaded */
         if (!($_FILES['files']['name']['sourcefile1']))
-            form_set_error('sourcefile1', t('Please upload source file.'));
+            $form_state->setErrorByName('sourcefile1', t('Please upload source file.'));
         /* check for valid filename extensions */
-        foreach ($_FILES['files']['name'] as $file_form_name => $file_name)
+        foreach ($_FILES['files']['name']['sourcefile1'] as $file_form_name => $file_name)
           {
             if ($file_name)
               {
@@ -239,25 +277,26 @@ public function validateForm(array &$form, \Drupal\Core\Form\FormStateInterface 
                 //$temp_extension = substr($_FILES['files']['name'][$file_form_name], strripos($_FILES['files']['name'][$file_form_name], '.')); // get file name
                 //var_dump($temp_extension); die;
                 if (!in_array($temp_extension, $allowed_extensions))
-                    form_set_error($file_form_name, t('Only file with ' . $allowed_extensions_str . ' extensions can be uploaded.'));
+                    $form_state->setErrorByName($file_form_name, t('Only file with ' . $allowed_extensions_str . ' extensions can be uploaded.'));
                 if ($_FILES['files']['size'][$file_form_name] <= 0)
-                    form_set_error($file_form_name, t('File size cannot be zero.'));
-                /* check if valid file name
-                if (!textbook_companion_check_valid_filename($_FILES['files']['name'][$file_form_name]))
-                form_set_error($file_form_name, t('Invalid file name specified. Only alphabets, numbers and underscore is allowed as a valid filename.'));*/
+                    $form_state->setErrorByName($file_form_name, t('File size cannot be zero.'));
+                // check if valid file name
+                if (!$service->textbook_companion_check_valid_filename($_FILES['files']['name'][$file_form_name]))
+                $form_state->setErrorByName($file_form_name, t('Invalid file name specified. Only alphabets, numbers and underscore is allowed as a valid filename.'));
               }
           }
       }
   }
-public function submitForm(array &$form, FormStateInterface $form_state) {
+public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
-    $root_path = textbook_companion_path();
+    $service = \Drupal::service('textbook_companion_global');
+    $root_path = $service->textbook_companion_path();
     /************************ start approve book details ************************/
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE uid = %d ORDER BY id DESC LIMIT 1", $user->uid);
     $proposal_data = db_fetch_object($proposal_q);*/
     $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
-    $query->condition('uid', $user->uid);
+    $query->condition('uid', $user->id());
     $query->orderBy('id', 'DESC');
     $query->range(0, 1);
     $result = $query->execute();
@@ -288,22 +327,22 @@ public function submitForm(array &$form, FormStateInterface $form_state) {
                 return;
                 break;
             case 3:
-                // @FIXME
-// l() expects a Url object, created from a route name or external URI.
-// drupal_set_message(t('Congratulations! You have completed your last book proposal. You have to create another proposal ' . l('here', 'textbook-companion/proposal') . '.'), 'status');
-
-                drupal_goto('');
+                $msg = drupal_set_message(t('Congratulations! You have completed your last book proposal. You have to create another proposal ' . l('here', 'textbook-companion/proposal') . '.'), 'status');
+                $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+                $response->send();
                 return;
                 break;
-case 5:
-      \Drupal::messenger()->addStatus(t('You have submmited your all codes'));
-      drupal_goto('');
-      return;
+            case 5:
+              $msg = \Drupal::messenger()->addStatus(t('You have submmited your all codes'));
+              $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+              $response->send();
+              return $msg;
       break;
             default:
-                \Drupal::messenger()->addError(t('Invalid proposal state. Please contact site administrator for further information.'));
-                drupal_goto('');
-                return;
+                $msg = \Drupal::messenger()->addError(t('Invalid proposal state. Please contact site administrator for further information.'));
+                $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+                $response->send();
+                return $msg;
                 break;
         }
       }
@@ -318,146 +357,130 @@ case 5:
     $preference_data = $result->fetchObject();
     if (!$preference_data)
       {
-        \Drupal::messenger()->addError(t('Invalid Book Preference status. Please contact site administrator for further information.'));
-        drupal_goto('');
-        return;
+        $msg = \Drupal::messenger()->addError(t('Invalid Book Preference status. Please contact site administrator for further information.'));
+        $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+        $response->send();
+        //drupal_goto('');
+        return $msg;
       }
     /************************ end approve book details **************************/
     $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('proposal_id', $proposal_data->id);
     $query->condition('approval_status', 1);
-    $result = $query->execute()->rowCount();
-    if ($result > 1)
+    $result = $query->execute()->fetchAll();
+    if (count($result) > 1)
       {
-        \Drupal::messenger()->addError(t('You cannot upload your code. This name of book directory alrady preasent in directory folder, please contact to administrator.'));
-        return;
+        $msg = \Drupal::messenger()->addError(t('You cannot upload your code. This name of book directory alrady preasent in directory folder, please contact to administrator.'));
+        return $msg;
       }
     $proposal_directory = $preference_data->directory_name;
     $dest_path = $proposal_directory . '/';
     if (!is_dir($root_path . $dest_path)){   
         if(!mkdir($root_path . $dest_path))
         {
-        \Drupal::messenger()->addError(t('You cannot upload your code. Error in creating directory'));
+        $msg = \Drupal::messenger()->addError(t('You cannot upload your code. Error in creating directory'));
+        return $msg;
         }
      }   
     /* inserting chapter details */
     $chapter_id = 0;
-    /*$chapter_result = db_query("SELECT * FROM {textbook_companion_chapter} WHERE preference_id = %d AND number = %d", $preference_id, $form_state['values']['number']);*/
+    /*$chapter_result = db_query("SELECT * FROM {textbook_companion_chapter} WHERE preference_id = %d AND number = %d", $preference_id, $form_state->getValue('number']);*/
     $preference_id = $preference_data->id;
     $query = \Drupal::database()->select('textbook_companion_chapter');
     $query->fields('textbook_companion_chapter');
     $query->condition('preference_id', $preference_id);
-    $query->condition('number', $form_state['values']['number']);
+    $query->condition('number', $form_state->getValue('number'));
     $chapter_result = $query->execute();
-    if (!$chapter_row = $chapter_result->fetchObject())
+    $chapter_row = $chapter_result->fetchObject();
+    if (!$chapter_row)
       {
         /*db_query("INSERT INTO {textbook_companion_chapter} (preference_id, number, name) VALUES (%d, '%s', '%s')",
         $preference_id,
-        $form_state['values']['number'],
-        $form_state['values']['name']
+        $form_state->getValue('number'],
+        $form_state->getValue('name']
         );
         $chapter_id = db_last_insert_id('textbook_companion_chapter', 'id'); */
-        $query = "INSERT INTO {textbook_companion_chapter} (preference_id, number, name) VALUES(:preference_id, :number, :name)";
-        $args = array(
-            ":preference_id" => $preference_id,
-            ":number" => $form_state['values']['number'],
-            ":name" => $form_state['values']['name']
-        );
-        $result = \Drupal::database()->query($query, $args, $query);
-        $chapter_id = $result;
+        // Insert a new record into the textbook_companion_chapter table.
+$chapter_id = \Drupal::database()->insert('textbook_companion_chapter')
+  ->fields([
+    'preference_id' => $preference_id,
+    'number' => $form_state->getValue('number'),
+    'name' => $form_state->getValue('name'),
+  ])
+  ->execute();
+
       }
     else
       {
-        $chapter_id = $chapter_row->id;
-        /*db_query("UPDATE {textbook_companion_chapter} SET name = '%s' WHERE id = %d", $form_state['values']['name'], $chapter_id);*/
-        $query = \Drupal::database()->update('textbook_companion_chapter');
-        $query->fields(array(
-            'name' => $form_state['values']['name']
-        ));
-        $query->condition('id', $chapter_id);
-        $num_updated = $query->execute();
+        // Update the chapter name in the database.
+        //var_dump($chapter_row->id);die;
+$num_updated = \Drupal::database()
+  ->update('textbook_companion_chapter')
+  ->fields([
+    'name' => $form_state->getValue('name'),
+  ])
+  ->condition('id', $chapter_row->id)
+  ->execute();
+
       }
     /*  get example details - dont allow if already example present */
-    /*$cur_example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE chapter_id = %d AND number = '%s'", $chapter_id, $form_state['values']['example_number']);*/
-    $query = \Drupal::database()->select('textbook_companion_example');
-    $query->fields('textbook_companion_example');
-    $query->condition('chapter_id', $chapter_id);
-    $query->condition('number', $form_state['values']['example_number']);
-    $cur_example_q = $query->execute();
-    if ($cur_example_d = $cur_example_q->fetchObject())
-      {
-        if ($cur_example_d->approval_status == 1)
-          {
-            \Drupal::messenger()->addError(t("Example already approved. Cannot overwrite it."));
-            drupal_goto('textbook-companion/code');
-            return;
-          }
-        else if ($cur_example_d->approval_status == 0)
-          {
-            \Drupal::messenger()->addError(t("Example is under pending review. Delete the example and reupload it."));
-            drupal_goto('textbook-companion/code');
-            return;
-          }
-        else
-          {
-            \Drupal::messenger()->addError(t("Error uploading example. Please contact administrator."));
-            drupal_goto('textbook-companion/code');
-            return;
-          }
-      }
+    /*$cur_example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE chapter_id = %d AND number = '%s'", $chapter_id, $form_state->getValue('example_number']);*/
+    $query = \Drupal::database()->select('textbook_companion_example', 'tce');
+$query->fields('tce');
+$query->condition('chapter_id', $chapter_row->id);
+$query->condition('number', $form_state->getValue('example_number'));
+$cur_example_q = $query->execute();
+$cur_example_d = $cur_example_q->fetchObject();
+
+if ($cur_example_d) {
+  if ($cur_example_d->approval_status == 1) {
+    \Drupal::messenger()->addError(t("Example already approved. Cannot overwrite it."));
+    $form_state->setRedirect('textbook_companion.list_chapters');
+    return;
+  } elseif ($cur_example_d->approval_status == 0) {
+    \Drupal::messenger()->addError(t("Example is under pending review. Delete the example and reupload it."));
+    $form_state->setRedirect('textbook_companion.list_chapters');
+    return;
+  } else {
+    \Drupal::messenger()->addError(t("Error uploading example. Please contact administrator."));
+    $form_state->setRedirect('textbook_companion.list_chapters');
+    return;
+  }
+}
+      
     /* creating directories */
-    $dest_path .= 'CH' . $form_state['values']['number'] . '/';
+    // $chapter_path = 'CH' . $form_state->getValue('number') . '/';
+    // if (!is_dir($root_path . $dest_path))
+    //     mkdir($root_path . $dest_path);
+    $dest_path .= 'CH' . $form_state->getValue('number') . '/';
+    if(!is_dir($root_path . $dest_path))
+      mkdir($root_path . $dest_path);
+    $dest_path .= 'EX' . $form_state->getValue('example_number'). '/';
     if (!is_dir($root_path . $dest_path))
         mkdir($root_path . $dest_path);
-    $dest_path .= 'EX' . $form_state['values']['example_number'] . '/';
-    if (!is_dir($root_path . $dest_path))
-        mkdir($root_path . $dest_path);
-    $filepath = 'CH' . $form_state['values']['number'] . '/' . 'EX' . $form_state['values']['example_number'] . '/';
+    $filepath = 'CH' . $form_state->getValue('number') . '/' . 'EX' . $form_state->getValue('example_number') . '/';
     /* creating example database entry */
     /*db_query("INSERT INTO {textbook_companion_example} (chapter_id, number, caption, approval_status, timestamp) VALUES (%d, '%s', '%s', %d, %d)",
     $chapter_id,
-    $form_state['values']['example_number'],
-    $form_state['values']['example_caption'],
+    $form_state->getValue('example_number'],
+    $form_state->getValue('example_caption'],
     0,
     time()
     );
     $example_id = db_last_insert_id('textbook_companion_example', 'id');*/
-    $query = "INSERT INTO {textbook_companion_example} (chapter_id, number, caption, approval_date, approval_status, timestamp) VALUES (:chapter_id, :number, :caption, :approval_date,:approval_status, :timestamp)";
-    $args = array(
-        ":chapter_id" => $chapter_id,
-        ":number" => $form_state['values']['example_number'],
-        ":caption" => $form_state['values']['example_caption'],
-        ":approval_date" => time(),
-        ":approval_status" => 0,
-        ":timestamp" => time()
-    );
-    $result = \Drupal::database()->query($query, $args, $query);
-    $example_id = $result;
-    /* linking existing dependencies */
-    /* foreach ($form_state['values']['existing_depfile']['dep_chapter_example_files'] as $row)
-    {
-    if ($row > 0)
-    {
-    /* insterting into database */
-    /*db_query("INSERT INTO {textbook_companion_example_dependency} (example_id, dependency_id, approval_status, timestamp)
-    VALUES (%d, %d, %d, %d)",
-    $example_id,
-    $row,
-    0,
-    time()
-    );*/
-    /*$query = "INSERT INTO {textbook_companion_example_dependency} (example_id, dependency_id, approval_status, timestamp)
-    VALUES  (:example_id, :dependency_id, :approval_status, :timestamp)";
-    $args = array(
-    ":example_id"=>$example_id, 
-    ":dependency_id"=>$row,
-    ":approval_status"=> 0,
-    ":timestamp"=>time(),
-    );
-    $result = db_query($query, $args, array('return' => Database::RETURN_INSERT_ID));
-    }
-    }*/
+    $example_id = \Drupal::database()
+  ->insert('textbook_companion_example')
+  ->fields([
+    'chapter_id' => $chapter_row->id,
+    'number' => $form_state->getValue('example_number'),
+    'caption' => $form_state->getValue('example_caption'),
+    'approval_date' => time(),
+    'approval_status' => 0,
+    'timestamp' => time(),
+  ])
+  ->execute();
+    
     /* uploading files */
     foreach ($_FILES['files']['name'] as $file_form_name => $file_name)
       {
@@ -467,66 +490,62 @@ case 5:
             $file_type = 'S';
             if (file_exists($root_path . $dest_path . $_FILES['files']['name'][$file_form_name]))
               {
-                \Drupal::messenger()->addError(t("Error uploading file. File !filename already exists.", array(
+                $msg = \Drupal::messenger()->addError(t("Error uploading file. File !filename already exists.", array(
                     '!filename' => $_FILES['files']['name'][$file_form_name]
                 )));
-                return;
+                return $msg;
               }
             /* uploading file */
-            if (move_uploaded_file($_FILES['files']['tmp_name'][$file_form_name], $root_path . $dest_path . $_FILES['files']['name'][$file_form_name]))
+            else if (move_uploaded_file($_FILES['files']['tmp_name'][$file_form_name], $root_path . $dest_path . $_FILES['files']['name'][$file_form_name]))
               {
-                /* for uploaded files making an entry in the database */
-                /*db_query("INSERT INTO {textbook_companion_example_files} (example_id, filename, filepath, filemime, filesize, filetype, timestamp)
-                VALUES (%d, '%s', '%s', '%s', %d, '%s', %d)",
-                $example_id,
-                $_FILES['files']['name'][$file_form_name],
-                $dest_path . $_FILES['files']['name'][$file_form_name],
-                $_FILES['files']['type'][$file_form_name],
-                $_FILES['files']['size'][$file_form_name],
-                $file_type,
-                time()
-                );*/
-                $query = "INSERT INTO {textbook_companion_example_files} (example_id, filename, filepath,filemime, filesize, filetype, timestamp)
-          VALUES (:example_id, :filename ,:filepath,:filemime, :filesize, :filetype, :timestamp)";
-                $args = array(
-                    ":example_id" => $example_id,
-                    ":filename" => $_FILES['files']['name'][$file_form_name],
-                    ":filepath" => $filepath . $_FILES['files']['name'][$file_form_name],
-                    ":filemime" => 'application/zip',
-                    ":filesize" => $_FILES['files']['size'][$file_form_name],
-                    ":filetype" => $file_type,
-                    ":timestamp" => time()
-                );
-                $result = \Drupal::database()->query($query, $args, $query);
-                \Drupal::messenger()->addStatus($file_name . ' uploaded successfully.');
+                // Insert the file record into the database.
+$query = \Drupal::database()->insert('textbook_companion_example_files')
+  ->fields([
+    'example_id' => $example_id,
+    'filename' => $_FILES['files']['name'][$file_form_name],
+    'filepath' => $filepath . $_FILES['files']['name'][$file_form_name],
+    'filemime' => 'application/zip',
+    'filesize' => $_FILES['files']['size'][$file_form_name],
+    'filetype' => $file_type,
+    'timestamp' => time(),
+  ]);
+
+$result = $query->execute();
+
+// Show a success message.
+\Drupal::messenger()->addStatus(t('@filename uploaded successfully.', ['@filename' => $file_name]));
               }
             else
               {
-                \Drupal::messenger()->addError('Error uploading file : ' . $dest_path . '/' . $file_name);
+                $msg = \Drupal::messenger()->addError('Error uploading file : ' . $dest_path . '/' . $file_name);
+                return $msg;
               }
           }
       }
   
-    \Drupal::messenger()->addStatus('Example uploaded successfully.');
+    $msg = \Drupal::messenger()->addStatus('Example uploaded successfully.');
 	/* sending email */
-	$email_to = $user->mail;
-	$from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
-	$bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
-	$cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
-	$params['example_uploaded']['example_id'] = $example_id;
-	$params['example_uploaded']['user_id'] = $user->uid;
-	$params['example_uploaded']['headers'] = array(
-		'From' => $from,
-		'MIME-Version' => '1.0',
-		'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
-		'Content-Transfer-Encoding' => '8Bit',
-		'X-Mailer' => 'Drupal',
-		'Cc' => $cc,
-		'Bcc' => $bcc
-	);
-	if (!drupal_mail('textbook_companion', 'example_uploaded', $email_to, language_default(), $params, $from, TRUE))
-		\Drupal::messenger()->addError('Error sending email message.');
-	drupal_goto('textbook-companion/code');
+	// $email_to = $user->getMail();
+	// $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
+	// $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
+	// $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
+	// $params['example_uploaded']['example_id'] = $example_id;
+	// $params['example_uploaded']['user_id'] = $user->id();
+	// $params['example_uploaded']['headers'] = array(
+	// 	'From' => $from,
+	// 	'MIME-Version' => '1.0',
+	// 	'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
+	// 	'Content-Transfer-Encoding' => '8Bit',
+	// 	'X-Mailer' => 'Drupal',
+	// 	'Cc' => $cc,
+	// 	'Bcc' => $bcc
+	// );
+	// if (!drupal_mail('textbook_companion', 'example_uploaded', $email_to, language_default(), $params, $from, TRUE))
+	// 	\Drupal::messenger()->addError('Error sending email message.');
+  $response = new RedirectResponse(Url::fromRoute('textbook_companion.list_chapters')->toString());
+      $response->send();
+    return $msg;
+	//drupal_goto('');
     
     
   }
