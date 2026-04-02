@@ -49,7 +49,7 @@ textbook_companion.proposal_approval_form:
   requirements:
     _permission: 'approve book proposal'
 textbook_companion.proposal_status_form:
-  path: /textbook-companion/manage-proposal/status
+  path: /textbook-companion/manage-proposal/status/{id}
   defaults:
     _title: 'Proposal Status'
     _form: \Drupal\textbook_companion\Form\ProposalStatusForm
@@ -93,7 +93,7 @@ textbook_companion.edit_code_submission_form:
   requirements:
     _permission: 'bulk manage code'
 textbook_companion.upload_examples_admin_edit_form:
-  path: /textbook-companion/code-approval/editcode
+  path: /textbook-companion/code-approval/editcode/{example_id}
   defaults:
     _title: 'Admin Edit Example'
     _form: \Drupal\textbook_companion\Form\UploadExamplesAdminEditForm
@@ -240,7 +240,7 @@ textbook_companion.download_example:
   options:
     no_cache: TRUE
 textbook_companion.download_chapter:
-  path: /textbook-companion/download/chapter/
+  path: /textbook-companion/download/chapter/{chapter_id}
   defaults:
     _title: 'Code Download'
     _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_download_chapter'
@@ -249,16 +249,16 @@ textbook_companion.download_chapter:
   options:
     no_cache: TRUE
 textbook_companion.download_book:
-  path: /textbook-companion/generate-book
+  path: /textbook-companion/download/book/{preference_id}
   defaults:
-    _title: 'Generate Book'
-    _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_download_book'
+    _title: 'Download Completed Book'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_download_completed_book'
   requirements:
-    _permission: 'generate book'
+    _permission: 'download code'
   options:
     no_cache: TRUE
 textbook_companion.download_full_chapter:
-  path: /textbook-companion/full-download-external/chapter
+  path: /textbook-companion/full-download/chapter
   defaults:
     _title: 'Code Download'
     _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_download_full_chapter'
@@ -267,7 +267,7 @@ textbook_companion.download_full_chapter:
   options:
     no_cache: TRUE
 textbook_companion.download_full_book:
-  path: /textbook-companion/full-download-external/book
+  path: /textbook-companion/full-download/book
   defaults:
     _title: 'Code Download'
     _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_download_full_book'

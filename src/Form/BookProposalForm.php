@@ -530,7 +530,8 @@ $result = \Drupal::database()
   ])
   ->execute();
 
-    $dest_path = $result . '/';
+    $dest_path = $result;
+    //var_dump($root_path . $dest_path);die;
     if (!is_dir($root_path . $dest_path)) {
       mkdir($root_path . $dest_path);
     }
@@ -539,17 +540,18 @@ $result = \Drupal::database()
       if ($file_name) {
         /* checking file type */
         $file_type = 'S';
-        if (file_exists($root_path . $dest_path . $_FILES['files']['name'][$file_form_name])) {
+        if (file_exists($root_path . $dest_path . '/' . $_FILES['files']['name'][$file_form_name])) {
           // drupal_set_message(t("Error uploading file. File !filename already exists.", array('!filename' => $_FILES['files']['name'][$file_form_name])), 'error');
           unlink($root_path . $dest_path . $_FILES['files']['name'][$file_form_name]);
         } //file_exists($root_path . $dest_path . $_FILES['files']['name'][$file_form_name])
 			/* uploading file */
-        else if (move_uploaded_file($_FILES['files']['tmp_name'][$file_form_name], $root_path . $dest_path . $_FILES['files']['name'][$file_form_name])) {
+     // var_dump($root_path . $dest_path . $_FILES['files']['tmp_name'][$file_form_name]);die;
+        else if (move_uploaded_file($_FILES['files']['tmp_name'][$file_form_name], $root_path . $dest_path . '/' . $_FILES['files']['name'][$file_form_name])) {
           // Update the samplefilepath for the given proposal ID.
 $update_result = \Drupal::database()
   ->update('textbook_companion_proposal')
   ->fields([
-    'samplefilepath' => $dest_path . $_FILES['files']['name'][$file_form_name],
+    'samplefilepath' => $dest_path . '/' . $_FILES['files']['name'][$file_form_name],
   ])
   ->condition('id', $result)
   ->execute();
@@ -557,7 +559,7 @@ $update_result = \Drupal::database()
           \Drupal::messenger()->addStatus($file_name . ' uploaded successfully.');
         } //move_uploaded_file($_FILES['files']['tmp_name'][$file_form_name], $root_path . $dest_path . $_FILES['files']['name'][$file_form_name])
         else {
-          \Drupal::messenger()->addError('Error uploading file : ' . $dest_path . '/' . $file_name);
+          \Drupal::messenger()->addError('Error uploading file : ' . $dest_path . $file_name);
         }
       } //$file_name
     } //$_FILES['files']['name'] as $file_form_name => $file_name

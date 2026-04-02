@@ -141,7 +141,7 @@ public function textbook_companion_completed_books() {
     $query->fields('po', ['full_name', 'university', 'completion_date']);
     $query->condition('po.proposal_status', 3);
     $query->condition('pe.approval_status', 1);
-    $query->orderBy('po.completion_date');
+    $query->orderBy('po.completion_date', 'DESC');
 
     $results = $query->execute()->fetchAll();
 
@@ -311,23 +311,32 @@ $pending_rows[] = array(
       else {
         $proposed_completion_date = "-----";
       }
+      
+      $status_link = Link::fromTextAndUrl(t('Status'),Url::fromUri('internal:/textbook-companion/manage-proposal/status/' . $proposal_data->id))->toString();
+
+// Edit link
+$edit_link = Link::fromTextAndUrl(t('Edit'),
+  Url::fromRoute('textbook_companion.proposal_edit_form', ['id' => $proposal_data->id]))->toString();
+
+// Combine the links with a separator
+$mainLink = t('@linkApprove | @linkReject', array('@linkApprove' => $status_link, '@linkReject' => $edit_link));
       $proposal_rows[] = array(
                   date('d-m-Y', $proposal_data->creation_date),
-                  "{$preference_data->book} <br>
-      <em>by {$preference_data->author}</em>",
-                  l($proposal_data->full_name, 'user/' . $proposal_data->uid),
+                  $preference_data->book . ' by ' . $preference_data->author,
+                 Link::fromTextAndUrl($pending_data->full_name, Url::fromRoute('entity.user.canonical', ['user' => $proposal_data->uid])),
                   date('d-m-Y', $proposal_data->completion_date),
                   $proposed_completion_date,
                   $proposal_status,
-                  l('Status', 'textbook-companion/manage-proposal/status/' . $proposal_data->id) . ' | ' . l('Edit', 'textbook-companion/manage-proposal/edit/' . $proposal_data->id) . _tbc_ext($proposal_status, $preference_data->id)
+                  $mainLink
+                  //l('Status', 'textbook-companion/manage-proposal/status/' . $proposal_data->id) . ' | ' . l('Edit', 'textbook-companion/manage-proposal/edit/' . $proposal_data->id) . _tbc_ext($proposal_status, $preference_data->id)
               );
 
     }
     /* check if there are any pending proposals */
-    if (!$proposal_rows) {
-      \Drupal::messenger()->addStatus(t('There are no proposals.'));
-      return '';
-    }
+    // if (!$proposal_rows) {
+    //   \Drupal::messenger()->addStatus(t('There are no proposals.'));
+    //   return '';
+    // }
     $proposal_header = [
       'Date of Submission',
       'Title of the Book',
@@ -349,7 +358,12 @@ $pending_rows[] = array(
     //         'header' => $proposal_header,
     //         'rows' => $proposal_rows
     //     ));
-
+$output = [
+  '#theme' => 'table',
+  '#header' => $proposal_header,
+  '#rows' => $proposal_rows,
+  '#empty' => t('No proposals found.'),
+];
     return $output;
   }
 
@@ -1290,6 +1304,7 @@ $example_rows[] = array(
   public function textbook_companion_download_example_file() {
     $route_match = \Drupal::routeMatch();
     $example_file_id = (int) $route_match->getParameter('example_file_id');
+    //var_dump($example_file_id);die;
     $service = \Drupal::service('textbook_companion_global');
     $root_path = $service->textbook_companion_path();
     $example_files_q = \Drupal::database()->query(
@@ -1297,12 +1312,12 @@ $example_rows[] = array(
        JOIN {textbook_companion_example} tce ON tcef.example_id = tce.id
        JOIN {textbook_companion_chapter} tcc ON tce.chapter_id = tcc.id
        JOIN {textbook_companion_preference} tcp ON tcc.preference_id = tcp.id
-       WHERE tcef.id = :example_id LIMIT 1",
+       WHERE tcef.example_id = :example_id LIMIT 1",
       [':example_id' => $example_file_id]
     );
 
     $example_file_data = $example_files_q->fetchObject();
-
+//var_dump($example_file_data);die;
     // Check if the file data exists.
     if (!$example_file_data) {
       throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException();
@@ -1310,7 +1325,7 @@ $example_rows[] = array(
 
     // Construct the file path.
     $file_path = $root_path . $example_file_data->directory_name . '/' . $example_file_data->filepath;
-//var_dump($root_path .  ' ' . $example_file_data->filepath);die;
+//var_dump($file_path);die;
     // Check if the file exists on the server.
     if (!file_exists($file_path)) {
       throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException();
@@ -1430,10 +1445,11 @@ if ($zip_file_count > 0 && file_exists($zip_filename)) {
   }
 
   public function textbook_companion_download_chapter() {
-    $chapter_id = arg(3);
+    $route_match = \Drupal::routeMatch();
+    $chapter_id = (int) $route_match->getParameter('chapter_id');
+    $service = \Drupal::service('textbook_companion_global');
     //var_dump($chapter_id);die;
-    global $root_path;
-    $root_path = textbook_companion_path();
+    $root_path = $service->textbook_companion_path();
     /* get example data */
     /*$chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE id = %d", $chapter_id);
     $chapter_data = db_fetch_object($chapter_q);*/
@@ -1450,8 +1466,8 @@ if ($zip_file_count > 0 && file_exists($zip_filename)) {
     $zip_filename = $root_path . 'tbc_download_temp/' . 'zip-' . time() . '-' . rand(0, 999999) . '.zip';
 
     /* creating zip archive on the server */
-    $zip = new ZipArchive();
-    $zip->open($zip_filename, ZipArchive::CREATE);
+    $zip = new \ZipArchive();
+    $zip->open($zip_filename, \ZipArchive::CREATE);
     /*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE chapter_id = %d AND approval_status = 1", $chapter_id);*/
     $query = \Drupal::database()->select('textbook_companion_example');
     $query->fields('textbook_companion_example');
@@ -1460,11 +1476,6 @@ if ($zip_file_count > 0 && file_exists($zip_filename)) {
     $example_q = $query->execute();
     while ($example_row = $example_q->fetchObject()) {
       $EX_PATH = 'EX' . $example_row->number . '/';
-      /*$example_files_q = db_query("SELECT * FROM {textbook_companion_example_files} WHERE example_id = %d", $example_row->id);*/
-      /*$query = db_select('textbook_companion_example_files');
-        $query->fields('textbook_companion_example_files');
-        $query->condition('example_id', $example_row->id);
-        $example_files_q = $query->execute();*/
       $example_files_q = \Drupal::database()->query("select * from textbook_companion_preference tcp join textbook_companion_chapter tcc on tcp.id=tcc.preference_id join textbook_companion_example tce ON tcc.id=tce.chapter_id join textbook_companion_example_files tcef on tce.id=tcef.example_id where tcef.example_id= :example_id", [
         ':example_id' => $example_row->id
         ]);
@@ -1475,17 +1486,25 @@ if ($zip_file_count > 0 && file_exists($zip_filename)) {
     $zip_file_count = $zip->numFiles;
     $zip->close();
     if ($zip_file_count > 0) {
+      $response = new BinaryFileResponse($zip_filename);
+  $response->setContentDisposition(
+    ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+    'CH' . $chapter_data->number . '.zip'
+  );
+  $response->deleteFileAfterSend(TRUE); // Delete the file after sending it
+
+  return $response;
       /* download zip file */
-      header('Content-Type: application/zip');
-      header('Content-disposition: attachment; filename="CH' . $chapter_data->number . '.zip"');
-      header('Content-Length: ' . filesize($zip_filename));
-      ob_clean();
-      readfile($zip_filename);
-      unlink($zip_filename);
+      // header('Content-Type: application/zip');
+      // header('Content-disposition: attachment; filename="CH' . $chapter_data->number . '.zip"');
+      // header('Content-Length: ' . filesize($zip_filename));
+      // ob_clean();
+      // readfile($zip_filename);
+      // unlink($zip_filename);
     }
     else {
       \Drupal::messenger()->addError("There are no examples in this chapter to download");
-      drupal_goto('textbook-companion/textbook-run');
+      return $this->redirect('<current>');
     }
   }
 
@@ -1500,6 +1519,110 @@ if ($zip_file_count > 0 && file_exists($zip_filename)) {
       _latex_generate_files($preference_id, FALSE);
     }
   }
+public function textbook_companion_download_completed_book() {
+$user = \Drupal::currentUser();
+    
+    $route_match = \Drupal::routeMatch();
+
+$book_id = (int) $route_match->getParameter('preference_id');
+$serivce = \Drupal::service("textbook_companion_global");
+$root_path = $serivce->textbook_companion_path();
+    $root_temp_path = $serivce->textbook_companion_temp_path();
+    $database = \Drupal::database();
+
+// Query the database
+$query = $database->select('textbook_companion_preference', 'tcp');
+$query->fields('tcp');
+$query->condition('id', $book_id);
+$result = $query->execute();
+$book_data = $result->fetchObject();
+
+// Process the data
+$zipname = str_replace(' ', '_', $book_data->book);
+$directory_name = $book_data->directory_name;
+$BK_PATH = $zipname . '/';
+$temp_dir = $root_temp_path . 'tbc_download_temp';
+if (!is_dir($temp_dir)) {
+    mkdir($temp_dir, 0777, true);
+}
+
+// Generate a unique zip filename
+$zip_filename = $temp_dir . '/zip-' . time() . '-' . rand(0, 999999) . '.zip';
+
+// Create a new zip archive
+$zip = new \ZipArchive();
+if ($zip->open($zip_filename, \ZipArchive::CREATE) !== TRUE) {
+    throw new \RuntimeException("Cannot open zip file for writing: $zip_filename");
+}
+
+// Query chapters from the database
+$database = \Drupal::database();
+$query = $database->select('textbook_companion_chapter', 'tcc');
+$query->fields('tcc');
+$query->condition('preference_id', $book_id);
+$chapter_q = $query->execute();
+// Iterate through chapters
+while ($chapter_row = $chapter_q->fetchObject()) {
+    $CH_PATH = 'CH' . $chapter_row->number . '/';
+
+    // Query examples for the current chapter
+    $example_query = \Drupal::database()->select('textbook_companion_example', 'tce');
+    $example_query->fields('tce');
+    $example_query->condition('chapter_id', $chapter_row->id);
+    $example_query->condition('approval_status', 1);
+    $example_q = $example_query->execute();
+
+    // Iterate through examples
+    while ($example_row = $example_q->fetchObject()) {
+        $EX_PATH = 'EX' . $example_row->number . '/';
+
+        // Query files for the current example
+        $file_query = \Drupal::database()->select('textbook_companion_example_files', 'tcef');
+        $file_query->fields('tcef');
+        $file_query->condition('example_id', $example_row->id);
+        $example_files_q = $file_query->execute();
+
+        // Add each file to the zip
+        while ($example_files_row = $example_files_q->fetchObject()) {
+            $source = $root_path . $directory_name . '/' . $example_files_row->filepath;
+            $destination = $BK_PATH . $CH_PATH . $EX_PATH . $example_files_row->filename;
+            if (file_exists($source)) {
+                $zip->addFile($source, $destination);
+            } else {
+                \Drupal::logger('tbc_download')->warning('File not found: ' . $source);
+            }
+        }
+    }
+}
+$zip_file_count = $zip->numFiles;
+$zip->close();
+
+if ($zip_file_count > 0) {
+    // Download zip file
+    $response = new BinaryFileResponse($zip_filename);
+  $response->setContentDisposition(
+    ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+    $book_data->book . '.zip'
+  );
+  $response->deleteFileAfterSend(TRUE); // Delete the file after sending it
+
+  return $response;
+    // $response = new \Drupal\Core\File\FileResponse(
+    //     $zip_filename,
+    //     str_replace(' ', '_', $book_data->book) . '.zip',
+    //     'application/zip'
+    // );
+    // $response->send();
+    // // Delete the temporary zip file after download
+    // if (file_exists($zip_filename)) {
+    //     unlink($zip_filename);
+    // }
+    // exit;
+} else {
+    \Drupal::messenger()->addError(t("There are no examples in this book to download"));
+    return new \Drupal\Core\Routing\TrustedRedirectResponse('/textbook-companion/completed-books');
+}
+}
 
   public function textbook_companion_download_full_chapter() {
     $chapter_id = arg(3);

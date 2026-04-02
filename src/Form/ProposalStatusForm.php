@@ -10,6 +10,12 @@ namespace Drupal\textbook_companion\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\Core\Url;
+use Drupal\Core\Link;
+use Drupal\user\Entity\User;
+use Symfony\Component\HttpFoundation\Response;
+use Drupal\Core\Routing\RouteMatchInterface;
 
 class ProposalStatusForm extends FormBase {
 
@@ -20,19 +26,25 @@ class ProposalStatusForm extends FormBase {
     return 'proposal_status_form';
   }
 
-  public function buildForm(array $from, \Drupal\Core\Form\FormStateInterface $form_state) {
+  public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
+   // var_dump("hi");die;
     $user = \Drupal::currentUser();
     /* get current proposal */
-    $proposal_id = arg(3);
+    $route_match = \Drupal::routeMatch();
+
+$proposal_id = (int) $route_match->getParameter('id');
+
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d", $proposal_id);*/
     $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
     $query->condition('id', $proposal_id);
     $proposal_q = $query->execute();
-    if (!$proposal_data = $proposal_q->fetchObject()) {
-      \Drupal::messenger()->addError(t('Invalid proposal selected. Please try again.'));
-      drupal_goto('textbook-companion/manage-proposal');
-      return;
+    $proposal_data = $proposal_q->fetchObject();
+    if (!$proposal_data) {
+      $msg = \Drupal::messenger()->addError(t('Invalid proposal selected. Please try again.'));
+      $response = new RedirectResponse(Url::fromRoute('textbook_companion._proposal_all')->toString());
+      $response->send();
+      return $msg;
     }
     $form['full_name'] = [
       '#type' => 'item',
@@ -41,7 +53,7 @@ class ProposalStatusForm extends FormBase {
     ];
     $form['email'] = [
       '#type' => 'item',
-      '#markup' => \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid)->mail,
+      '#markup' => \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid)->getEmail(),
       '#title' => t('Email'),
     ];
     $form['mobile'] = [
@@ -257,9 +269,10 @@ class ProposalStatusForm extends FormBase {
     $query->condition('id', $proposal_id);
     $proposal_q = $query->execute();
     if (!$proposal_data = $proposal_q->fetchObject()) {
-      \Drupal::messenger()->addError(t('Invalid proposal selected. Please try again.'));
-      drupal_goto('textbook-companion/manage-proposal');
-      return;
+      $msg = \Drupal::messenger()->addError(t('Invalid proposal selected. Please try again.'));
+      $response = new RedirectResponse(Url::fromRoute('textbook_companion._proposal_all')->toString());
+      $response->send();
+      return $msg;
     }
     if ($form_state->getValue(['submit_all_code']) == 1) {
       /*db_query("UPDATE {textbook_companion_proposal} SET proposal_status = 3 WHERE id = %d", $proposal_id);*/
@@ -269,7 +282,7 @@ class ProposalStatusForm extends FormBase {
       $num_updated = $query->execute();
       /* sending email */
       $book_user = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid);
-      $email_to = $book_user->mail;
+      $email_to = $book_user->getEmail();
       $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
       $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
       $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
@@ -284,14 +297,17 @@ class ProposalStatusForm extends FormBase {
         'Cc' => $cc,
         'Bcc' => $bcc,
       ];
-      if (!drupal_mail('textbook_companion', 'all_code_submitted_status_changed', $email_to, language_default(), $params, \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email'), TRUE)) {
-        \Drupal::messenger()->addError('Error sending email message.');
-      }
+      // if (!drupal_mail('textbook_companion', 'all_code_submitted_status_changed', $email_to, language_default(), $params, \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email'), TRUE)) {
+      //   \Drupal::messenger()->addError('Error sending email message.');
+      // }
       \Drupal::messenger()->addStatus('User has been notified of that code submission interface is now available .');
-      drupal_goto('textbook-companion/manage-proposal');
+      $response = new RedirectResponse(Url::fromRoute('textbook_companion._proposal_all')->toString());
+      $response->send();
+      //return $msg;
       return;
     }
     else {
+      $service = \Drupal::service('textbook_companion_global');
       if ($form_state->getValue(['completed']) == 1) {
         /* set the book status to completed */
         /*db_query("UPDATE {textbook_companion_proposal} SET proposal_status = 3 WHERE id = %d", $proposal_id);*/
@@ -302,10 +318,10 @@ class ProposalStatusForm extends FormBase {
         ]);
         $query->condition('id', $proposal_id);
         $num_updated = $query->execute();
-        CreateReadmeFileTextbookCompanion($proposal_id);
+        $service->CreateReadmeFileTextbookCompanion($proposal_id);
         /* sending email */
         $book_user = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid);
-        $email_to = $book_user->mail;
+        $email_to = $book_user->getEmail();
         $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
         $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
         $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
@@ -320,18 +336,21 @@ class ProposalStatusForm extends FormBase {
           'Cc' => $cc,
           'Bcc' => $bcc,
         ];
-        if (!drupal_mail('textbook_companion', 'proposal_completed', $email_to, language_default(), $param, $from, TRUE)) {
-          \Drupal::messenger()->addError('Error sending email message.');
-        }
+        // if (!drupal_mail('textbook_companion', 'proposal_completed', $email_to, language_default(), $param, $from, TRUE)) {
+        //   \Drupal::messenger()->addError('Error sending email message.');
+        // }
         \Drupal::messenger()->addStatus('Congratulations! Book proposal has been marked as completed. User has been notified of the completion.');
       }
       else {
         \Drupal::messenger()->addError('Please select any one action.');
-        drupal_goto('textbook-companion/manage-proposal/status/' . $proposal_id);
+        $url = Url::fromUserInput('/textbook-companion/manage-proposal/status/' . $proposal_id);
+$response = new RedirectResponse($url->toString());
+        $response->send();
         return;
       }
     }
-    drupal_goto('textbook-companion/manage-proposal');
+    $response = new RedirectResponse(Url::fromRoute('textbook_companion._proposal_all')->toString());
+        $response->send();
     return;
   }
 

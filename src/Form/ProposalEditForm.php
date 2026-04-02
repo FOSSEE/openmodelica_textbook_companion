@@ -10,6 +10,11 @@ namespace Drupal\textbook_companion\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Url;
+use Drupal\Core\Link;
+use Drupal\user\Entity\User;
+use Symfony\Component\HttpFoundation\Response;
+use Drupal\Core\Routing\RouteMatchInterface;
 
 class ProposalEditForm extends FormBase {
 
@@ -23,7 +28,9 @@ class ProposalEditForm extends FormBase {
   public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state, $nonaicte_book = NULL) {
     $user = \Drupal::currentUser();
     /* get current proposal */
-    $proposal_id = arg(3);
+    $route_match = \Drupal::routeMatch();
+
+$proposal_id = (int) $route_match->getParameter('id');
     /*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d", $proposal_id);*/
     $query = \Drupal::database()->select('textbook_companion_proposal');
     $query->fields('textbook_companion_proposal');
@@ -33,13 +40,15 @@ class ProposalEditForm extends FormBase {
       $proposal_data = $proposal_q->fetchObject();
       if (!$proposal_data) {
         \Drupal::messenger()->addError(t('Invalid proposal selected. Please try again.'));
-        drupal_goto('textbook-companion/manage-proposal');
+        $response = new RedirectResponse(Url::fromRoute('textbook_companion._proposal_pending')->toString());
+      $response->send();
         return;
       }
     }
     else {
       \Drupal::messenger()->addError(t('Invalid proposal selected. Please try again.'));
-      drupal_goto('textbook-companion/manage-proposal');
+      $response = new RedirectResponse(Url::fromRoute('textbook_companion._proposal_pending')->toString());
+      $response->send();
       return;
     }
     $user_data = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid);
@@ -48,31 +57,15 @@ class ProposalEditForm extends FormBase {
     $query = \Drupal::database()->select('textbook_companion_preference');
     $query->fields('textbook_companion_preference');
     $query->condition('proposal_id', $proposal_id);
-    $query->condition('pref_number', 1);
+    //$query->condition('pref_number', 1);
     $query->range(0, 1);
     $preference1_q = $query->execute();
     $preference1_data = $preference1_q->fetchObject();
-    /********************************************************************/
-    $query = \Drupal::database()->select('textbook_companion_preference');
-    $query->fields('textbook_companion_preference');
-    $query->condition('proposal_id', $proposal_id);
-    $query->condition('pref_number', 2);
-    $query->range(0, 1);
-    $preference2_q = $query->execute();
-    $preference2_data = $preference2_q->fetchObject();
-    /**************************************************************************/
-    $query = \Drupal::database()->select('textbook_companion_preference');
-    $query->fields('textbook_companion_preference');
-    $query->condition('proposal_id', $proposal_id);
-    $query->condition('pref_number', 3);
-    $query->range(0, 1);
-    $preference3_q = $query->execute();
-    $preference3_data = $preference3_q->fetchObject();
     /*************************************************************************/
     $form['full_name'] = [
       '#type' => 'textfield',
       '#title' => t('Full Name'),
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 50,
       '#required' => TRUE,
       '#default_value' => $proposal_data->full_name,
@@ -80,14 +73,14 @@ class ProposalEditForm extends FormBase {
     $form['email_id'] = [
       '#type' => 'textfield',
       '#title' => t('Email'),
-      '#size' => 30,
-      '#value' => $user_data->mail,
+      //'#size' => 30,
+      '#value' => $user_data->getEmail(),
       '#disabled' => TRUE,
     ];
     $form['mobile'] = [
       '#type' => 'textfield',
       '#title' => t('Mobile No.'),
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 15,
       '#required' => TRUE,
       '#default_value' => $proposal_data->mobile,
@@ -109,7 +102,7 @@ class ProposalEditForm extends FormBase {
     $form['course'] = [
       '#type' => 'textfield',
       '#title' => t('Course'),
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 50,
       '#required' => TRUE,
       '#default_value' => $proposal_data->course,
@@ -124,7 +117,7 @@ class ProposalEditForm extends FormBase {
     $form['university'] = [
       '#type' => 'textfield',
       '#title' => t('University/ Institute'),
-      '#size' => 80,
+      //'#size' => 80,
       '#maxlength' => 200,
       '#required' => TRUE,
       '#attributes' => [
@@ -147,7 +140,7 @@ class ProposalEditForm extends FormBase {
     $form['other_country'] = [
       '#type' => 'textfield',
       '#title' => t('Other than India'),
-      '#size' => 100,
+      //'#size' => 100,
       '#attributes' => [
         'placeholder' => t('Enter your country name')
         ],
@@ -163,7 +156,7 @@ class ProposalEditForm extends FormBase {
     $form['other_state'] = [
       '#type' => 'textfield',
       '#title' => t('State other than India'),
-      '#size' => 100,
+      //'#size' => 100,
       '#default_value' => $proposal_data->state,
       '#attributes' => [
         'placeholder' => t('Enter your state/region name')
@@ -179,7 +172,7 @@ class ProposalEditForm extends FormBase {
     $form['other_city'] = [
       '#type' => 'textfield',
       '#title' => t('City other than India'),
-      '#size' => 100,
+      //'#size' => 100,
       '#default_value' => $proposal_data->city,
       '#attributes' => [
         'placeholder' => t('Enter your city name')
@@ -225,7 +218,7 @@ class ProposalEditForm extends FormBase {
     $form['pincode'] = [
       '#type' => 'textfield',
       '#title' => t('Pincode'),
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 6,
       '#required' => FALSE,
       '#default_value' => $proposal_data->pincode,
@@ -241,7 +234,7 @@ class ProposalEditForm extends FormBase {
     $form['faculty'] = [
       '#type' => 'hidden',
       '#title' => t('College Teacher/Professor'),
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 100,
       '#required' => TRUE,
       '#default_value' => $proposal_data->faculty,
@@ -249,7 +242,7 @@ class ProposalEditForm extends FormBase {
     $form['reviewer'] = [
       '#type' => 'hidden',
       '#title' => t('Reviewer'),
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 100,
       '#default_value' => $proposal_data->reviewer,
     ];
@@ -257,21 +250,36 @@ class ProposalEditForm extends FormBase {
       '#type' => 'textfield',
       '#title' => t('Expected Date of Completion'),
       '#description' => t('Input date format should be DD-MM-YYYY. Eg: 23-03-2011'),
-      '#size' => 10,
+      //'#size' => 10,
       '#maxlength' => 10,
       '#default_value' => date('d-m-Y', $proposal_data->completion_date),
     ];
     $form['version'] = [
-      '#type' => 'textfield',
+      '#type' => 'select',
       '#title' => t('OpenModelica Version'),
-      '#size' => 10,
-      '#maxlength' => 20,
+      //'#size' => 10,
+      '#maxlength' => 100,
+      '#options' => _list_of_software_version(),
       '#default_value' => $proposal_data->openmodelica_version,
+    ];
+    $form['other_version'] = [
+      '#type' => 'textfield',
+      //'#size' => 30,
+      '#maxlength' => 50,
+      //'#required' => TRUE,
+		'#description' => t('Specify the other version used'),
+      '#states' => [
+        'visible' => [
+          ':input[name="version"]' => [
+            'value' => 'Other version'
+            ]
+          ]
+        ],
     ];
     $form['operating_system'] = [
       '#type' => 'textfield',
       '#title' => t('Operating System'),
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 50,
       '#default_value' => $proposal_data->operating_system,
     ];
@@ -284,7 +292,7 @@ class ProposalEditForm extends FormBase {
     $form['preference1']['book1'] = [
       '#type' => 'textfield',
       '#title' => t('Title of the book'),
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 100,
       '#required' => TRUE,
       '#default_value' => $preference1_data->book,
@@ -292,7 +300,7 @@ class ProposalEditForm extends FormBase {
     $form['preference1']['author1'] = [
       '#type' => 'textfield',
       '#title' => t('Author Name'),
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 100,
       '#required' => TRUE,
       '#default_value' => $preference1_data->author,
@@ -300,7 +308,7 @@ class ProposalEditForm extends FormBase {
     $form['preference1']['isbn1'] = [
       '#type' => 'textfield',
       '#title' => t('ISBN No'),
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 25,
       '#required' => TRUE,
       '#default_value' => $preference1_data->isbn,
@@ -308,7 +316,7 @@ class ProposalEditForm extends FormBase {
     $form['preference1']['publisher1'] = [
       '#type' => 'textfield',
       '#title' => t('Publisher & Place'),
-      '#size' => 30,
+      //'#size' => 30,
       '#maxlength' => 50,
       '#required' => TRUE,
       '#default_value' => $preference1_data->publisher,
@@ -316,7 +324,7 @@ class ProposalEditForm extends FormBase {
     $form['preference1']['edition1'] = [
       '#type' => 'textfield',
       '#title' => t('Edition'),
-      '#size' => 4,
+      //'#size' => 4,
       '#maxlength' => 2,
       '#required' => TRUE,
       '#default_value' => $preference1_data->edition,
@@ -324,136 +332,18 @@ class ProposalEditForm extends FormBase {
     $form['preference1']['year1'] = [
       '#type' => 'textfield',
       '#title' => t('Year of pulication'),
-      '#size' => 4,
+      //'#size' => 4,
       '#maxlength' => 4,
       '#required' => TRUE,
       '#default_value' => $preference1_data->year,
     ];
-    if ($preference2_data) {
-      $form['preference2'] = [
-        '#type' => 'fieldset',
-        '#title' => t('Book Preference 2'),
-        '#collapsible' => TRUE,
-        '#collapsed' => FALSE,
-      ];
-      $form['preference2']['book2'] = [
-        '#type' => 'textfield',
-        '#title' => t('Title of the book'),
-        '#size' => 30,
-        '#maxlength' => 100,
-        '#required' => TRUE,
-        '#default_value' => $preference2_data->book,
-      ];
-      $form['preference2']['author2'] = [
-        '#type' => 'textfield',
-        '#title' => t('Author Name'),
-        '#size' => 30,
-        '#maxlength' => 100,
-        '#required' => TRUE,
-        '#default_value' => $preference2_data->author,
-      ];
-      $form['preference2']['isbn2'] = [
-        '#type' => 'textfield',
-        '#title' => t('ISBN No'),
-        '#size' => 30,
-        '#maxlength' => 25,
-        '#required' => TRUE,
-        '#default_value' => $preference2_data->isbn,
-      ];
-      $form['preference2']['publisher2'] = [
-        '#type' => 'textfield',
-        '#title' => t('Publisher & Place'),
-        '#size' => 30,
-        '#maxlength' => 50,
-        '#required' => TRUE,
-        '#default_value' => $preference2_data->publisher,
-      ];
-      $form['preference2']['edition2'] = [
-        '#type' => 'textfield',
-        '#title' => t('Edition'),
-        '#size' => 4,
-        '#maxlength' => 2,
-        '#required' => TRUE,
-        '#default_value' => $preference2_data->edition,
-      ];
-      $form['preference2']['year2'] = [
-        '#type' => 'textfield',
-        '#title' => t('Year of pulication'),
-        '#size' => 4,
-        '#maxlength' => 4,
-        '#required' => TRUE,
-        '#default_value' => $preference2_data->year,
-      ];
-    }
-    if ($preference3_data) {
-      $form['preference3'] = [
-        '#type' => 'fieldset',
-        '#title' => t('Book Preference 3'),
-        '#collapsible' => TRUE,
-        '#collapsed' => FALSE,
-      ];
-      $form['preference3']['book3'] = [
-        '#type' => 'textfield',
-        '#title' => t('Title of the book'),
-        '#size' => 30,
-        '#maxlength' => 100,
-        '#required' => TRUE,
-        '#default_value' => $preference3_data->book,
-      ];
-      $form['preference3']['author3'] = [
-        '#type' => 'textfield',
-        '#title' => t('Author Name'),
-        '#size' => 30,
-        '#maxlength' => 100,
-        '#required' => TRUE,
-        '#default_value' => $preference3_data->author,
-      ];
-      $form['preference3']['isbn3'] = [
-        '#type' => 'textfield',
-        '#title' => t('ISBN No'),
-        '#size' => 30,
-        '#maxlength' => 25,
-        '#required' => TRUE,
-        '#default_value' => $preference3_data->isbn,
-      ];
-      $form['preference3']['publisher3'] = [
-        '#type' => 'textfield',
-        '#title' => t('Publisher & Place'),
-        '#size' => 30,
-        '#maxlength' => 50,
-        '#required' => TRUE,
-        '#default_value' => $preference3_data->publisher,
-      ];
-      $form['preference3']['edition3'] = [
-        '#type' => 'textfield',
-        '#title' => t('Edition'),
-        '#size' => 4,
-        '#maxlength' => 2,
-        '#required' => TRUE,
-        '#default_value' => $preference3_data->edition,
-      ];
-      $form['preference3']['year3'] = [
-        '#type' => 'textfield',
-        '#title' => t('Year of pulication'),
-        '#size' => 4,
-        '#maxlength' => 4,
-        '#required' => TRUE,
-        '#default_value' => $preference3_data->year,
-      ];
-    }
+    
     /* hidden fields */
     $form['hidden_preference_id1'] = [
       '#type' => 'hidden',
       '#value' => $preference1_data->id,
     ];
-    /* $form['hidden_preference_id2'] = array(
-    '#type' => 'hidden',
-    '#value' => $preference2_data->id
-    );
-    $form['hidden_preference_id3'] = array(
-    '#type' => 'hidden',
-    '#value' => $preference3_data->id
-    );*/
+    
     $form['hidden_proposal_id'] = [
       '#type' => 'hidden',
       '#value' => $proposal_id,
@@ -464,10 +354,10 @@ class ProposalEditForm extends FormBase {
     ];
     // @FIXME
     // l() expects a Url object, created from a route name or external URI.
-    // $form['cancel'] = array(
-    //         '#type' => 'item',
-    //         '#markup' => l(t('Cancel'), 'textbook-companion/manage-proposal')
-    //     );
+    $form['cancel'] = array(
+            '#type' => 'item',
+            '#markup' => Link::fromTextAndUrl('Cancel', Url::fromUri('internal:/textbook-companion/manage-proposal'))->toString()
+        );
 
     return $form;
   }
@@ -476,33 +366,13 @@ class ProposalEditForm extends FormBase {
     if ($form_state->getValue(['book1']) && $form_state->getValue(['author1'])) {
       $bk1 = trim($form_state->getValue(['book1']));
       $auth1 = trim($form_state->getValue(['author1']));
-      if (_dir_name($bk1, $auth1, $form_state->getValue([
+      if (\Drupal::service('textbook_companion_global')->_dir_name($bk1, $auth1, $form_state->getValue([
         'hidden_preference_id1'
         ])) != NULL) {
         $form_state->setValue(['dir_name1'], _dir_name($bk1, $auth1, $form_state->getValue([
           'hidden_preference_id1'
           ])));
       }
-    }
-    /*if ($form_state['values']['book2'] && $form_state['values']['author2'])
-    {
-    $bk2 = trim($form_state['values']['book2']);
-    $auth2 = trim($form_state['values']['author2']);
-    
-    if (_dir_name($bk2, $auth2, $form_state['values']['hidden_preference_id2']) != NULL)
-    {
-    $form_state['values']['dir_name2'] = _dir_name($bk2, $auth2, $form_state['values']['hidden_preference_id2']);
-    }
-    }
-    if ($form_state['values']['book3'] && $form_state['values']['author3'])
-    {
-    $bk3 = trim($form_state['values']['book3']);
-    $auth3 = trim($form_state['values']['author3']);
-    
-    if (_dir_name($bk3, $auth3, $form_state['values']['hidden_preference_id3']) != NULL)
-    {
-    $form_state['values']['dir_name3'] = _dir_name($bk3, $auth3, $form_state['values']['hidden_preference_id3']);
-    }
     }
     /* mobile */
     if (!preg_match('/^[0-9\ \+]{0,15}$/', $form_state->getValue(['mobile']))) {
@@ -540,9 +410,9 @@ class ProposalEditForm extends FormBase {
     if (!preg_match('/^[0-9\-xX]+$/', $form_state->getValue(['isbn1']))) {
       $form_state->setErrorByName('isbn1', t('Invalid ISBN for Book Preference 1'));
     }
-    if ($form_state->getValue(['version']) == 'olderversion') {
-      if ($form_state->getValue(['older']) == '') {
-        $form_state->setErrorByName('older', t('Please provide valid version'));
+    if ($form_state->getValue(['version']) == 'Other Version') {
+      if ($form_state->getValue(['other_version']) == '') {
+        $form_state->setErrorByName('other_version', t('Please provide valid version'));
       }
     }
     return;
@@ -553,8 +423,8 @@ class ProposalEditForm extends FormBase {
     list($d, $m, $y) = explode('-', $form_state->getValue(['completion_date']));
     $completion_date_timestamp = mktime(0, 0, 0, $m, $d, $y);
     $proposal_id = $form_state->getValue(['hidden_proposal_id']);
-    if ($form_state->getValue(['version']) == 'olderversion') {
-      $form_state->setValue(['version'], $form_state->getValue(['older']));
+    if ($form_state->getValue(['version']) == 'Other Version') {
+      $form_state->setValue(['version'], $form_state->getValue(['other_version']));
     }
     if ($form_state->getValue(['country']) == 'other') {
       $form_state->setValue(['country'], $form_state->getValue(['other_country']));
@@ -578,6 +448,7 @@ class ProposalEditForm extends FormBase {
       'operating_system' => $form_state->getValue(['operating_system']),
       'openmodelica_version' => $form_state->getValue(['version']),
     ]);
+    $service = \Drupal::service('textbook_companion_global');
     $query->condition('id', $proposal_id);
     $num_updated = $query->execute();
     $query = \Drupal::database()->select('textbook_companion_preference');
@@ -589,8 +460,8 @@ class ProposalEditForm extends FormBase {
     $preference1_data = $preference1_q->fetchObject();
     $preference1_id = $preference1_data->id;
     if ($preference1_data) {
-      del_book_pdf($preference1_data->id);
-      RenameDir($preference1_id, $form_state->getValue(['dir_name1']));
+      //del_book_pdf($preference1_data->id);
+      $service->RenameDir($preference1_id, $form_state->getValue(['dir_name1']));
       $query = \Drupal::database()->update('textbook_companion_preference');
       $query->fields([
         'book' => $form_state->getValue(['book1']),
@@ -604,58 +475,7 @@ class ProposalEditForm extends FormBase {
       $query->condition('id', $preference1_id);
       $num_updated = $query->execute();
     }
-    /**************************************************************/
-    /**$query = db_select('textbook_companion_preference');
-    $query->fields('textbook_companion_preference');
-    $query->condition('proposal_id', $proposal_id);
-    $query->condition('pref_number', 2);
-    $query->range(0, 1);
-    $preference2_q = $query->execute();
-    $preference2_data = $preference2_q->fetchObject();
-    $preference2_id = $preference2_data->id;
-    if ($preference2_data)
-    {
-    del_book_pdf($preference2_data->id);        
-    RenameDir($preference2_id, $form_state['values']['dir_name2']);
-    $query = db_update('textbook_companion_preference');
-    $query->fields(array(
-    'book' => $form_state['values']['book2'],
-    'author' => $form_state['values']['author2'],
-    'isbn' => $form_state['values']['isbn2'],
-    'publisher' => $form_state['values']['publisher2'],
-    'edition' => $form_state['values']['edition2'],
-    'year' => $form_state['values']['year2'],
-    'directory_name' => $form_state['values']['dir_name2']
-    ));
-    $query->condition('id', $preference2_id);
-    $num_updated = $query->execute();
-    }
-    /*****************************************************************/
-    /**$query = db_select('textbook_companion_preference');
-    $query->fields('textbook_companion_preference');
-    $query->condition('proposal_id', $proposal_id);
-    $query->condition('pref_number', 3);
-    $query->range(0, 1);
-    $preference3_q = $query->execute();
-    $preference3_data = $preference3_q->fetchObject();
-    $preference3_id = $preference3_data->id;
-    if ($preference3_data)
-    {
-    del_book_pdf($preference3_data->id);        
-    RenameDir($preference3_id, $form_state['values']['dir_name3']);
-    $query = db_update('textbook_companion_preference');
-    $query->fields(array(
-    'book' => $form_state['values']['book3'],
-    'author' => $form_state['values']['author3'],
-    'isbn' => $form_state['values']['isbn3'],
-    'publisher' => $form_state['values']['publisher3'],
-    'edition' => $form_state['values']['edition3'],
-    'year' => $form_state['values']['year3'],
-    'directory_name' => $form_state['values']['dir_name3']
-    ));
-    $query->condition('id', $preference3_id);
-    $num_updated = $query->execute();
-    }**/
+    
     \Drupal::messenger()->addStatus(t('Proposal Updated'));
   }
 

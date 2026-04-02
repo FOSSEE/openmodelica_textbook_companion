@@ -411,19 +411,19 @@ $chapter_id = \Drupal::database()->insert('textbook_companion_chapter')
   ->execute();
 
       }
-    else
-      {
-        // Update the chapter name in the database.
-        //var_dump($chapter_row->id);die;
-$num_updated = \Drupal::database()
-  ->update('textbook_companion_chapter')
-  ->fields([
-    'name' => $form_state->getValue('name'),
-  ])
-  ->condition('id', $chapter_row->id)
-  ->execute();
+//     else
+//       {
+//         // Update the chapter name in the database.
+//         //var_dump($chapter_row->id);die;
+// $num_updated = \Drupal::database()
+//   ->update('textbook_companion_chapter')
+//   ->fields([
+//     'name' => $form_state->getValue('name'),
+//   ])
+//   ->condition('id', $chapter_row->id)
+//   ->execute();
 
-      }
+//       }
     /*  get example details - dont allow if already example present */
     /*$cur_example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE chapter_id = %d AND number = '%s'", $chapter_id, $form_state->getValue('example_number']);*/
     $query = \Drupal::database()->select('textbook_companion_example', 'tce');
@@ -432,8 +432,9 @@ $query->condition('chapter_id', $chapter_row->id);
 $query->condition('number', $form_state->getValue('example_number'));
 $cur_example_q = $query->execute();
 $cur_example_d = $cur_example_q->fetchObject();
-
+//var_dump($chapter_row->id);die;
 if ($cur_example_d) {
+  //var_dump($cur_example_d);die;
   if ($cur_example_d->approval_status == 1) {
     \Drupal::messenger()->addError(t("Example already approved. Cannot overwrite it."));
     $form_state->setRedirect('textbook_companion.list_chapters');

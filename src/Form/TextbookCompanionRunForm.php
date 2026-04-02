@@ -66,10 +66,10 @@ class TextbookCompanionRunForm extends FormBase {
       // Download Book link
       $form['book_wrapper']['download_book'] = [
         '#type' => 'markup',
-        '#markup' => Link::fromTextAndUrl(
-          $this->t('Download Book'),
-          Url::fromRoute('textbook_companion.download_book', ['book_id' => $selected_book])
-        )->toString(),
+        '#markup' =>Link::fromTextAndUrl(
+        $this->t('Download Book'),
+        Url::fromUri('internal:/textbook-companion/download/book/' . $selected_book)
+      )->toString() . ' ' . $this->t('(Download the OpenModelica code for all the solved examples)')
       ];
 $selected_chapter = (int) $form_state->getValue('chapter');
       // Chapter select
@@ -95,14 +95,14 @@ $selected_chapter = (int) $form_state->getValue('chapter');
         $form['chapter_download']['link'] = [
           '#type' => 'markup',
           '#markup' => Link::fromTextAndUrl(
-            $this->t('Download Chapter'),
-            Url::fromRoute('textbook_companion.download_chapter', ['chapter_id' => $selected_chapter])
-          )->toString(),
+        $this->t('Download Chapter'),
+        Url::fromUri('internal:/textbook-companion/download/chapter/' . $selected_chapter)
+      )->toString() . ' ' . $this->t('(Download the OpenModelica code for all the solved examples)'),
         ];
       }
       
-    }
-    $selected_example = (int)$form_state->getValue('examples') ?? 0;
+    
+    
 
     $form['chapter_download']['examples'] = [
     '#type' => 'select',
@@ -115,7 +115,7 @@ $selected_chapter = (int) $form_state->getValue('chapter');
     ],
   ];
 
-  
+  $selected_example = (int)$form_state->getValue('examples') ?? 0;
 
   // Wrapper for download example link
   $form['download_example_wrapper'] = [
@@ -125,17 +125,17 @@ $selected_chapter = (int) $form_state->getValue('chapter');
 if($selected_example){
     $form['download_example_wrapper']['download_example'] = [
       '#type' => 'markup',
-      '#markup' => Link::fromTextAndUrl(
-        $this->t('Download Example (OpenFOAM code)'),
-        Url::fromRoute('textbook_companion.download_example' , ['id' => $form_state->getValue('examples')])
-      )->toString(),
+      '#markup' =>Link::fromTextAndUrl(
+        $this->t('Download Example'),
+        Url::fromUri('internal:/textbook-companion/download/file/' . $selected_example)
+      )->toString()
     ];
   
 // $form['download_example_wrapper']['example_details'] = [
 //       '#type' => 'markup',
 //       '#markup' => $this->t('Example no. @example', ['@example' => $selected_example]),
 //     ];
-// For table and example files
+//For table and example files
  $query = \Drupal::database()->select('textbook_companion_example_files');
         $query->fields('textbook_companion_example_files');
         $query->condition('example_id', $form_state->getValue('examples'));
@@ -163,7 +163,9 @@ if($selected_example){
                 }
 
                 $items=[
-                  Link::fromTextAndUrl($example_list_data->filename,Url::fromRoute('textbook_companion.download_example_file', ['file_id' => $example_list_data->id]))->toString(),
+                  Link::fromTextAndUrl($example_list_data->filename,
+        Url::fromUri('internal:/textbook-companion/download/file/' . $example_list_data->example_id)
+      )->toString(),
                   "{$example_file_type}"
                 ];
                
@@ -200,7 +202,7 @@ $form['download_example_wrapper']['example_files']['table'] = $table;
       
         }
     
-
+    }
    
 
     return $form;
@@ -217,12 +219,12 @@ $form['download_example_wrapper']['example_files']['table'] = $table;
     return $form['chapter_download'];
   }
 public function ajax_example_changed_callback(array &$form, FormStateInterface $form_state) {
-  $selected_example = (int) $form_state->getValue('examples') ?? 0;
-  $selected_chapter = (int) $form_state->getValue('chapter') ?? 0;
-  $form_state->setRebuild(TRUE);
+//   $selected_example = (int) $form_state->getValue('examples') ?? 0;
+//   $selected_chapter = (int) $form_state->getValue('chapter') ?? 0;
+//   $form_state->setRebuild(TRUE);
 
-//   // Rebuild the examples select field with the correct options
-   $form['examples']['#options'] = $this->_list_of_examples($selected_chapter, $selected_example);
+// //   // Rebuild the examples select field with the correct options
+//    $form['examples']['#options'] = $this->_list_of_examples($selected_chapter, $selected_example);
 
 //   // Return the updated download example wrapper
 
