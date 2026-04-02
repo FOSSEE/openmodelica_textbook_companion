@@ -258,7 +258,7 @@ textbook_companion.download_book:
   options:
     no_cache: TRUE
 textbook_companion.download_full_chapter:
-  path: /textbook-companion/full-download/chapter
+  path: /textbook-companion/full-download/chapter/{chapter_id}
   defaults:
     _title: 'Code Download'
     _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_download_full_chapter'
@@ -267,7 +267,7 @@ textbook_companion.download_full_chapter:
   options:
     no_cache: TRUE
 textbook_companion.download_full_book:
-  path: /textbook-companion/full-download/book
+  path: /textbook-companion/full-download/book/{preference_id}
   defaults:
     _title: 'Code Download'
     _controller: '\Drupal\textbook_companion\Controller\DefaultController::textbook_companion_download_full_book'
