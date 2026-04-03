@@ -13,6 +13,62 @@ use Drupal\user\Entity\User;
 
 
 class TextBookCompanionGlobalFunction{
+	function _list_of_departments()
+{
+	$department = array();
+	$query = \Drupal::database()->select('list_of_departments');
+	$query->fields('list_of_departments');
+	$query->orderBy('id', 'DESC');
+	$department_list = $query->execute();
+	while ($department_list_data = $department_list->fetchObject())
+	{
+		$department[$department_list_data->department] = $department_list_data->department;
+	} //$department_list_data = $department_list->fetchObject()
+	return $department;
+}
+function _list_of_states()
+{
+	$states = array(
+		'' => '-select-'
+	);
+	$query = \Drupal::database()->select('list_states_of_india');
+	$query->fields('list_states_of_india');
+	//$query->orderBy('', '');
+	$states_list = $query->execute();
+	while ($states_list_data = $states_list->fetchObject())
+	{
+		$states[$states_list_data->state] = $states_list_data->state;
+	} //$states_list_data = $states_list->fetchObject()
+	return $states;
+}
+function _list_of_cities()
+{
+	$city = array(
+		'' => '-select-'
+	);
+	$query = \Drupal::database()->select('list_cities_of_india');
+	$query->fields('list_cities_of_india');
+	$query->orderBy('city', 'ASC');
+	$city_list = $query->execute();
+	while ($city_list_data = $city_list->fetchObject())
+	{
+		$city[$city_list_data->city] = $city_list_data->city;
+	} //$city_list_data = $city_list->fetchObject()
+	return $city;
+}
+function _list_of_software_version()
+{
+	$software_version = array();
+	$query = \Drupal::database()->select('openmodelica_software_version');
+	$query->fields('openmodelica_software_version');
+	$query->orderBy('openmodelica_version', 'ASC');
+	$software_version_list = $query->execute();
+	while ($software_version_list_data = $software_version_list->fetchObject())
+	{
+		$software_version[$software_version_list_data->openmodelica_version] = $software_version_list_data->openmodelica_version;
+	} //$software_version_list_data = $software_version_list->fetchObject()
+	return $software_version;
+}
 function ucname($string)
 {
 	$string = ucwords(strtolower($string));

@@ -17,6 +17,10 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\user\Entity\User;
 use Drupal\Core\Database\Database;
 use Drupal\textbook_companion\Services\TextbookCompanionGlobalFunction;
+use Drupal\Core\Mail\MailManager;
+use Drupal\Core\Mail\MailManagerInterface;
+use Drupal\Core\DependencyInjection\ContainerInterface;
+use Drupal\Core\File\FileSystemInterface;
 
 
 class BookProposalForm extends FormBase {
@@ -30,6 +34,7 @@ class BookProposalForm extends FormBase {
 
   public function buildForm(array $form, FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
+    $service = \Drupal::service('textbook_companion_global');
     //22$page_content = "";
     if ($user->isAnonymous()) {
   // Create the error message with a link to the login page
@@ -83,12 +88,16 @@ class BookProposalForm extends FormBase {
 
     case 2:
       $msg = \Drupal::messenger()->addError(t('Your proposal has been disapproved. Please create another proposal below.'));
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+      $response->send();
       return $msg;
       break;
 
     case 3:
-      $msg = \Drupal::messenger()->addStatus(t('Congratulations! You have completed your last book proposal. You can create another proposal below.'));
-      return $msg;
+      \Drupal::messenger()->addStatus(t('Congratulations! You have completed your last book proposal. You can create another proposal below.'));
+      // $response = new RedirectResponse(Url::fromRoute('textbook_companion.book_proposal_form')->toString());
+      // $response->send();
+     // return;
       break;
 
     default:
@@ -157,7 +166,7 @@ class BookProposalForm extends FormBase {
     $form['branch'] = [
       '#type' => 'select',
       '#title' => t('Department/Branch'),
-      '#options' => _list_of_departments(),
+      '#options' => $service->_list_of_departments(),
       '#required' => TRUE,
     ];
     $form['university'] = [
@@ -232,7 +241,7 @@ class BookProposalForm extends FormBase {
       '#selected' => [
         '' => '-select-'
         ],
-      '#options' => _list_of_states(),
+      '#options' => $service->_list_of_states(),
       '#validated' => TRUE,
       '#states' => [
         'visible' => [
@@ -245,7 +254,7 @@ class BookProposalForm extends FormBase {
     $form['city'] = [
       '#type' => 'select',
       '#title' => t('City'),
-      '#options' => _list_of_cities(),
+      '#options' => $service->_list_of_cities(),
       '#states' => [
         'visible' => [
           ':input[name="country"]' => [
@@ -295,7 +304,7 @@ class BookProposalForm extends FormBase {
     $form['version'] = [
       '#type' => 'select',
       '#title' => t('Version'),
-      '#options' => _list_of_software_version(),
+      '#options' => $service->_list_of_software_version(),
       '#required' => TRUE,
     ];
     $form['other_version'] = [
@@ -464,7 +473,7 @@ class BookProposalForm extends FormBase {
     $user = \Drupal::currentUser();
     //var_dump("hi");die;
     $service = \Drupal::service('textbook_companion_global');
-    $root_path = textbook_companion_samplecode_path();
+    $root_path = $service->textbook_companion_samplecode_path();
     // @FIXME
     // // @FIXME
     // // The correct configuration object could not be determined. You'll need to
@@ -530,32 +539,33 @@ $result = \Drupal::database()
   ])
   ->execute();
 
-    $dest_path = $result;
+    $dest_path = $result . '/';
     //var_dump($root_path . $dest_path);die;
     if (!is_dir($root_path . $dest_path)) {
-      mkdir($root_path . $dest_path);
+      mkdir($root_path . $dest_path, 0777, true);
     }
+    //var_dump($root_path . $dest_path);die;
     /* uploading files */
     foreach ($_FILES['files']['name'] as $file_form_name => $file_name) {
       if ($file_name) {
         /* checking file type */
         $file_type = 'S';
-        if (file_exists($root_path . $dest_path . '/' . $_FILES['files']['name'][$file_form_name])) {
-          // drupal_set_message(t("Error uploading file. File !filename already exists.", array('!filename' => $_FILES['files']['name'][$file_form_name])), 'error');
-          unlink($root_path . $dest_path . $_FILES['files']['name'][$file_form_name]);
+        if (file_exists($root_path . $dest_path . $_FILES['files']['name'][$file_form_name])) {
+          \Drupal::messenger()->addError(t("Error uploading file. File !filename already exists.", [
+            '!filename' => $_FILES['files']['name'][$file_form_name]
+            ]));
+          return;
         } //file_exists($root_path . $dest_path . $_FILES['files']['name'][$file_form_name])
-			/* uploading file */
-     // var_dump($root_path . $dest_path . $_FILES['files']['tmp_name'][$file_form_name]);die;
-        else if (move_uploaded_file($_FILES['files']['tmp_name'][$file_form_name], $root_path . $dest_path . '/' . $_FILES['files']['name'][$file_form_name])) {
-          // Update the samplefilepath for the given proposal ID.
-$update_result = \Drupal::database()
-  ->update('textbook_companion_proposal')
-  ->fields([
-    'samplefilepath' => $dest_path . '/' . $_FILES['files']['name'][$file_form_name],
-  ])
-  ->condition('id', $result)
-  ->execute();
+            /* uploading file */
+            //var_dump($file_system->move($source, $destination));die;
+        if (move_uploaded_file($_FILES['files']['tmp_name'][$file_form_name], $root_path . $dest_path . $_FILES['files']['name'][$file_form_name])) {
 
+          $query = "UPDATE textbook_companion_proposal SET samplefilepath = :samplefilepath WHERE id = :id";
+          $args = [
+            ":samplefilepath" => $dest_path . $file_name,
+            ":id" => $result,
+          ];
+          $updateresult = \Drupal::database()->query($query, $args);
           \Drupal::messenger()->addStatus($file_name . ' uploaded successfully.');
         } //move_uploaded_file($_FILES['files']['tmp_name'][$file_form_name], $root_path . $dest_path . $_FILES['files']['name'][$file_form_name])
         else {
@@ -614,24 +624,25 @@ $result = \Drupal::database()
     } //$form_state['values']['book1']
 
     /* sending email */
-    // $email_to = $user->mail;
-    // $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
-    // $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
-    // $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
-    // $params['proposal_received']['proposal_id'] = $proposal_id;
-    // $params['proposal_received']['user_id'] = $user->uid;
-    // $params['proposal_received']['headers'] = [
-    //   'From' => $from,
-    //   'MIME-Version' => '1.0',
-    //   'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
-    //   'Content-Transfer-Encoding' => '8Bit',
-    //   'X-Mailer' => 'Drupal',
-    //   'Cc' => $cc,
-    //   'Bcc' => $bcc,
-    // ];
-    // if (!drupal_mail('textbook_companion', 'proposal_received', $email_to, language_default(), $params, $from, TRUE)) {
-    //   \Drupal::messenger()->addError('Error sending email message.');
-    // }
+    $email_to = $user->getEmail();
+    $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
+    $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
+    $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
+    $params['proposal_received']['proposal_id'] = $proposal_id;
+    $params['proposal_received']['user_id'] = $user->id();
+    $params['proposal_received']['headers'] = [
+      'From' => $from,
+      'MIME-Version' => '1.0',
+      'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
+      'Content-Transfer-Encoding' => '8Bit',
+      'X-Mailer' => 'Drupal',
+      'Cc' => $cc,
+      'Bcc' => $bcc,
+    ];
+     $langcode = $user->getPreferredLangcode();
+    if (!\Drupal::service('plugin.manager.mail')->mail('textbook_companion', 'proposal_received', $email_to, $langcode, $params, $from, TRUE)) {
+      \Drupal::messenger()->addError('Error sending email message.');
+    }
     \Drupal::messenger()->addStatus(t('We have received you book proposal. We will get back to you soon.'));
     //drupal_goto('');
     $form_state->setRedirect('<front>');

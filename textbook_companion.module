@@ -1249,70 +1249,64 @@ function textbook_companion_mail($key, &$message, $params)
 			$query->range(0, 1);
 			$result = $query->execute();
 			$preference1_data = $result->fetchObject();
-			$query = \Drupal::database()->select('textbook_companion_preference');
-			$query->fields('textbook_companion_preference');
-			$query->condition('proposal_id', $params['proposal_received']['proposal_id']);
-			$query->condition('pref_number', 2);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$preference2_data = $result->fetchObject();
-			$query = \Drupal::database()->select('textbook_companion_preference');
-			$query->fields('textbook_companion_preference');
-			$query->condition('proposal_id', $params['proposal_received']['proposal_id']);
-			$query->condition('pref_number', 3);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$preference3_data = $result->fetchObject();
 			$user_data = \Drupal::entityTypeManager()->getStorage('user')->load($params['proposal_received']['user_id']);
 			$message['headers'] = $params['proposal_received']['headers'];
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['subject'] = t('[!site_name] Your textbook companion book proposal has been received', array(
-// 				'!site_name' => variable_get('site_name', '')
-// 			));
+			$site_name = \Drupal::config('system.site')->get('name');
+$message['subject'] = t('[@site_name] Your textbook companion book proposal has been received', array(
+				'@site_name' => $site_name));
 
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['body'] = array(
-// 				'body' => t('
-// Dear ' . $proposal_data->full_name . ',
-// 
-// We have received your proposal for OpenModelica Textbook Companion with the following details:
-// 
-// Full Name: ' . $proposal_data->full_name . '
-// Email: ' . $user_data->mail . '
-// Mobile: ' . $proposal_data->mobile . '
-// Course: ' . $proposal_data->course . '
-// Department/Branch: ' . $proposal_data->branch . '
-// University/Institute : ' . $proposal_data->university . '
-// City: ' . $proposal_data->city . '
-// State: ' . $proposal_data->state . '
-// Expected date of completion: ' . date('d-m-Y', $proposal_data->completion_date) . '
-// 
-// Book Preference:-
-// Title of the book: ' . $preference1_data->book . '
-// Author name: ' . $preference1_data->author . '
-// ISBN No.: ' . $preference1_data->isbn . '
-// Publisher and Place: ' . $preference1_data->publisher . '
-// Edition: ' . $preference1_data->edition . '
-// Year of publication: ' . $preference1_data->year . '
-// 
-// Your proposal is under review. You will soon receive an email when your proposal has been approved/ disapproved. Thank you for your submission.
-// 
-// Best Wishes,
-// 
-// !site_name Team
-// FOSSEE, IIT Bombay', array(
-// 					'!site_name' => variable_get('site_name', ''),
-// 					'!user_name' => $user_data->name
-// 				))
-// 			);
+			
+$message['body'] = [
+  '#text' => t('
+Dear @full_name,
 
-			break;
+We have received your proposal for OpenModelica Textbook Companion with the following details:
+
+Full Name: @full_name
+Email: @email
+Mobile: @mobile
+Course: @course
+Department/Branch: @branch
+University/Institute: @university
+City: @city
+State: @state
+Expected date of completion: @completion_date
+
+Book Preference:
+Title of the book: @book_title
+Author name: @author_name
+ISBN No.: @isbn
+Publisher and Place: @publisher
+Edition: @edition
+Year of publication: @year
+
+Your proposal is under review. You will soon receive an email when your proposal has been approved/disapproved. Thank you for your submission.
+
+Best Wishes,
+
+@site_name Team
+FOSSEE, IIT Bombay',
+    [
+      '@full_name' => $proposal_data->full_name,
+      '@email' => $user_data->getEmail(),
+      '@mobile' => $proposal_data->mobile,
+      '@course' => $proposal_data->course,
+      '@branch' => $proposal_data->branch,
+      '@university' => $proposal_data->university,
+      '@city' => $proposal_data->city,
+      '@state' => $proposal_data->state,
+      '@completion_date' => \Drupal::service('date.formatter')->format($proposal_data->completion_date, 'custom', 'd-m-Y'),
+      '@book_title' => $preference1_data->book,
+      '@author_name' => $preference1_data->author,
+      '@isbn' => $preference1_data->isbn,
+      '@publisher' => $preference1_data->publisher,
+      '@edition' => $preference1_data->edition,
+      '@year' => $preference1_data->year,
+      '@site_name' => $site_name,
+    ]
+  ),
+  //'#format' => 'plain_text', // or 'full_html' if needed
+];
 			break;
 		case 'proposal_disapproved':
 
