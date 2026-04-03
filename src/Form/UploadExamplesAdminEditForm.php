@@ -10,6 +10,11 @@ namespace Drupal\textbook_companion\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Url;
+use Drupal\Core\Link;
+use Drupal\user\Entity\User;
+use Symfony\Component\HttpFoundation\Response;
+use Drupal\Core\Routing\RouteMatchInterface;
 
 class UploadExamplesAdminEditForm extends FormBase {
 
@@ -22,7 +27,10 @@ class UploadExamplesAdminEditForm extends FormBase {
 
   public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
-    $example_id = arg(3);
+    $service = \Drupal::service('textbook_companion_global');
+     $route_match = \Drupal::routeMatch();
+
+$example_id = (int) $route_match->getParameter('example_id');
     /* get example details */
     /*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE id = %d LIMIT 1", $example_id);
     $example_data = db_fetch_object($example_q);*/
@@ -34,7 +42,8 @@ class UploadExamplesAdminEditForm extends FormBase {
     $example_data = $example_q->fetchObject();
     if (!$example_q) {
       \Drupal::messenger()->addError(t("Invalid example selected."));
-      drupal_goto('');
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
       return;
     }
     /* get examples files */
@@ -57,7 +66,10 @@ class UploadExamplesAdminEditForm extends FormBase {
       if ($example_files_data->filetype == "S") {
         // @FIXME
 // l() expects a Url object, created from a route name or external URI.
-// $source_file = l($example_files_data->filename, 'textbook-companion/download/file/' . $example_files_data->id);
+$source_file = Link::fromTextAndUrl(
+  $example_files_data->filename,
+  Url::fromUri('internal:/textbook-companion/download/file/' . $example_files_data->id))->toString();
+//$source_file = l($example_files_data->filename, 'textbook-companion/download/file/' . $example_files_data->id);
 
         $source_file_id = $example_files_data->id;
       }
@@ -65,32 +77,11 @@ class UploadExamplesAdminEditForm extends FormBase {
         if (strlen($result1_file) == 0) {
           // @FIXME
 // l() expects a Url object, created from a route name or external URI.
-// $result1_file = l($example_files_data->filename, 'textbook-companion/download/file/' . $example_files_data->id);
+ $result1_file = Link::fromTextAndUrl(
+  $example_files_data->filename,
+  Url::fromUri('internal:/textbook-companion/download/file/' . $example_files_data->id))->toString();
 
           $result1_file_id = $example_files_data->id;
-        }
-        else {
-          // @FIXME
-// l() expects a Url object, created from a route name or external URI.
-// $result2_file = l($example_files_data->filename, 'textbook-companion/download/file/' . $example_files_data->id);
-
-          $result2_file_id = $example_files_data->id;
-        }
-      }
-      if ($example_files_data->filetype == "X") {
-        if (strlen($xcos1_file) <= 0) {
-          // @FIXME
-// l() expects a Url object, created from a route name or external URI.
-// $xcos1_file = l($example_files_data->filename, 'textbook-companion/download/file/' . $example_files_data->id);
-
-          $xcos1_file_id = $example_files_data->id;
-        }
-        else {
-          // @FIXME
-// l() expects a Url object, created from a route name or external URI.
-// $xcos2_file = l($example_files_data->filename, 'textbook-companion/download/file/' . $example_files_data->id);
-
-          $xcos2_file_id = $example_files_data->id;
         }
       }
     }
@@ -104,7 +95,8 @@ class UploadExamplesAdminEditForm extends FormBase {
     $chapter_data = $result->fetchObject();
     if (!$chapter_data) {
       \Drupal::messenger()->addError(t("Invalid chapter selected."));
-      drupal_goto('');
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
       return;
     }
     /* get preference details */
@@ -117,7 +109,8 @@ class UploadExamplesAdminEditForm extends FormBase {
     $preference_data = $result->fetchObject();
     if (!$preference_data) {
       \Drupal::messenger()->addError(t("Invalid book selected."));
-      drupal_goto('');
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
       return;
     }
     /* get proposal details */
@@ -130,7 +123,8 @@ class UploadExamplesAdminEditForm extends FormBase {
     $proposal_data = $result->fetchObject();
     if (!$proposal_data) {
       \Drupal::messenger()->addError(t("Invalid proposal selected."));
-      drupal_goto('');
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
       return;
     }
     $user_data = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid);
@@ -217,16 +211,17 @@ class UploadExamplesAdminEditForm extends FormBase {
     ];
     // @FIXME
     // l() expects a Url object, created from a route name or external URI.
-    // $form['cancel'] = array(
-    //         '#type' => 'markup',
-    //         '#value' => l(t('Cancel'), 'textbook-companion/code')
-    //     );
+    $form['cancel'] = array(
+            '#type' => 'item',
+            '#markup' => Link::fromTextAndUrl(t('Cancel'),  Url::fromUri('internal:/textbook-companion/code-approval'))->toString()
+        );
 
     return $form;
   }
 
   public function validateForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
-    if (!check_name($form_state->getValue(['example_caption']))) {
+    $service = \Drupal::service('textbook_companion_global');
+    if (!$service->check_name($form_state->getValue(['example_caption']))) {
       $form_state->setErrorByName('example_caption', t('Example Caption can contain only alphabets, numbers and spaces.'));
     }
     if (isset($_FILES['files'])) {
@@ -272,7 +267,7 @@ class UploadExamplesAdminEditForm extends FormBase {
             $form_state->setErrorByName($file_form_name, t('File size cannot be zero.'));
           }
           /* check if valid file name */
-          if (!textbook_companion_check_valid_filename($_FILES['files']['name'][$file_form_name])) {
+          if (!$service->textbook_companion_check_valid_filename($_FILES['files']['name'][$file_form_name])) {
             $form_state->setErrorByName($file_form_name, t('Invalid file name specified. Only alphabets, numbers and underscore is allowed as a valid filename.'));
           }
         }
@@ -282,7 +277,11 @@ class UploadExamplesAdminEditForm extends FormBase {
 
   public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
-    $example_id = arg(3);
+    $service = \Drupal::service('textbook_companion_global');
+     $route_match = \Drupal::routeMatch();
+
+$example_id = (int) $route_match->getParameter('example_id');
+    
     /* get example details */
     /*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE id = %d LIMIT 1", $example_id);
     $example_data = db_fetch_object($example_q);*/
@@ -294,7 +293,8 @@ class UploadExamplesAdminEditForm extends FormBase {
     $example_data = $example_q->fetchObject();
     if (!$example_q) {
       \Drupal::messenger()->addError(t("Invalid example selected."));
-      drupal_goto('');
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
       return;
     }
     /* get chapter details */
@@ -307,7 +307,8 @@ class UploadExamplesAdminEditForm extends FormBase {
     $chapter_data = $chapter_q->fetchObject();
     if (!$chapter_data) {
       \Drupal::messenger()->addError(t("Invalid chapter selected."));
-      drupal_goto('');
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
       return;
     }
     /* get preference details */
@@ -320,7 +321,8 @@ class UploadExamplesAdminEditForm extends FormBase {
     $preference_data = $result->fetchObject();
     if (!$preference_data) {
       \Drupal::messenger()->addError(t("Invalid book selected."));
-      drupal_goto('');
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
       return;
     }
     /* get proposal details */
@@ -333,12 +335,13 @@ class UploadExamplesAdminEditForm extends FormBase {
     $proposal_data = $result->fetchObject();
     if (!$proposal_data) {
       \Drupal::messenger()->addError(t("Invalid proposal selected."));
-      drupal_goto('');
+      $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
+  $response->send();
       return;
     }
     $user_data = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid);
     /* creating directories */
-    $root_path = textbook_companion_path();
+    $root_path = $service->textbook_companion_path();
     $dest_path = $preference_data->directory_name . '/';
     if (!is_dir($root_path . $dest_path)) {
       mkdir($root_path . $dest_path);
@@ -415,12 +418,12 @@ class UploadExamplesAdminEditForm extends FormBase {
           ":example_id" => $example_data->id,
           ":filename" => $_FILES['files']['name']['sourcefile1'],
           ":filepath" => $filepath . $_FILES['files']['name']['sourcefile1'],
-          ":filemime" => 'application/dwxml',
+          ":filemime" => 'application/mo',
           ":filesize" => $_FILES['files']['size']['sourcefile1'],
           ":filetype" => 'S',
           ":timestamp" => time(),
         ];
-        $result = \Drupal::database()->query($query, $args, $query);
+        $result = \Drupal::database()->query($query, $args);
         \Drupal::messenger()->addStatus($_FILES['files']['name']['sourcefile1'] . ' uploaded successfully.');
       }
       else {
@@ -431,9 +434,9 @@ class UploadExamplesAdminEditForm extends FormBase {
     $email_to = $user_data->mail;
     $param['example_updated_admin']['example_id'] = $example_id;
     $param['example_updated_admin']['user_id'] = $proposal_data->uid;
-    if (!drupal_mail('textbook_companion', 'example_updated_admin', $email_to, language_default(), $param, \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email'), TRUE)) {
-      \Drupal::messenger()->addError('Error sending email message.');
-    }
+    // if (!drupal_mail('textbook_companion', 'example_updated_admin', $email_to, language_default(), $param, \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email'), TRUE)) {
+    //   \Drupal::messenger()->addError('Error sending email message.');
+    // }
     \Drupal::messenger()->addStatus(t("Example successfully udpated."));
   }
 
