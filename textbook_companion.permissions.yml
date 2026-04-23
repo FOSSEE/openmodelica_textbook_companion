@@ -1,0 +1,69 @@
+'create book proposal':
+  title: 'Book Proposal Form'
+  description: 'Book Proposal Form.'
+'approve book proposal':
+  title: 'Approve book proposal'
+  description: 'Allows users to approve book proposal.'
+'approve code':
+  title: 'Approve code'
+  description: 'Allows users to approve code.'
+'upload code':
+  title: 'Upload code'
+  description: 'Allows users to upload code.'
+'edit uploaded code':
+  title: 'Edit uploaded code'
+  description: 'Allows users to edit uploaded code.'
+'download code':
+  title: 'Download code'
+  description: 'Allows users to download code.'
+'create feedback':
+  title: 'Create feedback'
+  description: 'Allows users to create feedback.'
+'bulk manage code':
+  title: 'Bulk manage code'
+  description: 'Allows users to manage Bulk code.'
+'bulk delete code':
+  title: 'Bulk delete code'
+  description: 'Allows users to delete bulk code.'
+'edit book proposal':
+  title: 'Edit book proposal'
+  description: 'Allows users to edit book proposal.'
+'administer book companion':
+  title: 'Administer book companion'
+  description: 'Allows users to administer book companion.'
+'generate book':
+  title: 'Generate book'
+  description: 'Allows users to generate book.'
+'cheque contct form':
+  title: 'Cheque contact form'
+  description: 'Cheque contct form.'
+contact_details:
+  title: Contact_details
+  description: Contact_details.
+'comment cheque':
+  title: 'Comment cheque'
+  description: 'Comment cheque.'
+'list all certificates':
+  title: 'list all certificates'
+  description: 'Allows users to list all certificates.'
+'verify certificates':
+  title: 'Verify certificates'
+  description: 'Allows users to verify certificates.'
+'generate pdf':
+  title: 'Generate pdf'
+  description: 'Allows users to Generate pdf.'
+'paper submission form':
+  title: 'paper submission form'
+  description: 'Paper submission form.'
+'cheque status form':
+  title: 'Cheque status form'
+  description: 'Cheque status form.'
+'cheque report form':
+  title: 'Cheque report form'
+  description: 'Cheque report form.'
+'cheque proposal':
+  title: 'Cheque proposal'
+  description: 'Cheque proposal.'
+'download books to review':
+  title: 'download books to review'
+  description: 'Download books to review.'

@@ -1,0 +1,16 @@
+textbook_companion.book_proposal_form:
+  route_name: textbook_companion.book_proposal_form
+  title: 'Book Proposal Form'
+  description: 'Book Proposal Form.'
+textbook_companion.code_approval:
+  route_name: textbook_companion.code_approval
+  title: 'Manage Code Approval'
+  description: 'Manage Code Approval'
+textbook_companion.settings_form:
+  route_name: textbook_companion.settings_form
+  title: 'Book Companion Settings'
+  description: 'Textbook Companion Settings'
+textbook_companion._list_all_certificates:
+  route_name: textbook_companion._list_all_certificates
+  title: 'List Of All Certificates'
+  description: 'List Of All Certificates'

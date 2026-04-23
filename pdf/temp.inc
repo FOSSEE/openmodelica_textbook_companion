@@ -25,7 +25,7 @@ $pending_rows = array();
 
 
 
-global $user;
+$user = \Drupal::currentUser();
                 $uid1 = $user->uid;
 
                 $query2 = db_query("SELECT * FROM {textbook_companion_proposal} WHERE proposal_status=3 AND uid=".$user->uid);

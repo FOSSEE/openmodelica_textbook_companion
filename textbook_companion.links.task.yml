@@ -1,0 +1,10 @@
+textbook_companion.code_approval:
+  route_name: textbook_companion.code_approval
+  title: 'Code Approval'
+  weight: 1
+  base_route: textbook_companion.code_approval
+textbook_companion.bulk_approval_form:
+  route_name: textbook_companion.bulk_approval_form
+  title: 'Bulk Manage'
+  weight: 2
+  base_route: textbook_companion.code_approval
