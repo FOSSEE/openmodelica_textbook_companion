@@ -120,11 +120,19 @@ class BookProposalForm extends FormBase {
       '#maxlength' => 50,
       '#required' => TRUE,
     ];
-    $form['email_id'] = [
+    // $form['email_id'] = [
+    //   '#type' => 'textfield',
+    //   '#title' => t('Email'),
+    //   //'#size' => 30,
+    //   '#value' => $user->getEmail(),
+    //   '#disabled' => TRUE,
+    // ];
+        $form['email_id'] = [
       '#type' => 'textfield',
-      '#title' => t('Email'),
-      //'#size' => 30,
-      '#value' => $user->getEmail(),
+      // '#attributes' => array('class' => array('form-control')),
+'#title' => $this->t('Email'),
+      // '#size' => 30,
+      '#value' => $user ? $user->getEmail() : '',
       '#disabled' => TRUE,
     ];
     $form['mobile'] = [
@@ -619,7 +627,7 @@ $result = \Drupal::database()
 
 //      $result = \Drupal::database()->query($query, $args, $query);
       if (!$result) {
-        \Drupal::messenger()->addError(t('Error receiving your first book preference.'));
+        \Drupal::messenger()->addMessage(t(' Receiving your first book preference.'));
       } //!$result
     } //$form_state['values']['book1']
 
@@ -641,7 +649,7 @@ $result = \Drupal::database()
     ];
      $langcode = $user->getPreferredLangcode();
     if (!\Drupal::service('plugin.manager.mail')->mail('textbook_companion', 'proposal_received', $email_to, $langcode, $params, $from, TRUE)) {
-      \Drupal::messenger()->addError('Error sending email message.');
+      \Drupal::messenger()->addMessage(' Sending email message.');
     }
     \Drupal::messenger()->addStatus(t('We have received you book proposal. We will get back to you soon.'));
     //drupal_goto('');

@@ -207,90 +207,50 @@ class BulkApprovalForm extends FormBase {
           ]
         ],
     ];
-//      $form['message'] = [
-//   '#type' => 'textarea',
-//   '#title' => $this->t('If Dis-Approved please specify reason for Dis-Approval'),
-//   '#states' => [
-//     'visible' => [
-//       [':input[name="book_actions"]' => ['value' => '3']],
-//       'or',
-//       [':input[name="chapter_actions"]' => ['value' => '3']],
-//       'or',
-//       [':input[name="example_actions"]' => ['value' => '3']],
-//       'or',
-//       [':input[name="book_actions"]' => ['value' => '4']],
-//     ],
-//     'required' => [
-//       [':input[name="book_actions"]' => ['value' => '3']],
-//       'or',
-//       [':input[name="chapter_actions"]' => ['value' => '3']],
-//       'or',
-//       [':input[name="example_actions"]' => ['value' => '3']],
-//       'or',
-//       [':input[name="book_actions"]' => ['value' => '4']],
-//     ],
-//   ],
-// ];
-
-    $form['message'] = [
+     $form['message'] = [
       '#type' => 'textarea',
-      '#title' => $this->t('If Dis-Approved please specify reason for Dis-Approval'),
+      '#title' => t('If Dis-Approved please specify reason for Dis-Approval'),
       '#states' => [
         'visible' => [
           [
             [
               ':input[name="book_actions"]' => [
-                'value' => 3,
+                'value' => 3
+                ]
               ],
-            ],
             'or',
             [':input[name="chapter_actions"]' => ['value' => 3]],
             'or',
             [
               ':input[name="example_actions"]' => [
-                'value' => 3,
+                'value' => 3
+                ]
               ],
-            ],
             'or',
             [':input[name="book_actions"]' => ['value' => 4]],
+          ]
           ],
-        ],
         'required' => [
           [
             [':input[name="book_actions"]' => ['value' => 3]],
             'or',
             [
               ':input[name="chapter_actions"]' => [
-                'value' => 3,
+                'value' => 3
+                ]
               ],
-            ],
             'or',
             [':input[name="example_actions"]' => ['value' => 3]],
             'or',
             [
               ':input[name="book_actions"]' => [
-                'value' => 4,
+                'value' => 4
+                ]
               ],
-            ],
+          ]
           ],
-        ],
       ],
     ];
-  //   $form['submit'] = [
-  //     '#type' => 'submit',
-  //     '#value' => $this->t('Submit'),
-  //     '#states' => [
-  //       'invisible' => [
-  //         ':input[name="book"]' => [
-  //           'value' => 0,
-  //         ],
-  //       ],
-  //     ],
-  //   ];
-
-  //   return $form;
-  // }
-
     $query = \Drupal::database()->select('textbook_companion_example_files');
         $query->fields('textbook_companion_example_files');
         $query->condition('example_id', $example_default_value);
@@ -319,7 +279,6 @@ class BulkApprovalForm extends FormBase {
                 ];
             }
         }
-        // var_dump($example_list_data);die;
             array_push($example_files_rows, $items);
             //var_dump($example_files_rows);
             /* creating list of files table */
@@ -412,6 +371,7 @@ function _bulk_list_of_books() {
 }
 function _ajax_bulk_get_chapter_list($preference_id = 0) {
   $book_chapters = ['0' => t('Please select...')];
+
   // Create a database connection
   $database = Database::getConnection();
 
@@ -481,7 +441,6 @@ function _bulk_list_example_actions() {
   public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
     $root_path = textbook_companion_path();
-    // var_dump($root_path);die;
     //if ($form_state->get(['clicked_button', '#value']) == 'Submit') {
       if ($form_state->getValue(['book'])) {
         del_book_pdf($form_state->getValue(['book']));
@@ -493,13 +452,11 @@ function _bulk_list_example_actions() {
         $result = $query->execute();
         $pref_data = $result->fetchObject();
         $prop_id = $pref_data->proposal_id;
-        // var_dump($prop_id);die;
         $query = \Drupal::database()->select('textbook_companion_proposal');
         $query->fields('textbook_companion_proposal');
         $query->condition('id', $prop_id);
         $user_query = $query->execute();
         $user_info = $user_query->fetchObject();
-        // var_dump($user_info);die;
         $user_data = \Drupal::entityTypeManager()->getStorage('user')->load($user_info->uid);
         if (($form_state->getValue(['book_actions']) == 1) && ($form_state->getValue(['chapter_actions']) == 0) && ($form_state->getValue(['example_actions']) == 0)) {
           /* approving entire book */
@@ -528,17 +485,16 @@ function _bulk_list_example_actions() {
           $query->condition('id', $form_state->getValue(['book']));
           $num_updated = $query->execute();
           \Drupal::messenger()->addStatus(t('Approved Entire Book.'));
-          /* email  body for bulk approval textbook*/
+          /* email */
           // @FIXME
-			$site_name = \Drupal::config('system.site')->get('name');
 
-      $email_subject = $this->t('[@site][Textbook Companion] Your uploaded Textbook Companion examples have been approved', [
-        '@site' => $site_name,
+      $email_subject = $this->t('[@site_name][Textbook Companion] Your uploaded Textbook Companion examples have been approved', [
+        '@site_name' => $site_name,
       ]);
       $email_body = [
-        $this->t("\n\nDear @full_name,\n\nYour all the uploaded examples for the book have been approved.\n\nTitle of the book : @book\nAuthor name : @author\nISBN No. : @isbn\nPublisher and Place : @publisher\nEdition : @edition\nYear of publication : @year\n\nBest Wishes,\n\n@site Team,\nFOSSEE,IIT Bombay", [
-          '@site' => $site_name,
-          '@Full Name'=> $full_name,
+        $this->t("\n\nDear @user_name,\n\nYour all the uploaded examples for the book have been approved.\n\nTitle of the book : @book\nAuthor name : @author\nISBN No. : @isbn\nPublisher and Place : @publisher\nEdition : @edition\nYear of publication : @year\n\nBest Wishes,\n\n@site_name Team,\nFOSSEE,IIT Bombay", [
+          '@site_name' => $site_name,
+          '@user_name' => $user_name,
           '@book' => $preference_data->book ?? '',
           '@author' => $preference_data->author ?? '',
           '@isbn' => $preference_data->isbn ?? '',
@@ -568,46 +524,43 @@ function _bulk_list_example_actions() {
             $num_updated = $query->execute();
           }
           \Drupal::messenger()->addStatus(t('Pending Review Entire Book.'));
-          // /* email body for bulk-pending 
-          			$site_name = \Drupal::config('system.site')->get('name');
+          /* email */
+          // @FIXME
+          // // @FIXME
+          // // This looks like another module's variable. You'll need to rewrite this call
+          // // to ensure that it uses the correct configuration object.
+          // $email_subject = t('[!site_name] Your uploaded Textbook Companion examples have been marked as pending', array(
+          //                     '!site_name' => variable_get('site_name', '')
+          //                 ));
 
           // @FIXME
           // // @FIXME
           // // This looks like another module's variable. You'll need to rewrite this call
-          // to ensure that it uses the correct configuration object.
-$email_subject = $this->t(
-  '[@site] Your uploaded Textbook Companion examples have been marked as pending',
-  ['@site' => $site_name]
-);
+          // // to ensure that it uses the correct configuration object.
+          // $email_body = array(
+          //                     0 => t('
           // 
-          $email_body = $this->t(
-  "Dear @user_name,
+          // Dear !user_name,
+          // 
+          // Your all the uploaded examples for the book have been marked as pending to be reviewed.
+          // You will be able to see the examples after they have been approved by one of our reviewers.
+          // 
+          // Title of the book : ' . $preference_data->book . '
+          // Author name : ' . $preference_data->author . '
+          // ISBN No. : ' . $preference_data->isbn . '
+          // Publisher and Place : ' . $preference_data->publisher . '
+          // Edition : ' . $preference_data->edition . '
+          // Year of publication : ' . $preference_data->year . '
+          // 
+          // Best Wishes,
+          // 
+          // !site_name Team,
+          // FOSSEE,IIT Bombay', array(
+          //                         '!site_name' => variable_get('site_name', ''),
+          //                         '!user_name' => $user_data->name
+          //                     ))
+          //                 );
 
-Your uploaded examples for the book have been marked as pending for review.
-You will be able to see the examples after they are approved by one of our reviewers.
-
-Title of the book : @book
-Author name : @author
-ISBN No. : @isbn
-Publisher and Place : @publisher
-Edition : @edition
-Year of publication : @year
-
-Best Wishes,
-
-@site Team,
-FOSSEE, IIT Bombay",
-  [
-    '@user_name' => $user_data->getDisplayName(),
-    '@book' => $preference_data->book,
-    '@author' => $preference_data->author,
-    '@isbn' => $preference_data->isbn,
-    '@publisher' => $preference_data->publisher,
-    '@edition' => $preference_data->edition,
-    '@year' => $preference_data->year,
-    '@site' => $site_name,
-  ]
-);
         }
         elseif (($form_state->getValue(['book_actions']) == 3) && ($form_state->getValue(['chapter_actions']) == 0) && ($form_state->getValue(['example_actions']) == 0)) {
           if (strlen(trim($form_state->getValue(['message']))) <= 30) {
@@ -632,51 +585,52 @@ FOSSEE, IIT Bombay",
           else {
             \Drupal::messenger()->addError(t('Error Dis-Approving and Deleting Entire Book.'));
           }
-          /* email body for bulk disapproved textbook entire book */
-
-      $site_name = \Drupal::config('system.site')->get('name');
-
-      $email_subject = $this->t(
-          '[@site] Your uploaded Textbook Companion examples have been marked as dis-approved',
-              ['@site' => $site_name]
-                  );
-
+          /* email */
+          /*$email_subject = t('Your uploaded examples have been marked as dis-approved');
+                $email_body =array( t('Your all the uploaded examples for the whole book have been marked as dis-approved.
+                
+                Reason for dis-approval:
+                
+                ' . $form_state['values']['message']));*/
+          // @FIXME
           // // @FIXME
           // // This looks like another module's variable. You'll need to rewrite this call
           // // to ensure that it uses the correct configuration object.
+          // $email_subject = t('[!site_name] Your uploaded Textbook Companion examples have been marked as
+          // 				dis-approved', array(
+          //                     '!site_name' => variable_get('site_name', '')
+          //                 ));
+
+          // @FIXME
+          // // @FIXME
           // // This looks like another module's variable. You'll need to rewrite this call
           // // to ensure that it uses the correct configuration object.
-$email_body = $this->t(
-  "Dear @user_name,
+          // $email_body = array(
+          //                     0 => t('
+          // 
+          // Dear !user_name,
+          // 
+          // Your all the uploaded examples for the whole book have been marked as dis-approved.
+          // 
+          // Title of the book : ' . $preference_data->book . '
+          // Author name : ' . $preference_data->author . '
+          // ISBN No. : ' . $preference_data->isbn . '
+          // Publisher and Place : ' . $preference_data->publisher . '
+          // Edition : ' . $preference_data->edition . '
+          // Year of publication : ' . $preference_data->year . '
+          // 
+          // 
+          // Reason for dis-approval:' . $form_state['values']['message'] . '
+          // 
+          // Best Wishes,
+          // 
+          // !site_name Team,
+          // FOSSEE,IIT Bombay', array(
+          //                         '!site_name' => variable_get('site_name', ''),
+          //                         '!user_name' => $user_data->name
+          //                     ))
+          //                 );
 
-Your uploaded examples for the whole book have been marked as dis-approved.
-
-Title of the book : @book
-Author name : @author
-ISBN No. : @isbn
-Publisher and Place : @publisher
-Edition : @edition
-Year of publication : @year
-
-Reason for dis-approval:
-@reason
-
-Best Wishes,
-
-@site Team,
-FOSSEE, IIT Bombay",
-  [
-    '@user_name' => $user_data->getDisplayName(), // ✅ correct for Drupal 10
-    '@book' => $preference_data->book,
-    '@author' => $preference_data->author,
-    '@isbn' => $preference_data->isbn,
-    '@publisher' => $preference_data->publisher,
-    '@edition' => $preference_data->edition,
-    '@year' => $preference_data->year,
-    '@reason' => $form_state->getValue('message'),
-    '@site' => $site_name,
-  ]
-);
         }
         elseif (($form_state->getValue(['book_actions']) == 4) && ($form_state->getValue(['chapter_actions']) == 0) && ($form_state->getValue(['example_actions']) == 0)) {
           if (strlen(trim($form_state->getValue(['message']))) <= 30) {
@@ -967,36 +921,37 @@ FOSSEE, IIT Bombay",
           \Drupal::messenger()->addStatus(t('Example approved.'));
           /* email */
           // @FIXME
-         $site_name = \Drupal::config('system.site')->get('name');
+          // // @FIXME
+          // // This looks like another module's variable. You'll need to rewrite this call
+          // // to ensure that it uses the correct configuration object.
+          // $email_subject = t('[!site_name] Your uploaded Textbook Companion example have been approved', array(
+          //                     '!site_name' => variable_get('site_name', '')
+          //                 ));
 
-$email_subject = $this->t(
-  '[@site] Your uploaded Textbook Companion example has been approved',
-  ['@site' => $site_name]
-);
-
-          $email_body = $this->t(
-  "Dear @user_name,
-
-Your example for OpenModelica Textbook Companion with the following details is approved.
-
-Title of the book : @book
-Title of the chapter : @chapter
-Example number : @example_number
-Caption : @caption
-
-Best Wishes,
-
-@site Team,
-FOSSEE, IIT Bombay",
-  [
-    '@user_name' => $user_data->name,
-    '@book' => $pref_data->book,
-    '@chapter' => $chap_data->name,
-    '@example_number' => $examp_data->number,
-    '@caption' => $examp_data->caption,
-    '@site' => $site_name,
-  ]
-);
+          // @FIXME
+          // // @FIXME
+          // // This looks like another module's variable. You'll need to rewrite this call
+          // // to ensure that it uses the correct configuration object.
+          // $email_body = array(
+          //                     0 => t('
+          // 
+          // Dear !user_name,
+          // 
+          // Your example for OpenModelica Textbook Companion with the following details is approved.
+          // 
+          // Title of the book : ' . $pref_data->book . '
+          // Title of the chapter : ' . $chap_data->name . '
+          // Example number : ' . $examp_data->number . '
+          // Caption : ' . $examp_data->caption . '
+          // 
+          // Best Wishes,
+          // 
+          // !site_name Team,
+          // FOSSEE,IIT Bombay', array(
+          //                         '!site_name' => variable_get('site_name', ''),
+          //                         '!user_name' => $user_data->name
+          //                     ))
+          //                 );
 
         }
         elseif (($form_state->getValue(['book_actions']) == 0) && ($form_state->getValue(['chapter_actions']) == 0) && ($form_state->getValue(['example_actions']) == 2)) {
@@ -1130,53 +1085,32 @@ FOSSEE, IIT Bombay",
           return;
         }
         /****** sending email when everything done ******/
-       if ($email_subject) {
-
-  $mailManager = \Drupal::service('plugin.manager.mail');
-  $current_user = \Drupal::currentUser();
-
-  // $email_to = $user_data->mail;
-  $email_to = $user_data->getEmail();
-
-  $config = \Drupal::config('textbook_companion.settings');
-  $from = $config->get('textbook_companion_from_email');
-  $bcc = $config->get('textbook_companion_emails');
-  $cc = $config->get('textbook_companion_cc_emails');
-
-  $params = [];
-  $params['subject'] = $email_subject;
-  $params['body'] = $email_body;
-  $params['headers'] = [
-    'From' => $from,
-    'MIME-Version' => '1.0',
-    'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
-    'Content-Transfer-Encoding' => '8Bit',
-    'X-Mailer' => 'Drupal',
-    'Cc' => $cc,
-    'Bcc' => $bcc,
-  ];
-
-  $langcode = $current_user->getPreferredLangcode();
-
-  $result = $mailManager->mail(
-    'textbook_companion',   // module name
-    'standard',             // mail key
-    $email_to,
-    $langcode,
-    $params,
-    $from,
-    TRUE
-  );
-
-  if (!$result['result']) {
-    \Drupal::messenger()->addError($this->t('Error sending email message.'));
-  }
-}
-else {
-  \Drupal::messenger()->addError($this->t('You do not have permission to bulk manage code.'));
-}
+        if ($email_subject) {
+          $email_to = $user_data->mail;
+          $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
+          $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
+          $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
+          $param['standard']['subject'] = $email_subject;
+          $param['standard']['body'] = $email_body;
+          $param['standard']['headers'] = [
+            'From' => $from,
+            'MIME-Version' => '1.0',
+            'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
+            'Content-Transfer-Encoding' => '8Bit',
+            'X-Mailer' => 'Drupal',
+            'Cc' => $cc,
+            'Bcc' => $bcc,
+          ];
+          if (!drupal_mail('textbook_companion', 'standard', $email_to, language_default(), $param, $from, TRUE)) {
+            \Drupal::messenger()->addError('Error sending email message.');
+          }
+        }
+      }
+      else {
+        \Drupal::messenger()->addError(t('You do not have permission to bulk manage code.'));
+      }
     }
   }
-}
+
 
 ?>

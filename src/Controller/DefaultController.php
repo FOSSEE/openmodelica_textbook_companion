@@ -22,6 +22,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Drupal\textbook_companion\Form\AllExampleSubmittedForm;
+use Drupal\Core\Cache\Cache;
+
 /**
  * Default controller for the textbook_companion module.
  */
@@ -131,6 +134,7 @@ class DefaultController extends ControllerBase {
     $page_content .= \Drupal::service("renderer")->render($textbook_companion_aicte_proposal_form);
     return $page_content;
   }
+  
 public function textbook_companion_completed_books() {
     $output = '';
 
@@ -323,7 +327,11 @@ $mainLink = t('@linkApprove | @linkReject', array('@linkApprove' => $status_link
       $proposal_rows[] = array(
                   date('d-m-Y', $proposal_data->creation_date),
                   $preference_data->book . ' by ' . $preference_data->author,
-                 Link::fromTextAndUrl($pending_data->full_name, Url::fromRoute('entity.user.canonical', ['user' => $proposal_data->uid])),
+                //  Link::fromTextAndUrl($pending_data->full_name, Url::fromRoute('entity.user.canonical', ['user' => $proposal_data->uid])),
+                Link::fromTextAndUrl(
+  $proposal_data->full_name,
+  Url::fromRoute('entity.user.canonical', ['user' => $proposal_data->uid])
+),
                   date('d-m-Y', $proposal_data->completion_date),
                   $proposed_completion_date,
                   $proposal_status,
@@ -367,154 +375,425 @@ $output = [
     return $output;
   }
 
-  public function _failed_all($preference_id = 0, $confirm = "") {
-    $page_content = "";
-    if ($preference_id && $confirm == "yes") {
-      /*$query = "
-        SELECT *, pro.id as proposal_id FROM textbook_companion_proposal pro
-        LEFT JOIN textbook_companion_preference pre ON pre.proposal_id = pro.id
-        LEFT JOIN users usr ON usr.uid = pro.uid
-        WHERE pre.id = {$preference_id}
-        ";
-        $result = db_query($query);
-        $row = db_fetch_object($result);*/
-      $query = \Drupal::database()->select('textbook_companion_proposal', 'pro');
-      $query->fields('*', ['']);
-      $query->fields('pro', ['id']);
-      $query->leftJoin('textbook_companion_preference', 'pre', 'pre.proposal_id = pro.id');
-      $query->leftJoin('users', 'usr', 'usr.uid = pro.uid');
-      $query->condition('pre.id', '$preference_id');
-      $result = $query->execute();
-      $row = $result->fetchObject();
-      /* increment failed_reminder */
-      /*$query = "
-        UPDATE textbook_companion_proposal
-        SET failed_reminder = failed_reminder + 1
-        WHERE id = {$row->proposal_id}
-        ";
-        db_query($query);*/
-      $query = \Drupal::database()->update('textbook_companion_proposal');
-      $query->fields(['failed_reminder' => 'failed_reminder + 1']);
-      $query->condition('id', '$row->proposal_id');
-      $num_updated = $query->execute();
-      /* sending mail */
-      $to = $row->mail;
-      $subject = "Failed to upload the TBC codes on time";
-      $body = "
-    <p>
-      Dear {$row->name},<br><br>
-      This is to inform you that you have failed to upload the TBC codes on time.<br>
-      Please note that the time you have taken is way past the deadline as well.<br>
-      Kindly upload the TBC codes on the interface within 5 days from now.<br>
-      Failure to submit the same will result in disapproval of your work and cancellation of your internship.<br><br>
-      Regards,<br>
-      OpenModelica TBC Team,<br>
-      FOSSEE.
-    </p>
-    ";
-      $message = [
-        "to" => $to,
-        "subject" => $subject,
-        "body" => $body,
-        "headers" => [
-          "From" => "contact-openmodelica@fossee.in",
-          "Bcc" => "contact-openmodelica@fossee.in",
-          "Content-Type" => "text/html; charset=UTF-8; format=flowed",
-        ],
-      ];
-      drupal_mail_send($message);
-      \Drupal::messenger()->addMessage("Reminder sent successfully.");
-      drupal_goto("textbook-companion/manage-proposal/failed");
-    }
-    else {
-      if ($preference_id) {
-        /*$query = "
-        SELECT * FROM textbook_companion_preference pre
-        LEFT JOIN textbook_companion_proposal pro ON pro.id = pre.proposal_id
-        WHERE pre.id = {$preference_id}
-        ";
-        $result = db_query($query);
-        $row = db_fetch_object($result);*/
-        $query = \Drupal::database()->select('textbook_companion_preference', 'pre');
-        $query->fields('pre');
-        $query->leftJoin('textbook_companion_proposal', 'pro', 'pro.id = pre.proposal_id');
-        $query->condition('pre.id', $preference_id);
-        $result = $query->execute();
-        $row = $result->fetchObject();
-        $page_content .= "Are you sure you want to notify?<br><br>";
-        $page_content .= "Book: <b>{$row->book}</b><br>";
-        $page_content .= "Author: <b>{$row->author}</b><br>";
-        $page_content .= "Contributor: <b>{$row->full_name}</b><br>";
-        $page_content .= "Expected Completion Date: <b>" . date("d-m-Y", $row->completion_date) . "</b><br><br>";
-        // @FIXME
-        // l() expects a Url object, created from a route name or external URI.
-        // $page_content .= l("Yes", "textbook-companion/manage-proposal/failed/{$preference_id}/yes") . " | ";
+//   public function _failed_all($preference_id = 0, $confirm = "") {
+//     $page_content = "";
+//     if ($preference_id && $confirm == "yes") {
+//       /*$query = "
+//         SELECT *, pro.id as proposal_id FROM textbook_companion_proposal pro
+//         LEFT JOIN textbook_companion_preference pre ON pre.proposal_id = pro.id
+//         LEFT JOIN users usr ON usr.uid = pro.uid
+//         WHERE pre.id = {$preference_id}
+//         ";
+//         $result = db_query($query);
+//         $row = db_fetch_object($result);*/
+//       $query = \Drupal::database()->select('textbook_companion_proposal', 'pro');
+//       $query->fields('*', ['']);
+//       $query->fields('pro', ['id']);
+//       $query->leftJoin('textbook_companion_preference', 'pre', 'pre.proposal_id = pro.id');
+//       $query->leftJoin('users', 'usr', 'usr.uid = pro.uid');
+//       $query->condition('pre.id', '$preference_id');
+//       $result = $query->execute();
+//       $row = $result->fetchObject();
+//       /* increment failed_reminder */
+//       /*$query = "
+//         UPDATE textbook_companion_proposal
+//         SET failed_reminder = failed_reminder + 1
+//         WHERE id = {$row->proposal_id}
+//         ";
+//         db_query($query);*/
+//       $query = \Drupal::database()->update('textbook_companion_proposal');
+//       $query->fields(['failed_reminder' => 'failed_reminder + 1']);
+//       $query->condition('id', '$row->proposal_id');
+//       $num_updated = $query->execute();
+//       /* sending mail */
+//       $to = $row->mail;
+//       $subject = "Failed to upload the TBC codes on time";
+//       $body = "
+//     <p>
+//       Dear {$row->name},<br><br>
+//       This is to inform you that you have failed to upload the TBC codes on time.<br>
+//       Please note that the time you have taken is way past the deadline as well.<br>
+//       Kindly upload the TBC codes on the interface within 5 days from now.<br>
+//       Failure to submit the same will result in disapproval of your work and cancellation of your internship.<br><br>
+//       Regards,<br>
+//       OpenModelica TBC Team,<br>
+//       FOSSEE.
+//     </p>
+//     ";
+//       $message = [
+//         "to" => $to,
+//         "subject" => $subject,
+//         "body" => $body,
+//         "headers" => [
+//           "From" => "contact-openmodelica@fossee.in",
+//           "Bcc" => "contact-openmodelica@fossee.in",
+//           "Content-Type" => "text/html; charset=UTF-8; format=flowed",
+//         ],
+//       ];
+//       drupal_mail_send($message);
+//       \Drupal::messenger()->addMessage("Reminder sent successfully.");
+//       drupal_goto("textbook-companion/manage-proposal/failed");
+//     }
+//     else {
+//       if ($preference_id) {
+//         /*$query = "
+//         SELECT * FROM textbook_companion_preference pre
+//         LEFT JOIN textbook_companion_proposal pro ON pro.id = pre.proposal_id
+//         WHERE pre.id = {$preference_id}
+//         ";
+//         $result = db_query($query);
+//         $row = db_fetch_object($result);*/
+//         $query = \Drupal::database()->select('textbook_companion_preference', 'pre');
+//         $query->fields('pre');
+//         $query->leftJoin('textbook_companion_proposal', 'pro', 'pro.id = pre.proposal_id');
+//         $query->condition('pre.id', $preference_id);
+//         $result = $query->execute();
+//         $row = $result->fetchObject();
+//         $page_content .= "Are you sure you want to notify?<br><br>";
+//         $page_content .= "Book: <b>{$row->book}</b><br>";
+//         $page_content .= "Author: <b>{$row->author}</b><br>";
+//         $page_content .= "Contributor: <b>{$row->full_name}</b><br>";
+//         $page_content .= "Expected Completion Date: <b>" . date("d-m-Y", $row->completion_date) . "</b><br><br>";
+//         // @FIXME
+//         // l() expects a Url object, created from a route name or external URI.
+//         // $page_content .= l("Yes", "textbook-companion/manage-proposal/failed/{$preference_id}/yes") . " | ";
 
-        // @FIXME
-        // l() expects a Url object, created from a route name or external URI.
-        // $page_content .= l("Cancel", "textbook-companion/manage-proposal/failed");
+//         // @FIXME
+//         // l() expects a Url object, created from a route name or external URI.
+//         // $page_content .= l("Cancel", "textbook-companion/manage-proposal/failed");
 
-      }
-      else {
-        /*$query = "
-        SELECT * FROM textbook_companion_proposal pro
-        LEFT JOIN textbook_companion_preference pre ON pre.proposal_id = pro.id
-        LEFT JOIN users usr ON usr.uid = pro.uid
-        WHERE pro.proposal_status = 1 AND pre.approval_status = 1 AND pro.completion_date < %d
-        ORDER BY failed_reminder
-        ";
-        $result = db_query($query, time());*/
-        $query = \Drupal::database()->select('textbook_companion_proposal', 'pro');
-        $query->fields('pro');
-        $query->leftJoin('textbook_companion_preference', 'pre', 'pre.proposal_id = pro.id');
-        $query->leftJoin('users', 'usr', 'usr.uid = pro.uid');
-        $query->condition('pro.proposal_status', 1);
-        $query->condition('pre.approval_status', 1);
-        $query->condition('pro.completion_date', '%time()', '<');
-        $query->orderBy('failed_reminder', 'ASC');
-        $result = $query->execute();
-        $headers = [
-          "Date of Submission",
-          "Book",
-          "Contributor Name",
-          "Expected Completion Date",
-          "Remainders",
-          "Action",
-        ];
-        $rows = [];
-        while ($row = $result->fetchObject()) {
-          // @FIXME
-// l() expects a Url object, created from a route name or external URI.
-// $item = array(
-//                 date("d-m-Y", $row->creation_date),
-//                 "{$row->book}<br><i>by</i> {$row->author}",
-//                 $row->name,
-//                 date("d-m-Y", $row->completion_date),
-//                 $row->failed_reminder,
-//                 l("Remind", "textbook-companion/manage-proposal/failed/{$row->id}")
-//             );
+//       }
+//       else {
+//         /*$query = "
+//         SELECT * FROM textbook_companion_proposal pro
+//         LEFT JOIN textbook_companion_preference pre ON pre.proposal_id = pro.id
+//         LEFT JOIN users usr ON usr.uid = pro.uid
+//         WHERE pro.proposal_status = 1 AND pre.approval_status = 1 AND pro.completion_date < %d
+//         ORDER BY failed_reminder
+//         ";
+//         $result = db_query($query, time());*/
+//         $query = \Drupal::database()->select('textbook_companion_proposal', 'pro');
+//         $query->fields('pro');
+//         $query->leftJoin('textbook_companion_preference', 'pre', 'pre.proposal_id = pro.id');
+//         $query->leftJoin('users', 'usr', 'usr.uid = pro.uid');
+//         $query->condition('pro.proposal_status', 1);
+//         $query->condition('pre.approval_status', 1);
+//         $query->condition('pro.completion_date', '%time()', '<');
+//         $query->orderBy('failed_reminder', 'ASC');
+//         $result = $query->execute();
+//         $headers = [
+//           "Date of Submission",
+//           "Book",
+//           "Contributor Name",
+//           "Expected Completion Date",
+//           "Remainders",
+//           "Action",
+//         ];
+//         $rows = [];
+//         while ($row = $result->fetchObject()) {
+//           // @FIXME
+// // l() expects a Url object, created from a route name or external URI.
+// // $item = array(
+// //                 date("d-m-Y", $row->creation_date),
+// //                 "{$row->book}<br><i>by</i> {$row->author}",
+// //                 $row->name,
+// //                 date("d-m-Y", $row->completion_date),
+// //                 $row->failed_reminder,
+// //                 l("Remind", "textbook-companion/manage-proposal/failed/{$row->id}")
+// //             );
 
-          array_push($rows, $item);
-        }
-        // @FIXME
-        // theme() has been renamed to _theme() and should NEVER be called directly.
-        // Calling _theme() directly can alter the expected output and potentially
-        // introduce security issues (see https://www.drupal.org/node/2195739). You
-        // should use renderable arrays instead.
-        // 
-        // 
-        // @see https://www.drupal.org/node/2195739
-        // $page_content .= theme('table', array(
-        //             'header' => $headers,
-        //             'rows' => $rows
-        //         ));
+//           array_push($rows, $item);
+//         }
+//         // @FIXME
+//         // theme() has been renamed to _theme() and should NEVER be called directly.
+//         // Calling _theme() directly can alter the expected output and potentially
+//         // introduce security issues (see https://www.drupal.org/node/2195739). You
+//         // should use renderable arrays instead.
+//         // 
+//         // 
+//         // @see https://www.drupal.org/node/2195739
+//         // $page_content .= theme('table', array(
+//         //             'header' => $headers,
+//         //             'rows' => $rows
+//         //         ));
 
-      }
-    }
-    return $page_content;
+//       }
+//     }
+//     return $page_content;
+//   }
+
+
+  public function tbc_books_in_progress_all() {
+  
+$result = \Drupal::database()->query("
+  SELECT 
+    pe.book,
+    pe.author,
+    pe.publisher,
+    pe.edition,
+    pe.isbn,
+    pe.year,
+    pe.id as pe_id,
+    po.full_name,
+po.university as institution 
+  FROM textbook_companion_preference pe
+  LEFT JOIN textbook_companion_proposal po ON pe.proposal_id = po.id
+  WHERE po.proposal_status IN (1, 4)
+    AND pe.approval_status = 1
+  ORDER BY po.creation_date DESC
+");
+  $rows = [];
+
+  // Fetch all ONCE, then loop.
+  $records = $result->fetchAll();
+  $i = count($records);
+
+  $date_formatter = \Drupal::service('date.formatter');
+  foreach ($records as $row) {
+    $proposal_date = $row->creation_date ? $date_formatter->format((int) $row->creation_date, 'custom', 'd-m-Y') : '';
+    $category = $row->category ?: $this->t('Not assigned');
+    $book_info = $this->t('@book<br><br>[ Author: @author, Publisher: @publisher, Year: @year, Edition: @edition, ISBN: @isbn ]', [
+      '@book' => $row->book ?? '',
+      '@author' => $row->author ?? '',
+      '@publisher' => $row->publisher ?? '',
+      '@year' => $row->year ?? '',
+      '@edition' => $row->edition ?? '',
+      '@isbn' => $row->isbn ?? '',
+    ]);
+
+   $rows = [];
+$records = $result->fetchAll();
+$i = 1;
+
+foreach ($records as $row) {
+
+  $book_info = $this->t(
+    '@book by @author',
+    [
+      '@book' => $row->book ?? '',
+      '@author' => $row->author ?? '',
+    ]
+  );
+
+  $rows[] = [
+    $i,
+    [
+      'data' => [
+        '#markup' => $book_info,
+      ],
+    ],
+    $row->full_name ?? '',
+    $row->institution ?? '',
+  ];
+
+  $i++;
+}
+
+  if (!$rows) {
+    $this->messenger()->addStatus($this->t('There are no books in progress.'));
+    return ['#markup' => ''];
   }
 
-  public function code_approval() {
+$header = [
+  'Sl No',
+  'Books in Progress',
+  'Contributor Name',
+  'Institution Name',
+];
+  return [
+    '#type' => 'container',
+    'separator' => ['#markup' => '<hr>'],
+    'table' => [
+      '#theme' => 'table',
+      '#header' => $header,
+      '#rows' => $rows,
+    ],
+    '#cache' => [
+      'tags' => ['textbook_companion:proposal_list', 'textbook_companion:preference_list', 'textbook_companion:category_list'],
+      'contexts' => ['user.permissions'],
+      'max-age' => Cache::PERMANENT,
+    ],
+  ];
+}
+  }
+
+
+public function _failed_all($preference_id = 0, $confirm = "") {
+
+  $connection = \Drupal::database();
+  $messenger = \Drupal::messenger();
+
+  // =========================
+  // CASE 1: SEND MAIL
+  // =========================
+  if ($preference_id && $confirm === "yes") {
+
+    $row = $connection->select('textbook_companion_proposal', 'pro')
+      ->fields('pro')
+      ->leftJoin('textbook_companion_preference', 'pre', 'pre.proposal_id = pro.id')
+      ->leftJoin('users_field_data', 'usr', 'usr.uid = pro.uid')
+      ->fields('usr', ['mail', 'name'])
+      ->condition('pre.id', (int) $preference_id)
+      ->range(0, 1)
+      ->execute()
+      ->fetchObject();
+
+    if (!$row) {
+      $messenger->addError('Invalid data.');
+      return [];
+    }
+
+    // ✅ increment failed_reminder
+    $connection->update('textbook_companion_proposal')
+      ->expression('failed_reminder', 'failed_reminder + 1')
+      ->condition('id', $row->id)
+      ->execute();
+
+    // ✅ SAFE EMAIL
+    $to = (string) $row->mail;
+
+    if (!empty($to)) {
+
+      $params = [];
+      $params['name'] = $row->name;
+
+      $langcode = \Drupal::languageManager()->getDefaultLanguage()->getId();
+
+      $result = \Drupal::service('plugin.manager.mail')->mail(
+        'textbook_companion',
+        'failed_reminder',
+        $to,
+        $langcode,
+        $params,
+        'contact-openmodelica@fossee.in',
+        TRUE
+      );
+
+      if (empty($result['result'])) {
+        $messenger->addError('Error sending email.');
+      }
+      else {
+        $messenger->addStatus('Reminder sent successfully.');
+      }
+    }
+    else {
+      $messenger->addError('User email not found.');
+    }
+
+    return new RedirectResponse(
+      // Url::fromRoute('textbook_companion.failed')->toString()
+    );
+  }
+
+  // =========================
+  // CASE 2: CONFIRM PAGE
+  // =========================
+  elseif ($preference_id) {
+
+    $row = $connection->select('textbook_companion_preference', 'pre')
+      ->fields('pre')
+      ->leftJoin('textbook_companion_proposal', 'pro', 'pro.id = pre.proposal_id')
+      ->fields('pro', ['full_name', 'completion_date'])
+      ->condition('pre.id', (int) $preference_id)
+      ->range(0, 1)
+      ->execute()
+      ->fetchObject();
+
+    if (!$row) {
+      return [];
+    }
+
+    $yes_url = Url::fromRoute('textbook_companion._failed_all', [
+      'preference_id' => $preference_id,
+      'confirm' => 'yes',
+    ]);
+
+    $cancel_url = Url::fromRoute('textbook_companion._failed_all');
+
+    return [
+      '#markup' =>
+        "Are you sure you want to notify?<br><br>" .
+        "Book: <b>{$row->book}</b><br>" .
+        "Author: <b>{$row->author}</b><br>" .
+        "Contributor: <b>{$row->full_name}</b><br>" .
+        "Expected Completion Date: <b>" . date("d-m-Y", $row->completion_date) . "</b><br><br>" .
+        Link::fromTextAndUrl('Yes', $yes_url)->toString() . " | " .
+        Link::fromTextAndUrl('Cancel', $cancel_url)->toString(),
+    ];
+  }
+
+  // =========================
+  // CASE 3: LISTING
+  // =========================
+  else {
+
+    // $result = $connection->select('textbook_companion_proposal', 'pro')
+    //   ->fields('pro')
+    //   ->leftJoin('textbook_companion_preference', 'pre', 'pre.proposal_id = pro.id')
+    //   ->leftJoin('users_field_data', 'usr', 'usr.uid = pro.uid')
+    //   ->fields('pre', ['book', 'author'])
+    //   ->fields('usr', ['name'])
+    //   ->condition('pro.proposal_status', 1)
+    //   ->condition('pre.approval_status', 1)
+    //   ->condition('pro.completion_date', time(), '<')
+    //   ->orderBy('failed_reminder', 'ASC')
+    //   ->execute();
+
+    $query = \Drupal::database()->select('textbook_companion_proposal', 'pro');
+
+$query->fields('pro');
+$query->leftJoin('textbook_companion_preference', 'pre', 'pre.proposal_id = pro.id');
+$query->leftJoin('users_field_data', 'usr', 'usr.uid = pro.uid');
+$query->fields('pre', ['book', 'author']);
+$query->fields('usr', ['name']);
+$query->condition('pro.proposal_status', 1);
+$query->condition('pre.approval_status', 1);
+$query->condition('pro.completion_date', time(), '<');
+$query->orderBy('failed_reminder', 'ASC');
+
+$result = $query->execute();
+
+
+    $header = [
+      'Date of Submission',
+      'Book',
+      'Contributor Name',
+      'Expected Completion Date',
+      'Reminders',
+      'Action',
+    ];
+
+    $rows = [];
+
+    foreach ($result as $row) {
+
+      $url = Url::fromRoute('textbook_companion._failed_all', [
+        'preference_id' => $row->id,
+      ]);
+
+      $rows[] = [
+        date("d-m-Y", $row->creation_date),
+        [
+          'data' => [
+            '#markup' => $row->book . "<br><i>by</i> " . $row->author,
+          ],
+        ],
+        $row->name,
+        date("d-m-Y", $row->completion_date),
+        $row->failed_reminder,
+        Link::fromTextAndUrl('Remind', $url)->toString(),
+      ];
+    }
+
+    return [
+      '#type' => 'table',
+      '#header' => $header,
+      '#rows' => $rows,
+      '#empty' => 'No records found.',
+    ];
+  }
+}  
+public function code_approval() {
     /* get a list of unapproved chapters */
     $query = \Drupal::database()->select('textbook_companion_example', 'e');
     $query->fields('c', [
@@ -736,9 +1015,31 @@ $chapter_name_with_link = t('@chapterName | @editLink', array('@chapterName' => 
     //         'rows' => $chapter_rows
     //     ));
 
-    //$submited_all_example = \Drupal::formBuilder()->getForm("all_example_submitted_check_form", $preference_data->id);
+    // $submited_all_example = \Drupal::formBuilder()->getForm("all_example_submitted_check_form", $preference_data->id);
     //$return_html .= \Drupal::service("renderer")->render($submited_all_example);
-    return $return_html;
+    // Build form
+// $submited_all_example = \Drupal::formBuilder()
+//   ->getForm(AllExampleSubmittedForm::class, $preference_data->id);
+
+// // Render form
+// $return_html .= \Drupal::service('renderer')
+//   ->render($submited_all_example);
+
+// return \Drupal::formBuilder()
+//   ->getForm(AllExampleSubmittedForm::class, $preference_data->id);
+//     return $return_html;
+//   }
+
+// Build form
+$form = \Drupal::formBuilder()
+  ->getForm(AllExampleSubmittedForm::class, $preference_data->id);
+
+// Final render array
+return [
+  '#type' => 'container',
+  'content' => $return_html,
+  'form' => $form,
+];
   }
 
   // public function upload_examples() {
@@ -826,35 +1127,50 @@ $chapter_name_with_link = t('@chapterName | @editLink', array('@chapterName' => 
       /* sending email */
 
 
-      $email_to = $user->mail;
-      $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
-      $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
-      $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
-      $params['example_deleted_user']['book_title'] = $preference_data->book;
-      $params['example_deleted_user']['chapter_title'] = $chapter_data->name;
-      $params['example_deleted_user']['example_number'] = $example_data->number;
-      $params['example_deleted_user']['example_caption'] = $example_data->caption;
-      $params['example_deleted_user']['user_id'] = $user->uid;
-      $params['example_deleted_user']['headers'] = [
-        'From' => $from,
-        'MIME-Version' => '1.0',
-        'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
-        'Content-Transfer-Encoding' => '8Bit',
-        'X-Mailer' => 'Drupal',
-        'Cc' => $cc,
-        'Bcc' => $bcc,
-      ];
-      // if (!drupal_mail('textbook_companion', 'example_deleted_user', $email_to, language_default(), $params, $from, TRUE)) {
-      //   \Drupal::messenger()->addError('Error sending email message.');
-      // }
-    }
-    else {
-      \Drupal::messenger()->addStatus('Error deleting example.');
-    }
-     $response = new RedirectResponse(Url::fromRoute('textbook_companion.list_chapters')->toString());
-  $response->send();
-  // return $msg;
-    return;
+/* sending email */
+$email_to = $user->getEmail();  // ✅ FIX
+
+$config = \Drupal::config('textbook_companion.settings');
+$from = $config->get('textbook_companion_from_email') ?? \Drupal::config('system.site')->get('mail');
+$bcc = $config->get('textbook_companion_emails');
+$cc = $config->get('textbook_companion_cc_emails');
+
+$params = [];
+$params['book_title'] = $preference_data->book;
+$params['chapter_title'] = $chapter_data->name;
+$params['example_number'] = $example_data->number;
+$params['example_caption'] = $example_data->caption;
+$params['user_id'] = $user->id();
+$params['cc'] = $cc;
+$params['bcc'] = $bcc;
+
+$langcode = $user->getPreferredLangcode() ?? \Drupal::languageManager()->getDefaultLanguage()->getId();
+
+if (!empty($email_to)) {
+  $result = \Drupal::service('plugin.manager.mail')->mail(
+    'textbook_companion',
+    'example_deleted_user',
+    $email_to,
+    $langcode,
+    $params,
+    $from,
+    TRUE
+  );
+
+  if (empty($result['result'])) {
+    \Drupal::messenger()->addError('Error sending email message.');
+  }
+}
+
+else {
+  \Drupal::messenger()->addStatus('Error deleting example.');
+}
+
+/* redirect */
+$response = new RedirectResponse(Url::fromRoute('textbook_companion.list_chapters')->toString());
+$response->send();
+return;
+}
   }
 
   public function list_examples() {
@@ -1108,7 +1424,7 @@ $example_rows[] = array(
   }
 
   public function textbook_companion_browse_book() {
-    $return_html = _browse_list('book');
+    $return_html = $this->_browse_list('book');
     $return_html .= '<br /><br />';
     $query_character = arg(2);
     if (!$query_character) {
@@ -1157,8 +1473,31 @@ $example_rows[] = array(
     return $return_html;
   }
 
+public function _browse_list($type) {
+
+  $return_html = '';
+
+  $char_list = range('A', 'Z');
+
+  foreach ($char_list as $char_name) {
+
+    // Create URL (adjust if you have a named route instead)
+    $url = Url::fromUserInput('/textbook_search/' . $type . '/' . $char_name);
+
+    // Create link
+    $link = Link::fromTextAndUrl($char_name, $url)->toString();
+
+    $return_html .= $link;
+
+    if ($char_name !== 'Z') {
+      $return_html .= ' | ';
+    }
+  }
+
+  return '<div id="filter-links">' . $return_html . '</div>';
+}
   public function textbook_companion_browse_author() {
-    $return_html = _browse_list('author');
+    $return_html = $this->_browse_list('author');
     $return_html .= '<br /><br />';
     $query_character = arg(2);
     if (!$query_character) {
@@ -1234,9 +1573,12 @@ $example_rows[] = array(
   }
 
   public function textbook_companion_browse_student() {
-    $return_html = _browse_list('student');
+    $return_html = $this->_browse_list('student');
     $return_html .= '<br /><br />';
-    $query_character = arg(2);
+    // $query_character = arg(2);
+        $route_match = \Drupal::routeMatch();
+    $query_character = (int) $route_match->getParameter('query_character');
+
     //print $query_character;
     //die();
     if (!$query_character) {
@@ -1951,75 +2293,77 @@ return $response;
     }
   }
 
-  public function _list_all_certificates() {
-    $user = \Drupal::currentUser();
-    $query_id = \Drupal::database()->query("SELECT id FROM textbook_companion_proposal WHERE proposal_status=3 AND uid= :uid", [
-      ':uid' => $user->uid
-      ]);
-    $exist_id = $query_id->fetchObject();
-    $exist_id_count = $query_id->rowCount();
-    if ($exist_id) {
-      if ($exist_id->id) {
-        if ($exist_id_count < 1) {
-          \Drupal::messenger()->addStatus(t('<strong>You need to propose a book <a href="http://om.fossee.in/textbook-companion/proposal">Book Proposal</a></strong> or if you have already proposed then your book is under reviewing process'));
-          return '';
-        } //$exist_id->id < 3
-        else {
-          $search_rows = [];
-          global $output;
-          $output = '';
-          $query3 = \Drupal::database()->query("SELECT prop.id,pref.isbn,pref.book,pref.author FROM textbook_companion_proposal as prop,textbook_companion_preference as pref WHERE prop.proposal_status=3 AND pref.approval_status=1 AND pref.proposal_id=prop.id AND prop.uid= :uid", [
-            ':uid' => $user->uid
-            ]);
-          while ($search_data3 = $query3->fetchObject()) {
-            if ($search_data3->id) {
-              // @FIXME
-// l() expects a Url object, created from a route name or external URI.
-// $search_rows[] = array(
-// 						$search_data3->isbn,
-// 						$search_data3->book,
-// 						$search_data3->author,
-// 						l('Download Certificate', 'textbook-companion/certificate/generate-pdf/' . $search_data3->id)
-// 					);
 
-            } //$search_data3->id
-          } //$search_data3 = $query3->fetchObject()
-          if ($search_rows) {
-            $search_header = [
-              'ISBN',
-              'Book Name',
-              'Author',
-              'Download Certificates',
-            ];
-            // @FIXME
-            // theme() has been renamed to _theme() and should NEVER be called directly.
-            // Calling _theme() directly can alter the expected output and potentially
-            // introduce security issues (see https://www.drupal.org/node/2195739). You
-            // should use renderable arrays instead.
-            // 
-            // 
-            // @see https://www.drupal.org/node/2195739
-            // $output        = theme('table', array(
-            // 					'header' => $search_header,
-            // 					'rows' => $search_rows
-            // 				));
+public function _list_all_certificates() {
 
-            return $output;
-          } //$search_rows
-          else {
-            echo ("Error");
-            return '';
-          }
-        }
-      }
-    } //$exist_id->id
-    else {
-      \Drupal::messenger()->addStatus(t('<strong>You need to propose a book <a href="http://om.fossee.in/textbook-companion/proposal">Book Proposal</a></strong> or if you have already proposed then your book is under reviewing process'));
-      $page_content = "<span style='color:red;'> No certificate available </span>";
-      return $page_content;
-    }
+  $current_user = \Drupal::currentUser();
+  $uid = $current_user->id();
+  $connection = \Drupal::database();
+
+  // ✅ Check if user has any approved proposals
+  $exist_id = $connection->select('textbook_companion_proposal', 'p')
+    ->fields('p', ['id'])
+    ->condition('p.proposal_status', 3)
+    ->condition('p.uid', $uid)
+    ->range(0, 1)
+    ->execute()
+    ->fetchField(); // ✅ replaces rowCount logic
+
+  if (!$exist_id) {
+    \Drupal::messenger()->addStatus(
+      t('You need to propose a book <a href=":url">Book Proposal</a> or your book is under review.', [
+        ':url' => 'http://om.fossee.in/textbook-companion/proposal',
+      ])
+    );
+
+    return [
+      '#markup' => "<span style='color:red;'>No certificate available</span>",
+    ];
   }
 
+  // ✅ Fetch certificate data
+  $result = $connection->select('textbook_companion_proposal', 'prop')
+    ->fields('prop', ['id'])
+    ->innerJoin('textbook_companion_preference', 'pref', 'pref.proposal_id = prop.id')
+    ->fields('pref', ['isbn', 'book', 'author'])
+    ->condition('prop.proposal_status', 3)
+    ->condition('pref.approval_status', 1)
+    ->condition('prop.uid', $uid)
+    ->execute();
+
+  $rows = [];
+
+  foreach ($result as $record) {
+
+    $url = Url::fromUserInput('/textbook-companion/certificate/generate-pdf/' . $record->id);
+
+    $rows[] = [
+      $record->isbn,
+      $record->book,
+      $record->author,
+      Link::fromTextAndUrl('Download Certificate', $url),
+    ];
+  }
+
+  if (empty($rows)) {
+    return [
+      '#markup' => "<span style='color:red;'>No certificate available</span>",
+    ];
+  }
+
+  // ✅ Proper Drupal 10 table render array
+  return [
+    '#type' => 'table',
+    '#header' => [
+      'ISBN',
+      'Book Name',
+      'Author',
+      'Download Certificates',
+    ],
+    '#rows' => $rows,
+    '#empty' => t('No records found.'),
+  ];
+}
   public function verify_certificates($qr_code = 0) {
     $qr_code = arg(3);
     $page_content = "";

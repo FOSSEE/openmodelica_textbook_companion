@@ -4,6 +4,8 @@ implementation of hook_menu().
 */
 
 use Drupal\Core\Database\Database;
+use Drupal\user\Entity\User;
+
 function textbook_companion_menu()
 {
 	$items = array();
@@ -850,183 +852,7 @@ function textbook_companion_permission()
 		)
 	);
 }
-/* Aicte books pickup before the proposal form */
-/*function textbook_companion_aicte_proposal_form($form_state) {
-/* $query = "
-SELECT * FROM textbook_companion_aicte
-WHERE status = 0 AND selected = 0
-";
-$result = db_query($query);*/
-/* $query = "
-SELECT * FROM textbook_companion_aicte
-WHERE status = :status AND selected = :selected
-";
-$args = array(
-':status' => 0,
-':selected' => 0,
-);
-$result = db_query($query,$args); */
-/*	$query = db_select('textbook_companion_aicte');
-$query->fields('textbook_companion_aicte');
-$query->condition('status', 0);
-$query->condition('selected', 0);
-$result = $query->execute();
 
-$form = array();
-$form["wrapper"] = array(
-"#type" => "fieldset",
-"#prefix" => "<div id='aicte-form-wrapper'>",
-"#suffix" => "</div>",
-);
-// $num_rows = mysql_num_rows($result);
-$num_rows = $query->countQuery();
-if ($num_rows > 0) {
-while($row = $result->fetchObject()) {
-/* fixing title string */
-/*   $title = "";
-$edition = "";
-$year = "";
-$title = "{$row->book} by {$row->author}";
-if($row->edition) {
-$edition = "<i>ed</i>: {$row->edition}";
-}
-if($row->year) {
-if($row->edition) {
-$year = ", <i>pub</i>: {$row->year}";
-} else {
-$year = "<i>pub</i>: {$row->year}";
-}
-}
-if($edition or $year) {
-$title .= "({$edition} {$year})";
-}
-$form["wrapper"][$row->id] = array(
-"#type" => "checkbox",
-"#title" => $title,
-"#prefix" => "<div class='title'>",
-"#suffix" => "</div>",
-);
-}
-}
-$form["submit"] = array(
-"#type" => "submit",
-"#value" => "Submit Book Selections"
-);
-return $form;
-}*/
-/*function textbook_companion_aicte_proposal_form_validate($form, &$form_state) {
-/*$query = "
-SELECT * FROM textbook_companion_aicte
-WHERE status = 0 AND selected = 0
-";
-$result = db_query($query);*/
-/*$query = db_select('textbook_companion_aicte');
-$query->fields('textbook_companion_aicte');
-$query->condition('status', 0);
-$query->condition('selected', 0);
-$result = $query->execute();
-
-$count = 0;
-$selections = array();
-while($row = $result->fetchObject()) {
-if($form_state["values"][$row->id] == 1) {
-$count++;
-array_push($selections, $row->id);
-}
-}
-/* user can choose only 3 books to propose */
-/* if($count != 3) {
-form_set_error("", "Please select exactly <strong>3</strong> books. You currently selected <strong>{$count}</strong>");
-} else {
-$form_state["values"]["selections"] = $selections;
-}
-}*/
-/*function textbook_companion_aicte_proposal_form_submit($form, &$form_state) {
-$user = \Drupal::currentUser();
-$selections = $form_state["values"]["selections"];
-var_dump($selections);    
-variable_set("aicte_".$user->uid, $selections);
-drupal_goto("proposal");
-}*/
-/*function textbook_companion_aicte_report_form($form_state) {
-/*$query = "
-SELECT * FROM textbook_companion_aicte
-WHERE status = 0
-ORDER BY book
-";
-$result = db_query($query);*/
-/*$query = db_select('textbook_companion_aicte');
-$query->fields('textbook_companion_aicte');
-$query->condition('status', 0);
-$query->orderBy('book', 'ASC');
-$result = $query->execute();
-
-$books = array();
-$books[0] = "Please select a book";
-while($row = $result->fetchObject()) {
-$books[$row->id] = "{$row->book} ({$row->author})";
-}
-$form = array();
-$form["name"] = array(
-"#type" => "textfield",
-"#title" => "Name",
-"#description" => t("Please enter your name."),
-);
-$form["email"] = array(
-"#type" => "textfield",
-"#title" => "Email",
-"#description" => t("Please enter your valid email id."),
-);
-$form["number"] = array(
-"#type" => "textfield",
-"#title" => "Number",
-"#description" => t("Please enter your valid phone number."),
-);
-$form["book"] = array(
-"#type" => "select",
-"#title" => "AICTE Book",
-"#description" => t("Please select a book."),
-"#options" => $books
-);
-$form["comment"] = array(
-"#type" => "textarea",
-"#title" => "Any other comment?",
-"#description" => t("Please enter your query (if any)")
-);
-$form["submit"] = array(
-"#type" => "submit",
-"#value" => "Submit"
-);
-return $form;
-}
-*/
-/*function textbook_companion_aicte_report_form_submit($form, &$form_state) {
-$v = $form_state["values"];
-
-/*$query = "
-INSERT INTO textbook_companion_aicte_report
-(aicte_id, name, number, email, comment)
-VALUES
-(%d, '%s', '%s', '%s', '%s')
-";
-$result = db_query($query, 
-$v["book"], $v["name"], $v["number"], $v["email"], $v["comment"]
-);*/
-/*$query = "INSERT INTO textbook_companion_aicte_report
-(aicte_id, name, number, email, comment)
-VALUES (:aicte_id, :name, :number, :email, :comment)";
-$args = array(
-":aicte_id" => $v["book"],
-":name" => $v["name"],
-":number" => $v["number"],
-":email" =>$v["email"],
-":comment" => $v["comment"]
-);
-$result = db_query($query, $args, array('return' => Database::RETURN_INSERT_ID));
-
-drupal_set_message("Thank you for reporting.", "status");
-}
-*/
 function textbook_companion_aicte_proposal_all()
 {
 	$user = \Drupal::currentUser();
@@ -1252,8 +1078,8 @@ function textbook_companion_mail($key, &$message, $params)
 			$user_data = \Drupal::entityTypeManager()->getStorage('user')->load($params['proposal_received']['user_id']);
 			$message['headers'] = $params['proposal_received']['headers'];
 			$site_name = \Drupal::config('system.site')->get('name');
-$message['subject'] = t('[@site_name] Your textbook companion book proposal has been received', array(
-				'@site_name' => $site_name));
+$message['subject'] = t('[@site] Your textbook companion book proposal has been received', array(
+				'@site' => $site_name));
 
 			
 $message['body'] = [
@@ -1284,7 +1110,7 @@ Your proposal is under review. You will soon receive an email when your proposal
 
 Best Wishes,
 
-@site_name Team
+@site Team
 FOSSEE, IIT Bombay',
     [
       '@full_name' => $proposal_data->full_name,
@@ -1302,165 +1128,208 @@ FOSSEE, IIT Bombay',
       '@publisher' => $preference1_data->publisher,
       '@edition' => $preference1_data->edition,
       '@year' => $preference1_data->year,
-      '@site_name' => $site_name,
+      '@site' => $site_name,
     ]
   ),
   //'#format' => 'plain_text', // or 'full_html' if needed
 ];
 			break;
-		case 'proposal_disapproved':
 
-			/* initializing data */
-			/*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d LIMIT 1", $params['proposal_disapproved']['proposal_id']);
-			$proposal_data = db_fetch_object($proposal_q);*/
-			$query = \Drupal::database()->select('textbook_companion_proposal');
-			$query->fields('textbook_companion_proposal');
-			$query->condition('id', $params['proposal_disapproved']['proposal_id']);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$proposal_data = $result->fetchObject();
-			/*$preference1_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d AND pref_number = %d LIMIT 1", $params['proposal_disapproved']['proposal_id'], 1);
-			$preference1_data = db_fetch_object($preference1_q);*/
-			$query = \Drupal::database()->select('textbook_companion_preference');
-			$query->fields('textbook_companion_preference');
-			$query->condition('proposal_id', $params['proposal_disapproved']['proposal_id']);
-			$query->condition('pref_number', 1);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$preference1_data = $result->fetchObject();
-			$user_data = \Drupal::entityTypeManager()->getStorage('user')->load($params['proposal_disapproved']['user_id']);
-			$message['headers'] = $params['proposal_disapproved']['headers'];
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['subject'] = t('[!site_name] Your textbook companion book proposal has been disapproved', array(
-// 				'!site_name' => variable_get('site_name', '')
-// 			));
+case 'proposal_disapproved':
 
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['body'] = array(
-// 				'body' => t('
-// Dear ' . $proposal_data->full_name . ',
-// 
-// We regret to inform you that all the uploaded examples including the book
-// with following details have been deleted permanently.
-// 
-// Full Name: ' . $proposal_data->full_name . '
-// Email: ' . $user_data->mail . '
-// Mobile: ' . $proposal_data->mobile . '
-// Course: ' . $proposal_data->course . '
-// Department/Branch: ' . $proposal_data->branch . '
-// University/Institute: ' . $proposal_data->university . '
-// City: ' . $proposal_data->city . '
-// State: ' . $proposal_data->state . '
-// 
-// Expected date of completion: ' . date('d-m-Y', $proposal_data->completion_date) . '
-// 
-// Reason: ' . $proposal_data->reason . '
-// Reference: ' . $proposal_data->reference . '
-// 
-// Book Preference:-
-// Title of the book: ' . $preference1_data->book . '
-// Author name: ' . $preference1_data->author . '
-// ISBN No.: ' . $preference1_data->isbn . '
-// Publisher and Place: ' . $preference1_data->publisher . '
-// Edition: ' . $preference1_data->edition . '
-// Year of publication: ' . $preference1_data->year . '
-// 
-// Reason for disapproval: ' . $proposal_data->message . '
-// 
-// You are welcome to submit a new proposal.
-// 
-// Best Wishes,
-// 
-// !site_name Team
-// FOSSEE, IIT Bombay', array(
-// 					'!site_name' => variable_get('site_name', ''),
-// 					'!user_name' => $user_data->name
-// 				))
-// 			);
+  // Load proposal
+  $query = \Drupal::database()->select('textbook_companion_proposal', 'p');
+  $query->fields('p');
+  $query->condition('id', $params['proposal_disapproved']['proposal_id']);
+  $query->range(0, 1);
+  $proposal_data = $query->execute()->fetchObject();
 
-			break;
-		case 'proposal_approved':
-		
-			/*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d LIMIT 1", $params['proposal_approved']['proposal_id']);
-			$proposal_data = db_fetch_object($proposal_q);*/
-			$query = \Drupal::database()->select('textbook_companion_proposal');
-			$query->fields('textbook_companion_proposal');
-			$query->condition('id', $params['proposal_approved']['proposal_id']);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$proposal_data = $result->fetchObject();
-			/* $approved_preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d AND approval_status = 1 LIMIT 1", $params['proposal_approved']['proposal_id']);
-			$approved_preference_data = db_fetch_object($approved_preference_q);*/
-			$query = \Drupal::database()->select('textbook_companion_preference');
-			$query->fields('textbook_companion_preference');
-			$query->condition('proposal_id', $params['proposal_approved']['proposal_id']);
-			$query->condition('approval_status', 1);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$approved_preference_data = $result->fetchObject();
-			$user_data = \Drupal::entityTypeManager()->getStorage('user')->load($params['proposal_approved']['user_id']);
-			$message['headers'] = $params['proposal_approved']['headers'];
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['subject'] = t('[!site_name] Your book proposal has been approved', array(
-// 				'!site_name' => variable_get('site_name', '')
-// 			));
+  // Load preference
+  $query = \Drupal::database()->select('textbook_companion_preference', 'tp');
+  $query->fields('tp');
+  $query->condition('proposal_id', $params['proposal_disapproved']['proposal_id']);
+  $query->condition('pref_number', 1);
+  $query->range(0, 1);
+  $preference1_data = $query->execute()->fetchObject();
 
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['body'] = array(
-// 				'body' => t('
-// Dear ' . $proposal_data->full_name . ',
-// 
-// Congratulations! Your proposal for OpenModelica Textbook Companion with the following details is approved.
-// 
-// Full Name : ' . $proposal_data->full_name . '
-// Email : ' . $user_data->mail . '
-// Mobile : ' . $proposal_data->mobile . '
-// Course : ' . $proposal_data->course . '
-// Department/Branch : ' . $proposal_data->branch . '
-// University/Institute : ' . $proposal_data->university . '
-// College Teacher / Professor : ' . $proposal_data->faculty . '
-// Reviewer : ' . $proposal_data->reviewer . '
-// Expected date of completion : ' . date('d-m-Y', $proposal_data->completion_date) . '
-// 
-// Reason : ' . $proposal_data->reason . '
-// 
-// Reference : ' . $proposal_data->reference . '
-// 
-// Title of the book : ' . $approved_preference_data->book . '
-// Author name : ' . $approved_preference_data->author . '
-// ISBN No. : ' . $approved_preference_data->isbn . '
-// Publisher and Place : ' . $approved_preference_data->publisher . '
-// Edition : ' . $approved_preference_data->edition . '
-// Year of publication : ' . $approved_preference_data->year . '
-// 
-// Please ensure that ALL the guidelines for coding are strictly followed:
-// 
-// http://om.fossee.in/textbook-companion/guidelines-coding
-// 
-// 
-// Best Wishes,
-// 
-// !site_name Team
-// FOSSEE, IIT Bombay', array(
-// 					'!site_name' => variable_get('site_name', ''),
-// 					'!user_name' => $user_data->name
-// 				))
-// 			);
+  // Load user safely
+  $user_data = \Drupal::entityTypeManager()
+    ->getStorage('user')
+    ->load($params['proposal_disapproved']['user_id']);
 
-			break;
-		case 'proposal_completed':
+  $email = $user_data ? $user_data->getEmail() : 'N/A';
+
+  // Site name
+  $site_name = \Drupal::config('system.site')->get('name');
+
+  // Headers
+  $message['headers'] = $params['proposal_disapproved']['headers'];
+$message['subject'] = t('[@site] Your textbook companion book proposal has been diapproved', array(
+				'@site' => $site_name));
+
+  // Body
+  $message['body'][] = t(
+"Dear @name,
+
+We regret to inform you that all the uploaded examples including the book
+with following details have been deleted permanently.
+
+Full Name: @full_name
+Email: @email
+Mobile: @mobile
+Course: @course
+Department/Branch: @branch
+University/Institute: @university
+City: @city
+State: @state
+
+Expected date of completion: @completion_date
+
+Reason: @reason
+Reference: @reference
+
+Book Preference:-
+Title of the book: @book
+Author name: @author
+ISBN No.: @isbn
+Publisher and Place: @publisher
+Edition: @edition
+Year of publication: @year
+
+Reason for disapproval: @disapproval_message
+
+You are welcome to submit a new proposal.
+
+Best Wishes,
+
+@site Team,
+FOSSEE, IIT Bombay",
+[
+  '@name' => $proposal_data->full_name ?? '',
+  '@full_name' => $proposal_data->full_name ?? '',
+  '@email' => $email,
+  '@mobile' => $proposal_data->mobile ?? '',
+  '@course' => $proposal_data->course ?? '',
+  '@branch' => $proposal_data->branch ?? '',
+  '@university' => $proposal_data->university ?? '',
+  '@city' => $proposal_data->city ?? '',
+  '@state' => $proposal_data->state ?? '',
+  '@completion_date' => !empty($proposal_data->completion_date)
+    ? date('d-m-Y', $proposal_data->completion_date)
+    : '',
+  '@reason' => $proposal_data->reason ?? '',
+  '@reference' => $proposal_data->reference ?? '',
+  '@book' => $preference1_data->book ?? '',
+  '@author' => $preference1_data->author ?? '',
+  '@isbn' => $preference1_data->isbn ?? '',
+  '@publisher' => $preference1_data->publisher ?? '',
+  '@edition' => $preference1_data->edition ?? '',
+  '@year' => $preference1_data->year ?? '',
+  '@disapproval_message' => $proposal_data->message ?? '',
+  '@site' => $site_name,
+]
+);
+
+break;
+
+case 'proposal_approved':
+
+  // Load proposal
+  $query = \Drupal::database()->select('textbook_companion_proposal', 'p');
+  $query->fields('p');
+  $query->condition('p.id', $params['proposal_approved']['proposal_id']);
+  $query->range(0, 1);
+  $proposal_data = $query->execute()->fetchObject();
+
+  // Load approved preference
+  $query = \Drupal::database()->select('textbook_companion_preference', 'tp');
+  $query->fields('tp');
+  $query->condition('tp.proposal_id', $params['proposal_approved']['proposal_id']);
+  $query->condition('tp.approval_status', 1);
+  $query->range(0, 1);
+  $approved_preference_data = $query->execute()->fetchObject();
+
+  // Load user safely
+  $user_data = \Drupal::entityTypeManager()
+    ->getStorage('user')
+    ->load($params['proposal_approved']['user_id']);
+
+  $email = $user_data ? $user_data->getEmail() : 'N/A';
+
+  // Site name
+  $site_name = \Drupal::config('system.site')->get('name');
+
+  // Headers
+  $message['headers'] = $params['proposal_approved']['headers'];
+
+  // Subject
+  $message['subject'] = t(
+    '[@site] Your book proposal has been approved',
+    ['@site' => $site_name]
+  );
+
+  // Body
+  $message['body'][] = t(
+"Dear @name,
+
+Congratulations! Your proposal for OpenModelica Textbook Companion with the following details is approved.
+
+Full Name : @full_name
+Email : @email
+Mobile : @mobile
+Course : @course
+Department/Branch : @branch
+University/Institute : @university
+College Teacher / Professor : @faculty
+Reviewer : @reviewer
+Expected date of completion : @completion_date
+
+Reason : @reason
+
+Reference : @reference
+
+Title of the book : @book
+Author name : @author
+ISBN No. : @isbn
+Publisher and Place : @publisher
+Edition : @edition
+Year of publication : @year
+
+Please ensure that ALL the guidelines for coding are strictly followed:
+http://om.fossee.in/textbook-companion/guidelines-coding
+
+Best Wishes,
+
+@site Team
+FOSSEE, IIT Bombay",
+[
+  '@name' => $proposal_data->full_name ?? '',
+  '@full_name' => $proposal_data->full_name ?? '',
+  '@email' => $email,
+  '@mobile' => $proposal_data->mobile ?? '',
+  '@course' => $proposal_data->course ?? '',
+  '@branch' => $proposal_data->branch ?? '',
+  '@university' => $proposal_data->university ?? '',
+  '@faculty' => $proposal_data->faculty ?? '',
+  '@reviewer' => $proposal_data->reviewer ?? '',
+  '@completion_date' => !empty($proposal_data->completion_date)
+    ? date('d-m-Y', $proposal_data->completion_date)
+    : '',
+  '@reason' => $proposal_data->reason ?? '',
+  '@reference' => $proposal_data->reference ?? '',
+  '@book' => $approved_preference_data->book ?? '',
+  '@author' => $approved_preference_data->author ?? '',
+  '@isbn' => $approved_preference_data->isbn ?? '',
+  '@publisher' => $approved_preference_data->publisher ?? '',
+  '@edition' => $approved_preference_data->edition ?? '',
+  '@year' => $approved_preference_data->year ?? '',
+  '@site' => $site_name,
+]
+);
+
+break;
+
+case 'proposal_completed':
 			
 			/*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d LIMIT 1", $params['proposal_completed']['proposal_id']);
 			$proposal_data = db_fetch_object($proposal_q);*/
@@ -1485,53 +1354,78 @@ FOSSEE, IIT Bombay',
 // // @FIXME
 // // This looks like another module's variable. You'll need to rewrite this call
 // // to ensure that it uses the correct configuration object.
-// $message['subject'] = t('[!site_name] Congratulations on the completion of the Textbook Companion.', array(
-// 				'!site_name' => variable_get('site_name', '')
-// 			));
+// Get site name
+$site_name = \Drupal::config('system.site')->get('name');
 
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['body'] = array(
-// 				'body' => t('
-// Dear ' . $proposal_data->full_name . ',
-// 
-// The textbook companion on the following book has been completed successfully by you:
-// 
-// Full Name : ' . $proposal_data->full_name . '
-// Email : ' . $user_data->mail . '
-// Mobile : ' . $proposal_data->mobile . '
-// Course : ' . $proposal_data->course . '
-// Department/Branch : ' . $proposal_data->branch . '
-// University/Institute : ' . $proposal_data->university . '
-// College Teacher / Professor : ' . $proposal_data->faculty . '
-// Reviewer : ' . $proposal_data->reviewer . '
-// Expected date of completion : ' . date('d-m-Y', $proposal_data->completion_date) . '
-// 
-// 
-// Title of the book : ' . $approved_preference_data->book . '
-// Author name : ' . $approved_preference_data->author . '
-// ISBN No. : ' . $approved_preference_data->isbn . '
-// Publisher and Place : ' . $approved_preference_data->publisher . '
-// Edition : ' . $approved_preference_data->edition . '
-// Year of publication : ' . $approved_preference_data->year . '
-// 
-// Your book is now available at following link to download.
-// 
-// http://om.fossee.in/textbook-companion/textbook-run/' . $approved_preference_data->id . '
-// 
-// Now you should be able to propose a new book.
-// 
-// Best Wishes,
-// 
-// !site_name Team
-// FOSSEE, IIT Bombay', array(
-// 					'!site_name' => variable_get('site_name', ''),
-// 					'!user_name' => $user_data->name
-// 				))
-// 			);
+// Safe user email
+$email = $user_data ? $user_data->getEmail() : '';
 
+// Subject
+$message['subject'] = t(
+  '[@site] Congratulations on the completion of the Textbook Companion',
+  ['@site' => $site_name]
+);
+
+// Build download link
+$download_link = !empty($approved_preference_data->id)
+  ? 'http://om.fossee.in/textbook-companion/textbook-run/' . $approved_preference_data->id
+  : '';
+
+// Body
+$message['body'][] = t(
+"Dear @name,
+
+The textbook companion on the following book has been completed successfully by you:
+
+Full Name : @full_name
+Email : @email
+Mobile : @mobile
+Course : @course
+Department/Branch : @branch
+University/Institute : @university
+College Teacher / Professor : @faculty
+Reviewer : @reviewer
+Expected date of completion : @completion_date
+
+Title of the book : @book
+Author name : @author
+ISBN No. : @isbn
+Publisher and Place : @publisher
+Edition : @edition
+Year of publication : @year
+
+Your book is now available at the following link to download:
+@download_link
+
+Now you should be able to propose a new book.
+
+Best Wishes,
+
+@site Team
+FOSSEE, IIT Bombay",
+[
+  '@name' => $proposal_data->full_name ?? '',
+  '@full_name' => $proposal_data->full_name ?? '',
+  '@email' => $email,
+  '@mobile' => $proposal_data->mobile ?? '',
+  '@course' => $proposal_data->course ?? '',
+  '@branch' => $proposal_data->branch ?? '',
+  '@university' => $proposal_data->university ?? '',
+  '@faculty' => $proposal_data->faculty ?? '',
+  '@reviewer' => $proposal_data->reviewer ?? '',
+  '@completion_date' => !empty($proposal_data->completion_date)
+    ? date('d-m-Y', $proposal_data->completion_date)
+    : '',
+  '@book' => $approved_preference_data->book ?? '',
+  '@author' => $approved_preference_data->author ?? '',
+  '@isbn' => $approved_preference_data->isbn ?? '',
+  '@publisher' => $approved_preference_data->publisher ?? '',
+  '@edition' => $approved_preference_data->edition ?? '',
+  '@year' => $approved_preference_data->year ?? '',
+  '@download_link' => $download_link,
+  '@site' => $site_name,
+]
+);
 			break;
 		/***********************************************************************************************/
 		case 'all_code_submitted':
@@ -1558,117 +1452,165 @@ FOSSEE, IIT Bombay',
 // // @FIXME
 // // This looks like another module's variable. You'll need to rewrite this call
 // // to ensure that it uses the correct configuration object.
-// $message['subject'] = t('[!site_name][Textbook Companion] You have marked to submited code for all examples.', array(
-// 				'!site_name' => variable_get('site_name', '')
-// 			));
+// Get site name
+$site_name = \Drupal::config('system.site')->get('name');
 
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['body'] = array(
-// 				'body' => t('
-// Dear ' . $proposal_data->full_name . ',
-// 
-// You have submitted codes for all examples:
-// 
-// Full Name : ' . $proposal_data->full_name . '
-// Email : ' . $user_data->mail . '
-// Mobile : ' . $proposal_data->mobile . '
-// Course : ' . $proposal_data->course . '
-// Department/Branch : ' . $proposal_data->branch . '
-// University/Institute : ' . $proposal_data->university . '
-// College Teacher / Professor : ' . $proposal_data->faculty . '
-// Reviewer : ' . $proposal_data->reviewer . '
-// Expected date of completion : ' . date('d-m-Y', $proposal_data->completion_date) . '
-// 
-// 
-// Title of the book : ' . $approved_preference_data->book . '
-// Author name : ' . $approved_preference_data->author . '
-// ISBN No. : ' . $approved_preference_data->isbn . '
-// Publisher and Place : ' . $approved_preference_data->publisher . '
-// Edition : ' . $approved_preference_data->edition . '
-// Year of publication : ' . $approved_preference_data->year . '
-// 
-// You shall be notified after the code is reviewed.
-// 
-// Best Wishes,
-// 
-// !site_name Team
-// FOSSEE, IIT Bombay', array(
-// 					'!site_name' => variable_get('site_name', ''),
-// 					'!user_name' => $user_data->name
-// 				))
-// 			);
+// Subject
+$message['subject'] = t(
+  '[@site][Textbook Companion] You have submitted code for all examples.',
+  ['@site' => $site_name]
+);
 
-			break;
-		case 'all_code_submitted_status_changed':
+// Body
+$message['body'][] = t(
+"Dear @name,
 
-			/*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d LIMIT 1", $params['proposal_completed']['proposal_id']);
-			$proposal_data = db_fetch_object($proposal_q);*/
-			$query = \Drupal::database()->select('textbook_companion_proposal');
-			$query->fields('textbook_companion_proposal');
-			$query->condition('id', $params['all_code_submitted_status_changed']['proposal_id']);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$proposal_data = $result->fetchObject();
-			/*$approved_preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d AND approval_status = 1 LIMIT 1", $params['proposal_completed']['proposal_id']);
-			$approved_preference_data = db_fetch_object($approved_preference_q);*/
-			$query = \Drupal::database()->select('textbook_companion_preference');
-			$query->fields('textbook_companion_preference');
-			$query->condition('proposal_id', $params['all_code_submitted_status_changed']['proposal_id']);
-			$query->condition('approval_status', 1);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$approved_preference_data = $result->fetchObject();
-			$user_data = \Drupal::entityTypeManager()->getStorage('user')->load($params['all_code_submitted_status_changed']['user_id']);
-			$message['headers'] = $params['all_code_submitted_status_changed']['headers'];
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['subject'] = t('[!site_name][Textbook Companion] Your interface for code submission has been enabled by the reviewer', array(
-// 				'!site_name' => variable_get('site_name', '')
-// 			));
+You have submitted codes for all examples:
 
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['body'] = array(
-// 				'body' => t('
-// Dear ' . $proposal_data->full_name . ',
-// 
-// Your interface for code submission has been enabled by the reviewer, you can now able to send more code for this book.
-// 
-// Full Name : ' . $proposal_data->full_name . '
-// Email : ' . $user_data->mail . '
-// Mobile : ' . $proposal_data->mobile . '
-// Course : ' . $proposal_data->course . '
-// Department/Branch : ' . $proposal_data->branch . '
-// University/Institute : ' . $proposal_data->university . '
-// College Teacher / Professor : ' . $proposal_data->faculty . '
-// Reviewer : ' . $proposal_data->reviewer . '
-// Expected date of completion : ' . date('d-m-Y', $proposal_data->completion_date) . '
-// 
-// 
-// Title of the book : ' . $approved_preference_data->book . '
-// Author name : ' . $approved_preference_data->author . '
-// ISBN No. : ' . $approved_preference_data->isbn . '
-// Publisher and Place : ' . $approved_preference_data->publisher . '
-// Edition : ' . $approved_preference_data->edition . '
-// Year of publication : ' . $approved_preference_data->year . '
-// 
-// Best Wishes,
-// 
-// !site_name Team
-// FOSSEE, IIT Bombay', array(
-// 					'!site_name' => variable_get('site_name', ''),
-// 					'!user_name' => $user_data->name
-// 				))
-// 			);
+Full Name : @full_name
+Email : @email
+Mobile : @mobile
+Course : @course
+Department/Branch : @branch
+University/Institute : @university
+College Teacher / Professor : @faculty
+Reviewer : @reviewer
+Expected date of completion : @completion_date
 
-			break;
+Title of the book : @book
+Author name : @author
+ISBN No. : @isbn
+Publisher and Place : @publisher
+Edition : @edition
+Year of publication : @year
+
+You shall be notified after the code is reviewed.
+
+Best Wishes,
+
+@site Team
+FOSSEE, IIT Bombay",
+[
+  '@name' => $proposal_data->full_name ?? '',
+  '@full_name' => $proposal_data->full_name ?? '',
+  '@email' => $user_data ? $user_data->getEmail() : '',
+  '@mobile' => $proposal_data->mobile ?? '',
+  '@course' => $proposal_data->course ?? '',
+  '@branch' => $proposal_data->branch ?? '',
+  '@university' => $proposal_data->university ?? '',
+  '@faculty' => $proposal_data->faculty ?? '',
+  '@reviewer' => $proposal_data->reviewer ?? '',
+  '@completion_date' => !empty($proposal_data->completion_date)
+    ? date('d-m-Y', $proposal_data->completion_date)
+    : '',
+  '@book' => $approved_preference_data->book ?? '',
+  '@author' => $approved_preference_data->author ?? '',
+  '@isbn' => $approved_preference_data->isbn ?? '',
+  '@publisher' => $approved_preference_data->publisher ?? '',
+  '@edition' => $approved_preference_data->edition ?? '',
+  '@year' => $approved_preference_data->year ?? '',
+  '@site' => $site_name,
+]
+);
+	break;
+
+
+case 'all_code_submitted_status_changed':
+
+  $connection = \Drupal::database();
+
+  // Proposal data
+  $proposal_data = $connection->select('textbook_companion_proposal', 'pr')
+    ->fields('pr')
+    ->condition('id', $params['proposal_id'])   // ✅ fixed (flat param)
+    ->range(0, 1)
+    ->execute()
+    ->fetchObject();
+
+  if (!$proposal_data) {
+    return;
+  }
+
+  // Approved preference
+  $approved_preference_data = $connection->select('textbook_companion_preference', 'p')
+    ->fields('p')
+    ->condition('proposal_id', $params['proposal_id'])
+    ->condition('approval_status', 1)
+    ->range(0, 1)
+    ->execute()
+    ->fetchObject();
+
+  // User
+  $user_data = User::load((int) $params['user_id']);  // ✅ fixed
+
+  // Site name
+  $site_name = \Drupal::config('system.site')->get('name');
+
+  // Subject
+  $message['subject'] = t(
+    '[@site][Textbook Companion] Your interface for code submission has been enabled by the reviewer',
+    ['@site' => (string) $site_name]
+  );
+
+  // Body
+  $message['body'][] = t(
+"Dear @name,
+
+Your interface for code submission has been enabled by the reviewer. You can now submit more code for this book.
+
+Full Name : @full_name
+Email : @email
+Mobile : @mobile
+Course : @course
+Department/Branch : @branch
+University/Institute : @university
+College Teacher / Professor : @faculty
+Reviewer : @reviewer
+Expected date of completion : @completion_date
+
+Title of the book : @book
+Author name : @author
+ISBN No. : @isbn
+Publisher and Place : @publisher
+Edition : @edition
+Year of publication : @year
+
+Best Wishes,
+
+@site Team
+FOSSEE, IIT Bombay",
+  [
+    '@name' => (string) ($proposal_data->full_name ?? ''),
+    '@full_name' => (string) ($proposal_data->full_name ?? ''),
+    '@email' => $user_data ? $user_data->getEmail() : '',
+    '@mobile' => (string) ($proposal_data->mobile ?? ''),
+    '@course' => (string) ($proposal_data->course ?? ''),
+    '@branch' => (string) ($proposal_data->branch ?? ''),
+    '@university' => (string) ($proposal_data->university ?? ''),
+    '@faculty' => (string) ($proposal_data->faculty ?? ''),
+    '@reviewer' => (string) ($proposal_data->reviewer ?? ''),
+    '@completion_date' => !empty($proposal_data->completion_date)
+      ? date('d-m-Y', $proposal_data->completion_date)
+      : '',
+    '@book' => (string) ($approved_preference_data->book ?? ''),
+    '@author' => (string) ($approved_preference_data->author ?? ''),
+    '@isbn' => (string) ($approved_preference_data->isbn ?? ''),
+    '@publisher' => (string) ($approved_preference_data->publisher ?? ''),
+    '@edition' => (string) ($approved_preference_data->edition ?? ''),
+    '@year' => (string) ($approved_preference_data->year ?? ''),
+    '@site' => (string) $site_name,
+  ]
+  );
+
+  // ✅ Correct header handling (DO NOT overwrite headers)
+  if (!empty($params['cc'])) {
+    $message['headers']['Cc'] = $params['cc'];
+  }
+  if (!empty($params['bcc'])) {
+    $message['headers']['Bcc'] = $params['bcc'];
+  }
+
+  break;
 		/*****************************************************************************************/
 		case 'example_uploaded':
 
@@ -1702,228 +1644,310 @@ FOSSEE, IIT Bombay',
 			$message['headers'] = $params['example_uploaded']['headers'];
 			// @FIXME
 // // @FIXME
+
+$site_name = \Drupal::config('system.site')->get('name');
+
 // // This looks like another module's variable. You'll need to rewrite this call
 // // to ensure that it uses the correct configuration object.
-// $message['subject'] = t('[!site_name] You have uploaded example for Textbook Companion', array(
-// 				'!site_name' => variable_get('site_name', '')
-// 			));
-
+$message['subject'] = t(
+  '[@site] You have uploaded an example for Textbook Companion',
+  ['@site' => $site_name]
+);
 			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['body'] = array(
-// 				'body' => t('
-// Dear ' . $proposal_data->full_name . ',
-// 
-// You have uploaded the following solution :
-// 
-// Title of the book : ' . $preference_data->book . '
-// Title of the chapter : ' . $chapter_data->name . '
-// Example number : ' . $example_data->number . '
-// Caption : ' . $example_data->caption . '
-// 
-// You shall be notified after the solution is reviewed
-// 
-// Best Wishes,
-// 
-// !site_name Team
-// FOSSEE, IIT Bombay', array(
-// 					'!site_name' => variable_get('site_name', ''),
-// 					'!user_name' => $user_data->name
-// 				))
-// 			);
+// Get site name
+// $site_name = \Drupal::config('system.site')->get('name');
 
-			break;
-		case 'example_updated':
-			/*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE id = %d LIMIT 1", $params['example_updated']['example_id']);
-			$example_data = db_fetch_object($example_q);*/
-			$query = \Drupal::database()->select('textbook_companion_example');
-			$query->fields('textbook_companion_example');
-			$query->condition('id', $params['example_updated']['example_id']);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$example_data = $result->fetchObject();
-			$query = \Drupal::database()->select('textbook_companion_chapter');
-			$query->fields('textbook_companion_chapter');
-			$query->condition('id', $example_data->chapter_id);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$chapter_data = $result->fetchObject();
-			$query = \Drupal::database()->select('textbook_companion_preference');
-			$query->fields('textbook_companion_preference');
-			$query->condition('id', $chapter_data->preference_id);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$preference_data = $result->fetchObject();
-			$query = \Drupal::database()->select('textbook_companion_proposal');
-			$query->fields('textbook_companion_proposal');
-			$query->condition('id', $preference_data->proposal_id);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$proposal_data = $result->fetchObject();
-			$user_data = \Drupal::entityTypeManager()->getStorage('user')->load($params['example_updated']['user_id']);
-			$message['headers'] = $params['example_updated']['headers'];
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['subject'] = t('[!site_name] You have updated example for Textbook Companion', array(
-// 				'!site_name' => variable_get('site_name', '')
-// 			));
+// Body
+$message['body'][] = t(
+"Dear @name,
 
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['body'] = array(
-// 				'body' => t('
-// Dear ' . $proposal_data->full_name . ',
-// 
-// You have updated the following example:
-// 
-// Title of the book : ' . $preference_data->book . '
-// Title of the chapter : ' . $chapter_data->name . '
-// Example number : ' . $example_data->number . '
-// Caption : ' . $example_data->caption . '
-// 
-// The example is still under review. You will be notified when it has been approved.
-// 
-// Best Wishes,
-// 
-// !site_name Team,
-// FOSSEE,IIT Bombay', array(
-// 					'!site_name' => variable_get('site_name', ''),
-// 					'!user_name' => $user_data->name
-// 				))
-// 			);
+You have uploaded the following solution :
 
-			break;
-		case 'example_updated_admin':
-			/*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE id = %d LIMIT 1", $params['example_updated_admin']['example_id']);
-			$example_data = db_fetch_object($example_q);*/
-			$query = \Drupal::database()->select('textbook_companion_example');
-			$query->fields('textbook_companion_example');
-			$query->condition('id', $params['example_updated_admin']['example_id']);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$example_data = $result->fetchObject();
-			$query = \Drupal::database()->select('textbook_companion_chapter');
-			$query->fields('textbook_companion_chapter');
-			$query->condition('id', $example_data->chapter_id);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$chapter_data = $result->fetchObject();
-			$query = \Drupal::database()->select('textbook_companion_preference');
-			$query->fields('textbook_companion_preference');
-			$query->condition('id', $chapter_data->preference_id);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$preference_data = $result->fetchObject();
-			$query = \Drupal::database()->select('textbook_companion_proposal');
-			$query->fields('textbook_companion_proposal');
-			$query->condition('id', $preference_data->proposal_id);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$proposal_data = $result->fetchObject();
-			$user_data = \Drupal::entityTypeManager()->getStorage('user')->load($params['example_updated_admin']['user_id']);
-			$message['headers'] = $params['example_updated_admin']['headers'];
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['subject'] = t('[!site_name] Reviewer have updated example for Textbook Companion ', array(
-// 				'!site_name' => variable_get('site_name', '')
-// 			));
+Title of the book : @book
+Title of the chapter : @chapter
+Example number : @example_number
+Caption : @caption
 
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['body'] = array(
-// 				'body' => t('
-// Dear ' . $proposal_data->full_name . ',
-// 
-// Reviewer have updated the following example:
-// 
-// Title of the book : ' . $preference_data->book . '
-// Title of the chapter : ' . $chapter_data->name . '
-// Example number : ' . $example_data->number . '
-// Caption : ' . $example_data->caption . '
-// 
-// Best Wishes,
-// 
-// !site_name Team,
-// FOSSEE,IIT Bombay', array(
-// 					'!site_name' => variable_get('site_name', ''),
-// 					'!user_name' => $user_data->name
-// 				))
-// 			);
+You shall be notified after the solution is reviewed
 
-			break;
-		case 'example_approved':
-			
-			/*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE id = %d LIMIT 1", $params['example_approved']['example_id']);
-			$example_data = db_fetch_object($example_q);*/
-			$query = \Drupal::database()->select('textbook_companion_example');
-			$query->fields('textbook_companion_example');
-			$query->condition('id', $params['example_approved']['example_id']);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$example_data = $result->fetchObject();
-			$query = \Drupal::database()->select('textbook_companion_chapter');
-			$query->fields('textbook_companion_chapter');
-			$query->condition('id', $example_data->chapter_id);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$chapter_data = $result->fetchObject();
-			$query = \Drupal::database()->select('textbook_companion_preference');
-			$query->fields('textbook_companion_preference');
-			$query->condition('id', $chapter_data->preference_id);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$preference_data = $result->fetchObject();
-			$query = \Drupal::database()->select('textbook_companion_proposal');
-			$query->fields('textbook_companion_proposal');
-			$query->condition('id', $preference_data->proposal_id);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$proposal_data = $result->fetchObject();
-			$user_data = \Drupal::entityTypeManager()->getStorage('user')->load($params['example_approved']['user_id']);
-			$message['headers'] = $params['example_approved']['headers'];
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['subject'] = t('[!site_name] Your uploaded example has been approved for Textbook Companion', array(
-// 				'!site_name' => variable_get('site_name', '')
-// 			));
+Best Wishes,
 
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['body'] = array(
-// 				'body' => t('
-// Dear ' . $proposal_data->full_name . ',
-// 
-// Your example for OpenModelica Textbook Companion with the following details is approved.
-// 
-// Title of the book : ' . $preference_data->book . '
-// Title of the chapter : ' . $chapter_data->name . '
-// Example number : ' . $example_data->number . '
-// Caption : ' . $example_data->caption . '
-// 
-// Best Wishes,
-// 
-// !site_name Team,
-// FOSSEE,IIT Bombay', array(
-// 					'!site_name' => variable_get('site_name', ''),
-// 					'!user_name' => $user_data->name
-// 				))
-// 			);
+@site Team
+FOSSEE, IIT Bombay",
+[
+  '@name' => $proposal_data->full_name ?? '',
+  '@book' => $preference_data->book ?? '',
+  '@chapter' => $chapter_data->name ?? '',
+  '@example_number' => $example_data->number ?? '',
+  '@caption' => $example_data->caption ?? '',
+  '@site' => $site_name,
+]
+);
+break;
 
-			break;
+
+		
+case 'example_updated':
+
+  $connection = \Drupal::database();
+
+  // Example
+  $example_data = $connection->select('textbook_companion_example', 'e')
+    ->fields('e')
+    ->condition('id', $params['example_id'])
+    ->range(0, 1)
+    ->execute()
+    ->fetchObject();
+
+  if (!$example_data) {
+    return;
+  }
+
+  // Chapter
+  $chapter_data = $connection->select('textbook_companion_chapter', 'c')
+    ->fields('c')
+    ->condition('id', $example_data->chapter_id)
+    ->range(0, 1)
+    ->execute()
+    ->fetchObject();
+
+  // Preference
+  $preference_data = $connection->select('textbook_companion_preference', 'p')
+    ->fields('p')
+    ->condition('id', $chapter_data->preference_id)
+    ->range(0, 1)
+    ->execute()
+    ->fetchObject();
+
+  // Proposal
+  $proposal_data = $connection->select('textbook_companion_proposal', 'pr')
+    ->fields('pr')
+    ->condition('id', $preference_data->proposal_id)
+    ->range(0, 1)
+    ->execute()
+    ->fetchObject();
+
+  // Site name
+  $site_name = \Drupal::config('system.site')->get('name');
+
+  // Subject
+  $message['subject'] = t(
+    '[@site] You have updated example for Textbook Companion',
+    ['@site' => $site_name]
+  );
+
+  // Body
+  $message['body'][] = t(
+"Dear @name,
+
+You have updated the following example:
+
+Title of the book : @book
+Title of the chapter : @chapter
+Example number : @example_number
+Caption : @caption
+
+The example is still under review. You will be notified when it has been approved.
+
+Best Wishes,
+
+@site Team,
+FOSSEE, IIT Bombay",
+  [
+    '@name' => (string) ($proposal_data->full_name ?? ''),
+    '@book' => (string) ($preference_data->book ?? ''),
+    '@chapter' => (string) ($chapter_data->name ?? ''),
+    '@example_number' => (string) ($example_data->number ?? ''),
+    '@caption' => (string) ($example_data->caption ?? ''),
+    '@site' => (string) $site_name,
+  ]
+  );
+
+  // Headers
+  if (!empty($params['cc'])) {
+    $message['headers']['Cc'] = $params['cc'];
+  }
+  if (!empty($params['bcc'])) {
+    $message['headers']['Bcc'] = $params['bcc'];
+  }
+
+  break;
+
+case 'example_updated_admin':
+
+  $connection = \Drupal::database();
+
+  // Example data
+  $example_data = $connection->select('textbook_companion_example', 'e')
+    ->fields('e')
+    ->condition('id', $params['example_id'])   // ✅ fixed
+    ->range(0, 1)
+    ->execute()
+    ->fetchObject();
+
+  if (!$example_data) {
+    return;
+  }
+
+  // Chapter data
+  $chapter_data = $connection->select('textbook_companion_chapter', 'c')
+    ->fields('c')
+    ->condition('id', $example_data->chapter_id)
+    ->range(0, 1)
+    ->execute()
+    ->fetchObject();
+
+  // Preference data
+  $preference_data = $connection->select('textbook_companion_preference', 'p')
+    ->fields('p')
+    ->condition('id', $chapter_data->preference_id)
+    ->range(0, 1)
+    ->execute()
+    ->fetchObject();
+
+  // Proposal data
+  $proposal_data = $connection->select('textbook_companion_proposal', 'pr')
+    ->fields('pr')
+    ->condition('id', $preference_data->proposal_id)
+    ->range(0, 1)
+    ->execute()
+    ->fetchObject();
+
+  // User
+  $user_data = User::load((int) $params['user_id']);   // ✅ fixed
+
+  // Site name
+  $site_name = \Drupal::config('system.site')->get('name');
+
+  // Subject
+  $message['subject'] = t(
+    '[@site] Reviewer has updated example for Textbook Companion',
+    ['@site' => (string) $site_name]
+  );
+
+  // Body
+  $message['body'][] = t(
+"Dear @name,
+
+Reviewer has updated the following example:
+
+Title of the book : @book
+Title of the chapter : @chapter
+Example number : @example_number
+Caption : @caption
+
+Best Wishes,
+
+@site Team,
+FOSSEE, IIT Bombay",
+  [
+    '@name' => (string) ($proposal_data->full_name ?? ''),
+    '@book' => (string) ($preference_data->book ?? ''),
+    '@chapter' => (string) ($chapter_data->name ?? ''),
+    '@example_number' => (string) ($example_data->number ?? ''),
+    '@caption' => (string) ($example_data->caption ?? ''),
+    '@site' => (string) $site_name,
+  ]
+  );
+
+  // ✅ Correct header handling
+  if (!empty($params['cc'])) {
+    $message['headers']['Cc'] = $params['cc'];
+  }
+  if (!empty($params['bcc'])) {
+    $message['headers']['Bcc'] = $params['bcc'];
+  }
+
+  break;
+
+
+    case 'example_approved':
+
+      $connection = \Drupal::database();
+
+      // Example data
+      $example_data = $connection->select('textbook_companion_example', 'e')
+        ->fields('e')
+        ->condition('id', $params['example_id'])
+        ->range(0, 1)
+        ->execute()
+        ->fetchObject();
+
+      if (!$example_data) {
+        return;
+      }
+
+      // Chapter data
+      $chapter_data = $connection->select('textbook_companion_chapter', 'c')
+        ->fields('c')
+        ->condition('id', $example_data->chapter_id)
+        ->range(0, 1)
+        ->execute()
+        ->fetchObject();
+
+      // Preference data
+      $preference_data = $connection->select('textbook_companion_preference', 'p')
+        ->fields('p')
+        ->condition('id', $chapter_data->preference_id)
+        ->range(0, 1)
+        ->execute()
+        ->fetchObject();
+
+      // Proposal data
+      $proposal_data = $connection->select('textbook_companion_proposal', 'pr')
+        ->fields('pr')
+        ->condition('id', $preference_data->proposal_id)
+        ->range(0, 1)
+        ->execute()
+        ->fetchObject();
+
+      $config = \Drupal::config('system.site');
+
+$user_id = (int) $params['user_id'];
+$user = \Drupal\user\Entity\User::load($user_id);
+
+$message['subject'] = t('@site: Your uploaded example has been approved for Textbook Companion', [
+  '@site' => (string) $config->get('name'),
+]);
+
+$message['body'][] = t('Dear @name,', [
+  '@name' => (string) ($proposal_data->full_name ?? ''),
+]);
+
+$message['body'][] = t('Your example for OpenModelica Textbook Companion has been approved.');
+
+$message['body'][] = t('Title of the book: @book', [
+  '@book' => (string) ($preference_data->book ?? ''),
+]);
+
+$message['body'][] = t('Title of the chapter: @chapter', [
+  '@chapter' => (string) ($chapter_data->name ?? ''),
+]);
+
+$message['body'][] = t('Example number: @number', [
+  '@number' => (string) ($example_data->number ?? ''),
+]);
+
+$message['body'][] = t('Caption: @caption', [
+  '@caption' => (string) ($example_data->caption ?? ''),
+]);
+
+$message['body'][] = t('Best Wishes,');
+$message['body'][] = t('@site Team, FOSSEE, IIT Bombay', [
+  '@site' => (string) $config->get('name'),
+]);
+
+if (!empty($params['cc'])) {
+  $message['headers']['Cc'] = (string) $params['cc'];
+}
+if (!empty($params['bcc'])) {
+  $message['headers']['Bcc'] = (string) $params['bcc'];
+}
+      break;
+
+
+
+
 		case 'example_disapproved':
 			
 			$user_data = \Drupal::entityTypeManager()->getStorage('user')->load($params['example_disapproved']['user_id']);
@@ -1948,11 +1972,22 @@ FOSSEE, IIT Bombay',
 			$result = $query->execute();
 			$proposal_data = $result->fetchObject();
 			$message['headers'] = $params['example_disapproved']['headers'];
+			$recipient_name = $get_recipient_name($proposal_data, $user_data);
+			$subject = "[{$site_name}][Textbook Companion] Your uploaded example has been disapproved";
+			$body = "Dear {$recipient_name},\n\n"
+				. "Your following example has been disapproved:\n\n"
+				. "Title of the book: " . $get_field($preference_data, 'book', 'N/A') . "\n"
+				. "Title of the chapter: " . $get_field($chapter_data, 'name', 'N/A') . "\n"
+				. "Example number: " . (string) ($params['example_disapproved']['example_number'] ?? 'N/A') . "\n"
+				. "Caption: " . (string) ($params['example_disapproved']['example_caption'] ?? 'N/A') . "\n\n"
+				. "Reason for disapproval: " . (string) ($params['example_disapproved']['message'] ?? 'N/A') . "\n\n"
+				. $mail_signature;
+			$set_subject_body($message, $subject, $body);
 			// @FIXME
 // // @FIXME
 // // This looks like another module's variable. You'll need to rewrite this call
 // // to ensure that it uses the correct configuration object.
-// $message['subject'] = t('[!site_name] Your uploaded example has been disapproved for Textbook Companion', array(
+// $message['subject'] = t('[!site_name][Textbook Companion] Your uploaded example has been disapproved for Textbook Companion', array(
 // 				'!site_name' => variable_get('site_name', '')
 // 			));
 
@@ -1966,60 +2001,85 @@ FOSSEE, IIT Bombay',
 // 
 // Your following example has been disapproved:
 // 
-// Title of the book : ' . $preference_data->book . '
-// Title of the chapter : ' . $chapter_data->name . '
-// Example number : ' . $params['example_disapproved']['example_number'] . '
-// Caption : ' . $params['example_disapproved']['example_caption'] . '
+// Title of the book: ' . $preference_data->book . '
+// Title of the chapter: ' . $chapter_data->name . '
+// Example number: ' . $params['example_disapproved']['example_number'] . '
+// Caption: ' . $params['example_disapproved']['example_caption'] . '
 // 
-// Reason for dis-approval : ' . $params['example_disapproved']['message'] . '
+// Reason for dis-approval: ' . $params['example_disapproved']['message'] . '
 // 
 // Best Wishes,
 // 
 // !site_name Team,
-// FOSSEE,IIT Bombay', array(
+// FOSSEE, IIT Bombay', array(
 // 					'!site_name' => variable_get('site_name', ''),
 // 					'!user_name' => $user_data->name
 // 				))
 // 			);
 
 			break;
-		case 'example_deleted_user':
 
-			$user_data = \Drupal::entityTypeManager()->getStorage('user')->load($params['example_deleted_user']['user_id']);
-			$message['headers'] = $params['example_deleted_user']['headers'];
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['subject'] = t('[!site_name] User has deleted pending example for Textbook Companion', array(
-// 				'!site_name' => variable_get('site_name', '')
-// 			));
 
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['body'] = array(
-// 				'body' => t('
-// Dear !user_name,
-// 
-// Your following pending example has been deleted :
-// 
-// Title of the Book : ' . $params['example_deleted_user']['book_title'] . '
-// Title of the Chapter : ' . $params['example_deleted_user']['chapter_title'] . '
-// Example number : ' . $params['example_deleted_user']['example_number'] . '
-// Caption : ' . $params['example_deleted_user']['example_caption'] . '
-// 
-// Best Wishes,
-// 
-// !site_name Team,
-// FOSSEE,IIT Bombay', array(
-// 					'!site_name' => variable_get('site_name', ''),
-// 					'!user_name' => $user_data->name
-// 				))
-// 			);
 
-			break;
+case 'example_deleted_user':
+
+  // Load user
+  $user_data = User::load((int) $params['user_id']);
+
+  $connection = \Drupal::database();
+
+$proposal_data = $connection->select('textbook_companion_proposal', 'pr')
+  ->fields('pr')
+  ->condition('id', $params['proposal_id'])
+  ->range(0, 1)
+  ->execute()
+  ->fetchObject();
+
+  // Site config (replaces variable_get)
+  $config = \Drupal::config('system.site');
+
+  // Subject
+  $message['subject'] = t('@site User has deleted pending example for Textbook Companion', [
+    '@site' => (string) $config->get('name'),
+  ]);
+
+
+$message['body'][] = t('Dear @user_name,', [
+  '@user_name' => (string) ($proposal_data->full_name ?? ''),
+]);
+  $message['body'][] = t('Your following pending example has been deleted:');
+
+  $message['body'][] = t('Title of the Book: @book', [
+    '@book' => (string) ($params['book_title'] ?? ''),
+  ]);
+
+  $message['body'][] = t('Title of the Chapter: @chapter', [
+    '@chapter' => (string) ($params['chapter_title'] ?? ''),
+  ]);
+
+  $message['body'][] = t('Example number: @number', [
+    '@number' => (string) ($params['example_number'] ?? ''),
+  ]);
+
+  $message['body'][] = t('Caption: @caption', [
+    '@caption' => (string) ($params['example_caption'] ?? ''),
+  ]);
+
+  $message['body'][] = t('Best Wishes,');
+
+  $message['body'][] = t('@site Team, FOSSEE, IIT Bombay', [
+    '@site' => (string) $config->get('name'),
+  ]);
+
+  // Proper CC / BCC handling
+  if (!empty($params['cc'])) {
+    $message['headers']['Cc'] = (string) $params['cc'];
+  }
+  if (!empty($params['bcc'])) {
+    $message['headers']['Bcc'] = (string) $params['bcc'];
+  }
+
+  			break;
 		case 'dependency_uploaded':
 			// bcc to textbook_companion_emails
 			$user_data = \Drupal::entityTypeManager()->getStorage('user')->load($params['dependency_uploaded']['user_id']);
@@ -2029,30 +2089,32 @@ FOSSEE, IIT Bombay',
 // // @FIXME
 // // This looks like another module's variable. You'll need to rewrite this call
 // // to ensure that it uses the correct configuration object.
-// $message['subject'] = t('[!site_name] You have uploaded dependency file', array(
-// 				'!site_name' => variable_get('site_name', '')
-// 			));
+// Get site name
+$site_name = \Drupal::config('system.site')->get('name');
 
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['body'] = array(
-// 				'body' => t('
-// Dear !user_name,
-// 
-// You have uploaded following dependency files :
-//     ' . $dependency_files . '
-// 
-// Best Wishes,
-// 
-// !site_name Team
-// FOSSEE, IIT Bombay', array(
-// 					'!site_name' => variable_get('site_name', ''),
-// 					'!user_name' => $user_data->name
-// 				))
-// 			);
+// Subject
+$message['subject'] = t(
+  '[@site] You have uploaded dependency file(s)',
+  ['@site' => $site_name]
+);
 
+// Body
+$message['body'][] = t(
+"Dear @user_name,
+
+You have uploaded the following dependency files:
+@files
+
+Best Wishes,
+
+@site Team
+FOSSEE, IIT Bombay",
+[
+  '@user_name' => $user_data ? $user_data->getDisplayName() : '',
+  '@files' => $dependency_files ?? '',
+  '@site' => $site_name,
+]
+);
 			break;
 		case 'feedback_received':
 
@@ -2062,37 +2124,44 @@ FOSSEE, IIT Bombay',
 // // @FIXME
 // // This looks like another module's variable. You'll need to rewrite this call
 // // to ensure that it uses the correct configuration object.
-// $message['subject'] = t('[!site_name] We have received your feedback', array(
-// 				'!site_name' => variable_get('site_name', '')
-// 			));
+// Get site name
+$site_name = \Drupal::config('system.site')->get('name');
 
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['body'] = array(
-// 				'body' => t('
-// Dear !user_name,
-// 
-// We have received your following feedback
-// 
-// Title of the Book: ' . $params['feedback_received']['book_title'] . '
-// Title of the Chapter: ' . $params['feedback_received']['chapter_number'] . ' ' . $params['feedback_received']['chapter_title'] . '
-// Example No.: ' . $params['feedback_received']['example_no'] . '
-// 
-// Your feedback :
-// ' . $params['feedback_received']['feedback'] . '
-// 
-// Best Wishes,
-// 
-// !site_name Team
-// FOSSEE, IIT Bombay', array(
-// 					'!site_name' => variable_get('site_name', ''),
-// 					'!user_name' => $user_data->name
-// 				))
-// 			);
+// Subject
+$message['subject'] = t(
+  '[@site] We have received your feedback',
+  ['@site' => $site_name]
+);
 
+// Body
+$message['body'][] = t(
+"Dear @user_name,
+
+We have received your following feedback:
+
+Title of the Book: @book
+Title of the Chapter: @chapter_number @chapter_title
+Example No.: @example_no
+
+Your feedback:
+@feedback
+
+Best Wishes,
+
+@site Team
+FOSSEE, IIT Bombay",
+[
+  '@user_name' => $user_data ? $user_data->getDisplayName() : '',
+  '@book' => $params['feedback_received']['book_title'] ?? '',
+  '@chapter_number' => $params['feedback_received']['chapter_number'] ?? '',
+  '@chapter_title' => $params['feedback_received']['chapter_title'] ?? '',
+  '@example_no' => $params['feedback_received']['example_no'] ?? '',
+  '@feedback' => $params['feedback_received']['feedback'] ?? '',
+  '@site' => $site_name,
+]
+);
 			break;
+
 		case 'internshipform':
 
 			$user_data = \Drupal::entityTypeManager()->getStorage('user')->load($params['internshipform']['user_id']);
@@ -2101,34 +2170,40 @@ FOSSEE, IIT Bombay',
 // // @FIXME
 // // This looks like another module's variable. You'll need to rewrite this call
 // // to ensure that it uses the correct configuration object.
-// $message['subject'] = t('[!site_name] We have received your feedback', array(
-// 				'!site_name' => variable_get('site_name', '')
-// 			));
+// Get site name
+$site_name = \Drupal::config('system.site')->get('name');
 
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['body'] = array(
-// 				'body' => t('
-// Dear !user_name,
-// 
-// We have received your Internship Form Application for the book
-// 
-// Title of the Book: ' . $params['internshipform']['book_title'] . '
-// Title of the Chapter: ' . $params['internshipform']['chapter_number'] . ' ' . $params['internshipform']['chapter_title'] . '
-// Example No.: ' . $params['internshipform']['example_no'] . '
-// 
-// Best Wishes,
-// 
-// !site_name Team
-// FOSSEE, IIT Bombay', array(
-// 					'!site_name' => variable_get('site_name', ''),
-// 					'!user_name' => $user_data->name
-// 				))
-// 			);
+// Subject
+$message['subject'] = t(
+  '[@site] We have received your Internship Form Application',
+  ['@site' => $site_name]
+);
 
-			break;
+// Body
+$message['body'][] = t(
+"Dear @user_name,
+
+We have received your Internship Form Application for the book:
+
+Title of the Book: @book
+Title of the Chapter: @chapter_number @chapter_title
+Example No.: @example_no
+
+Best Wishes,
+
+@site Team
+FOSSEE, IIT Bombay",
+[
+  '@user_name' => $user_data ? $user_data->getDisplayName() : '',
+  '@book' => $params['internshipform']['book_title'] ?? '',
+  '@chapter_number' => $params['internshipform']['chapter_number'] ?? '',
+  '@chapter_title' => $params['internshipform']['chapter_title'] ?? '',
+  '@example_no' => $params['internshipform']['example_no'] ?? '',
+  '@site' => $site_name,
+]
+);
+	break;
+
 		case 'copyrighttransferform':
 
 			$user_data = \Drupal::entityTypeManager()->getStorage('user')->load($params['copyrighttransferform']['user_id']);
@@ -2137,68 +2212,80 @@ FOSSEE, IIT Bombay',
 // // @FIXME
 // // This looks like another module's variable. You'll need to rewrite this call
 // // to ensure that it uses the correct configuration object.
-// $message['subject'] = t('[!site_name] We have received your feedback', array(
-// 				'!site_name' => variable_get('site_name', '')
-// 			));
+// Get site name
+$site_name = \Drupal::config('system.site')->get('name');
 
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['body'] = array(
-// 				'body' => t('
-// Dear !user_name,
-// 
-// We have received your Copyright Form Application for the book
-// 
-// Title of the Book: ' . $params['copyrighttransferform']['book_title'] . '
-// Title of the Chapter: ' . $params['copyrighttransferform']['chapter_number'] . ' ' . $params['copyrighttransferform']['chapter_title'] . '
-// Example No.: ' . $params['copyrighttransferform']['example_no'] . '
-// 
-// Best Wishes,
-// 
-// !site_name Team,
-// FOSSEE,IIT Bombay', array(
-// 					'!site_name' => variable_get('site_name', ''),
-// 					'!user_name' => $user_data->name
-// 				))
-// 			);
+// Subject
+$message['subject'] = t(
+  '[@site] We have received your Copyright Form Application',
+  ['@site' => $site_name]
+);
 
+// Body
+$message['body'][] = t(
+"Dear @user_name,
+
+We have received your Copyright Form Application for the book:
+
+Title of the Book: @book
+Title of the Chapter: @chapter_number @chapter_title
+Example No.: @example_no
+
+Best Wishes,
+
+@site Team,
+FOSSEE, IIT Bombay",
+[
+  '@user_name' => $user_data ? $user_data->getDisplayName() : '',
+  '@book' => $params['copyrighttransferform']['book_title'] ?? '',
+  '@chapter_number' => $params['copyrighttransferform']['chapter_number'] ?? '',
+  '@chapter_title' => $params['copyrighttransferform']['chapter_title'] ?? '',
+  '@example_no' => $params['copyrighttransferform']['example_no'] ?? '',
+  '@site' => $site_name,
+]
+);
 			break;
-		case 'undertakingform':
+		
+			case 'undertakingform':
 			$user_data = \Drupal::entityTypeManager()->getStorage('user')->load($params['undertakingform']['user_id']);
 			$message['headers'] = $params['undertakingform']['headers'];
 			// @FIXME
 // // @FIXME
 // // This looks like another module's variable. You'll need to rewrite this call
 // // to ensure that it uses the correct configuration object.
-// $message['subject'] = t('[!site_name] We have received your feedback', array(
-// 				'!site_name' => variable_get('site_name', '')
-// 			));
+// Get site name
+$site_name = \Drupal::config('system.site')->get('name');
 
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['body'] = array(
-// 				'body' => t('
-// Dear !user_name,
-// 
-// We have received your Undertaking Form Application for the book
-// 
-// Title of the Book: ' . $params['undertakingform']['book_title'] . '
-// Title of the Chapter: ' . $params['undertakingform']['chapter_number'] . ' ' . $params['undertakingform']['chapter_title'] . '
-// Example No.: ' . $params['undertakingform']['example_no'] . '
-// 
-// Best Wishes,
-// 
-// !site_name Team,
-// FOSSEE,IIT Bombay', array(
-// 					'!site_name' => variable_get('site_name', ''),
-// 					'!user_name' => $user_data->name
-// 				))
-// 			);
+// Subject
+$message['subject'] = t(
+  '[@site] We have received your feedback',
+  ['@site' => $site_name]
+);
 
+// Body
+$message['body'][] = t(
+'
+Dear @user_name,
+
+We have received your Undertaking Form Application for the book
+
+Title of the Book: @book_title
+Title of the Chapter: @chapter_number @chapter_title
+Example No.: @example_no
+
+Best Wishes,
+
+@site Team,
+FOSSEE,IIT Bombay',
+[
+  '@site' => $site_name,
+  '@user_name' => $user_data->name,
+  '@book_title' => $params['undertakingform']['book_title'],
+  '@chapter_number' => $params['undertakingform']['chapter_number'],
+  '@chapter_title' => $params['undertakingform']['chapter_title'],
+  '@example_no' => $params['undertakingform']['example_no'],
+]
+);
 			break;
 		case 'remark':
 			$user_data = \Drupal::entityTypeManager()->getStorage('user')->load($params['remark']['user_id']);
@@ -2207,34 +2294,41 @@ FOSSEE, IIT Bombay',
 // // @FIXME
 // // This looks like another module's variable. You'll need to rewrite this call
 // // to ensure that it uses the correct configuration object.
-// $message['subject'] = t('[!site_name] A remark has been given.Please check your contact detail form', array(
-// 				'!site_name' => variable_get('site_name', '')
-// 			));
+// Get site name
+$site_name = \Drupal::config('system.site')->get('name');
 
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['body'] = array(
-// 				'body' => t('
-// Dear !user_name,
-// 
-// A Remark has been given.Please check your Contact Detail Form
-// 
-// Title of the Book: ' . $params['internshipform']['book_title'] . '
-// Title of the Chapter: ' . $params['internshipform']['chapter_number'] . ' ' . $params['internshipform']['chapter_title'] . '
-// Example No.: ' . $params['internshipform']['example_no'] . '
-// 
-// Best Wishes,
-// 
-// !site_name Team,
-// FOSSEE,IIT Bombay', array(
-// 					'!site_name' => variable_get('site_name', ''),
-// 					'!user_name' => $user_data->name
-// 				))
-// 			);
+// Subject
+$message['subject'] = t(
+  '[@site] A remark has been given.Please check your contact detail form',
+  ['@site' => $site_name]
+);
 
+// Body
+$message['body'][] = t(
+'
+Dear @user_name,
+
+A Remark has been given.Please check your Contact Detail Form
+
+Title of the Book: @book_title
+Title of the Chapter: @chapter_number @chapter_title
+Example No.: @example_no
+
+Best Wishes,
+
+@site Team,
+FOSSEE,IIT Bombay',
+[
+  '@site' => $site_name,
+  '@user_name' => $user_data->name,
+  '@book_title' => $params['internshipform']['book_title'],
+  '@chapter_number' => $params['internshipform']['chapter_number'],
+  '@chapter_title' => $params['internshipform']['chapter_title'],
+  '@example_no' => $params['internshipform']['example_no'],
+]
+);
 			break;
+
 		case 'cheque_sent':
 
 			$user_data = \Drupal::entityTypeManager()->getStorage('user')->load($params['cheque_sent']['user_id']);
@@ -2243,43 +2337,68 @@ FOSSEE, IIT Bombay',
 // // @FIXME
 // // This looks like another module's variable. You'll need to rewrite this call
 // // to ensure that it uses the correct configuration object.
-// $message['subject'] = t('[!site_name] We have received your feedback', array(
-// 				'!site_name' => variable_get('site_name', '')
-// 			));
+// Get site name
+$site_name = \Drupal::config('system.site')->get('name');
 
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['body'] = array(
-// 				'body' => t('
-// Dear !user_name,
-// 
-// We have Sent Cheque for the following book proposed
-// 
-// Title of the Book: ' . $params['cheque_sent']['book_title'] . '
-// Title of the Chapter: ' . $params['cheque_sent']['chapter_number'] . ' ' . $params['cheque_sent']['chapter_title'] . '
-// Example No.: ' . $params['cheque_sent']['example_no'] . '
-// 
-// Best Wishes,
-// 
-// !site_name Team,
-// FOSSEE,IIT Bombay', array(
-// 					'!site_name' => variable_get('site_name', ''),
-// 					'!user_name' => $user_data->name
-// 				))
-// 			);
+// Subject
+$message['subject'] = t(
+  '[@site] We have received your feedback',
+  ['@site' => $site_name]
+);
 
+// Body
+$message['body'][] = t(
+'
+Dear @user_name,
+
+We have Sent Cheque for the following book proposed
+
+Title of the Book: @book_title
+Title of the Chapter: @chapter_number @chapter_title
+Example No.: @example_no
+
+Best Wishes,
+
+@site Team,
+FOSSEE,IIT Bombay',
+[
+  '@site' => $site_name,
+  '@user_name' => $user_data->name,
+  '@book_title' => $params['cheque_sent']['book_title'],
+  '@chapter_number' => $params['cheque_sent']['chapter_number'],
+  '@chapter_title' => $params['cheque_sent']['chapter_title'],
+  '@example_no' => $params['cheque_sent']['example_no'],
+]
+);
 			break;
-		case 'standard':
-			// bcc to textbook_companion_emails
-			$message['headers'] = $params['standard']['headers'];
-			$message['subject'] = $params['standard']['subject'];
-			$message['body'] = $params['standard']['body'];
-			break;
-	} //$key
+
+case 'standard':
+
+  $message['subject'] = $params['subject'] ?? '';
+
+  // 🔥 CRITICAL FIX (prevents implode error)
+  if (!empty($params['body'])) {
+    $message['body'] = is_array($params['body'])
+      ? $params['body']
+      : [$params['body']];
+  }
+  else {
+    $message['body'] = [];
+  }
+
+  // Headers
+  if (!empty($params['headers']) && is_array($params['headers'])) {
+    foreach ($params['headers'] as $key => $value) {
+      $message['headers'][$key] = $value;
+    }
+  }
+	
+
+  break;
 }
-/* AJAX CALLS */
+}
+
+  /* AJAX CALLS */
 function textbook_companion_ajax()
 {
 	$query_type = arg(2);
@@ -3287,3 +3406,5 @@ if ($count > 1) {
 
 	return $directory_name;
 }
+
+

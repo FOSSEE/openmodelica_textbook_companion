@@ -20,6 +20,12 @@ use Drupal\Service;
 use Drupal\textbook_companion\Services\TextbookCompanionGlobalFunction;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
+use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\File\FileSystemInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+
+
 
 
 class UploadExamplesForm extends FormBase {
@@ -309,6 +315,7 @@ public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $f
 
         drupal_goto('');
       }
+      // var_dump($proposal_data);die;
     if ($proposal_data->proposal_status != 1 && $proposal_data->proposal_status != 4)
       {
         switch ($proposal_data->proposal_status)
@@ -402,53 +409,107 @@ public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $f
         );
         $chapter_id = db_last_insert_id('textbook_companion_chapter', 'id'); */
         // Insert a new record into the textbook_companion_chapter table.
-$chapter_id = \Drupal::database()->insert('textbook_companion_chapter')
-  ->fields([
-    'preference_id' => $preference_id,
-    'number' => $form_state->getValue('number'),
-    'name' => $form_state->getValue('name'),
-  ])
-  ->execute();
+// $connection = \Drupal::database();
 
+// if ($is_new_chapter) {
+//   $chapter_id = $connection->insert('textbook_companion_chapter')
+//     ->fields([
+//       'preference_id' => $preference_id,
+//       'number' => $form_state->getValue('number'),
+//       'name' => $form_state->getValue('name'),
+//     ])
+//     ->execute();
+// }
+// else {
+//   $chapter_id = $chapter_row->id;
+
+//   $connection->update('textbook_companion_chapter')
+//     ->fields([
+//       'name' => $form_state->getValue('name'),
+//     ])
+//     ->condition('id', $chapter_id)
+//     ->execute();
+// } 
+
+// /*  get example details - dont allow if already example present */
+//     /*$cur_example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE chapter_id = %d AND number = '%s'", $chapter_id, $form_state->getValue('example_number']);*/
+//     $query = \Drupal::database()->select('textbook_companion_example', 'tce');
+// $query->fields('tce');
+// // $query->condition('chapter_id', $chapter_row->id);
+// $query->condition('chapter_id', $chapter_id);
+// $query->condition('number', $form_state->getValue('example_number'));
+// $cur_example_q = $query->execute();
+// $cur_example_d = $cur_example_q->fetchObject();
+// //var_dump($chapter_row->id);die;
+// if ($cur_example_d) {
+//   //var_dump($cur_example_d);die;
+//   if ($cur_example_d->approval_status == 1) {
+//     \Drupal::messenger()->addError(t("Example already approved. Cannot overwrite it."));
+//     $form_state->setRedirect('textbook_companion.list_chapters');
+//     return;
+//   } elseif ($cur_example_d->approval_status == 0) {
+//     \Drupal::messenger()->addError(t("Example is under pending review. Delete the example and reupload it."));
+//     $form_state->setRedirect('textbook_companion.list_chapters');
+//     return;
+//   } else {
+//     \Drupal::messenger()->addError(t("Error uploading example. Please contact administrator."));
+//     $form_state->setRedirect('textbook_companion.list_chapters');
+//     return;
+//   }
+// }
+      $connection = \Drupal::database();
+
+    $chapter_id = 0;
+    $preference_id = $preference_data->id;
+
+  // Now safe to use everywhere below
+  $query = $connection->select('textbook_companion_chapter');
+    // $query = $connection->select('textbook_companion_chapter');
+    $query->fields('textbook_companion_chapter');
+    $query->condition('preference_id', $preference_id);
+    $query->condition('number', $form_state->getValue('number'));
+    $chapter_result = $query->execute();
+    if (!$chapter_row = $chapter_result->fetchObject()) {
+      $chapter_id = $connection->insert('textbook_companion_chapter')
+        ->fields([
+          'preference_id' => $preference_id,
+          'number' => $form_state->getValue('number'),
+          'name' => $form_state->getValue('name'),
+        ])
+        ->execute();
+    }
+    else {
+      $chapter_id = $chapter_row->id;
+      $connection->update('textbook_companion_chapter')
+        ->fields([
+          'name' => $form_state->getValue('name'),
+        ])
+        ->condition('id', $chapter_id)
+        ->execute();
+    }
+    $query = $connection->select('textbook_companion_example');
+    $query->fields('textbook_companion_example');
+    $query->condition('chapter_id', $chapter_id);
+    $query->condition('number', $form_state->getValue('example_number'));
+    $cur_example_q = $query->execute();
+    
+    if ($cur_example_d = $cur_example_q->fetchObject()) {
+      if ($cur_example_d->approval_status == 1) {
+        $this->messenger()->addError($this->t('Example already approved. Cannot overwrite it.'));
+        $form_state->setRedirect('textbook_companion.list_chapters');
+        return;
       }
-//     else
-//       {
-//         // Update the chapter name in the database.
-//         //var_dump($chapter_row->id);die;
-// $num_updated = \Drupal::database()
-//   ->update('textbook_companion_chapter')
-//   ->fields([
-//     'name' => $form_state->getValue('name'),
-//   ])
-//   ->condition('id', $chapter_row->id)
-//   ->execute();
-
-//       }
-    /*  get example details - dont allow if already example present */
-    /*$cur_example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE chapter_id = %d AND number = '%s'", $chapter_id, $form_state->getValue('example_number']);*/
-    $query = \Drupal::database()->select('textbook_companion_example', 'tce');
-$query->fields('tce');
-$query->condition('chapter_id', $chapter_row->id);
-$query->condition('number', $form_state->getValue('example_number'));
-$cur_example_q = $query->execute();
-$cur_example_d = $cur_example_q->fetchObject();
-//var_dump($chapter_row->id);die;
-if ($cur_example_d) {
-  //var_dump($cur_example_d);die;
-  if ($cur_example_d->approval_status == 1) {
-    \Drupal::messenger()->addError(t("Example already approved. Cannot overwrite it."));
-    $form_state->setRedirect('textbook_companion.list_chapters');
-    return;
-  } elseif ($cur_example_d->approval_status == 0) {
-    \Drupal::messenger()->addError(t("Example is under pending review. Delete the example and reupload it."));
-    $form_state->setRedirect('textbook_companion.list_chapters');
-    return;
-  } else {
-    \Drupal::messenger()->addError(t("Error uploading example. Please contact administrator."));
-    $form_state->setRedirect('textbook_companion.list_chapters');
-    return;
-  }
-}
+      elseif ($cur_example_d->approval_status == 0) {
+        $this->messenger()->addError($this->t('Example is under pending review. Delete the example and reupload it.'));
+        $form_state->setRedirect('textbook_companion.list_chapters');
+        return;
+      }
+      else {
+        $this->messenger()->addError($this->t('Error uploading example. Please contact administrator.'));
+        $form_state->setRedirect('textbook_companion.list_chapters');
+        return;
+      }
+    }
       
     /* creating directories */
     // $chapter_path = 'CH' . $form_state->getValue('number') . '/';
@@ -473,7 +534,7 @@ if ($cur_example_d) {
     $example_id = \Drupal::database()
   ->insert('textbook_companion_example')
   ->fields([
-    'chapter_id' => $chapter_row->id,
+    'chapter_id' => $chapter_id,
     'number' => $form_state->getValue('example_number'),
     'caption' => $form_state->getValue('example_caption'),
     'approval_date' => time(),
@@ -526,28 +587,54 @@ $result = $query->execute();
   
     $msg = \Drupal::messenger()->addStatus('Example uploaded successfully.');
 	/* sending email */
-	// $email_to = $user->getMail();
-	// $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
-	// $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
-	// $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
-	// $params['example_uploaded']['example_id'] = $example_id;
-	// $params['example_uploaded']['user_id'] = $user->id();
-	// $params['example_uploaded']['headers'] = array(
-	// 	'From' => $from,
-	// 	'MIME-Version' => '1.0',
-	// 	'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
-	// 	'Content-Transfer-Encoding' => '8Bit',
-	// 	'X-Mailer' => 'Drupal',
-	// 	'Cc' => $cc,
-	// 	'Bcc' => $bcc
-	// );
-	// if (!drupal_mail('textbook_companion', 'example_uploaded', $email_to, language_default(), $params, $from, TRUE))
-	// 	\Drupal::messenger()->addError('Error sending email message.');
-  $response = new RedirectResponse(Url::fromRoute('textbook_companion.list_chapters')->toString());
+
+// Get user email safely
+$email_to = $user->getEmail();
+
+$config = \Drupal::config('textbook_companion.settings');
+$from = $config->get('textbook_companion_from_email');
+$bcc = $config->get('textbook_companion_emails');
+$cc = $config->get('textbook_companion_cc_emails');
+
+$params['example_uploaded']['example_id'] = $example_id;
+$params['example_uploaded']['user_id'] = $user->id();
+$params['example_uploaded']['headers'] = [
+  'From' => $from,
+  'MIME-Version' => '1.0',
+  'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
+  'Content-Transfer-Encoding' => '8Bit',
+  'X-Mailer' => 'Drupal',
+  'Cc' => $cc,
+  'Bcc' => $bcc,
+];
+
+$mailManager = \Drupal::service('plugin.manager.mail');
+$langcode = \Drupal::languageManager()->getDefaultLanguage()->getId();
+
+$result = $mailManager->mail(
+  'textbook_companion',
+  'example_uploaded',
+  $email_to,
+  $langcode,
+  $params,
+  $from,
+  TRUE
+);
+
+if (!$result['result']) {
+  \Drupal::messenger()->addError('Error sending email message.');
+}
+
+else {
+  \Drupal::messenger()->addError('User email not found.');
+}
+ $response = new RedirectResponse(Url::fromRoute('textbook_companion.list_chapters')->toString());
       $response->send();
     return $msg;
 	//drupal_goto('');
     
-    
-  }
+        $this->messenger()->addStatus($this->t('Example uploaded successfully.'));
 }
+}
+}
+
