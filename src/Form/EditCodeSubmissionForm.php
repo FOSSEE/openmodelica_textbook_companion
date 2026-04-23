@@ -113,29 +113,49 @@ class EditCodeSubmissionForm extends FormBase {
         $proposal_data_query = $proposal_query->execute()->fetchObject();
         /* sending email */
         $book_user = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data_query->uid);
-        $email_to = $book_user->mail;
-        $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
-        $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
-        $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
-        $param['all_code_submitted_status_changed']['proposal_id'] = $proposal_data_result->proposal_id;
-        $param['all_code_submitted_status_changed']['user_id'] = $user->uid;
-        $param['all_code_submitted_status_changed']['headers'] = [
-          'From' => $from,
-          'MIME-Version' => '1.0',
-          'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
-          'Content-Transfer-Encoding' => '8Bit',
-          'X-Mailer' => 'Drupal',
-          'Cc' => $cc,
-          'Bcc' => $bcc,
-        ];
-        if (!drupal_mail('textbook_companion', 'all_code_submitted_status_changed', $email_to, language_default(), $param, $from, TRUE)) {
-          \Drupal::messenger()->addError('Error sending email message.');
-        }
-        \Drupal::messenger()->addMessage('Enabled code submission interface for user');
-        drupal_goto('textbook-companion/code-approval/edit-code-submission');
-      }
+
+/* sending email */
+$email_to = $book_user->getEmail();   // ✅ FIX
+
+$config = \Drupal::config('textbook_companion.settings');
+$from = $config->get('textbook_companion_from_email') ?? \Drupal::config('system.site')->get('mail');
+$bcc = $config->get('textbook_companion_emails');
+$cc = $config->get('textbook_companion_cc_emails');
+
+$params = [];
+$params['proposal_id'] = $proposal_data_result->proposal_id;
+$params['user_id'] = $user->id();
+$params['cc'] = $cc;
+$params['bcc'] = $bcc;
+
+$langcode = $book_user->getPreferredLangcode() ?? \Drupal::languageManager()->getDefaultLanguage()->getId();
+
+if (!empty($email_to)) {
+  $result = \Drupal::service('plugin.manager.mail')->mail(
+    'textbook_companion',
+    'all_code_submitted_status_changed',
+    $email_to,
+    $langcode,
+    $params,
+    $from,
+    TRUE
+  );
+
+  if (empty($result['result'])) {
+    \Drupal::messenger()->addError('Error sending email message.');
+  }
+}
+
+\Drupal::messenger()->addMessage('Enabled code submission interface for user');
+
+/* redirect (replacement for drupal_goto) */
+$response = new RedirectResponse(
+  Url::fromRoute('textbook_companion.code_approval_edit')->toString()
+);
+$response->send();
+return;
+}
     }
   }
-
 }
 ?>

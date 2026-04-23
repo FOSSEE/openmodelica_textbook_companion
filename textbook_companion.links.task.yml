@@ -8,3 +8,46 @@ textbook_companion.bulk_approval_form:
   title: 'Bulk Manage'
   weight: 2
   base_route: textbook_companion.code_approval
+textbook_companion._proposal_pending:
+  route_name: textbook_companion._proposal_pending
+  title: 'Pending Proposals'
+  weight: 1
+  base_route: textbook_companion._proposal_pending
+textbook_companion._proposal_all:
+  route_name: textbook_companion._proposal_all
+  title: 'All Proposals'
+  weight: 2
+  base_route: textbook_companion._proposal_pending
+textbook_companion._failed_all:
+  route_name: textbook_companion._failed_all
+  title: 'Failed Proposals'
+  weight: 3
+  base_route: textbook_companion._proposal_pending
+
+textbook_companion.list_chapters:
+  route_name: textbook_companion.list_chapters
+  title: 'List Chapters'
+  weight: 1
+  base_route: textbook_companion.list_chapters
+textbook_companion.upload_examples:
+    route_name: textbook_companion.upload_examples  
+    title: 'Code Submission'
+    weight: 2
+    base_route: textbook_companion.list_chapters
+#   textbook_companion.code_approval_tab:
+#   route_name: textbook_companion.code_approval
+#   title: 'Code Approval'
+#   base_route: textbook_companion.code_approval
+#   weight: 1
+
+# textbook_companion.codable_example_approval_tab:
+#   route_name: textbook_companion.codable_example_approval
+#   title: 'Codable Examples'
+#   base_route: textbook_companion.code_approval
+#   weight: 2
+
+# textbook_companion.bulk_approval_tab:
+#   route_name: textbook_companion.bulk_approval_form
+#   title: 'Bulk Manage'
+#   base_route: textbook_companion.code_approval
+#   weight: 3

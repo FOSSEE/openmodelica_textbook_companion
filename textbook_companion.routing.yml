@@ -352,3 +352,12 @@ textbook_companion.nonaicte_proposal_all:
     _permission: 'create book proposal'
   options:
     no_cache: TRUE
+textbook_companion.tbc_books_in_progress_all:
+  path: /textbook-companion/books-in-progress
+  defaults:
+    _title: 'Books In Progress'
+    _controller: '\Drupal\textbook_companion\Controller\DefaultController::tbc_books_in_progress_all'
+  requirements:
+    _permission: 'display books in progress'
+  options:
+    no_cache: TRUE

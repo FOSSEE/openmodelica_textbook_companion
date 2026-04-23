@@ -498,26 +498,41 @@ $result = \Drupal::database()->query($query, $args);
       }
     
     /* sending email */
-    // $email_to = $user->mail;
-    // $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
-    // $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
-    // $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
-    // $param['example_updated']['example_id'] = $example_id;
-    // $param['example_updated']['user_id'] = $user->id();
-    // $param['example_updated']['headers'] = [
-    //   'From' => $from,
-    //   'MIME-Version' => '1.0',
-    //   'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
-    //   'Content-Transfer-Encoding' => '8Bit',
-    //   'X-Mailer' => 'Drupal',
-    //   'Cc' => $cc,
-    //   'Bcc' => $bcc,
-    // ];
-    // if (!drupal_mail('textbook_companion', 'example_updated', $email_to, language_default(), $param, $from, TRUE)) {
-    //   $msg = \Drupal::messenger()->addError('Error sending email message.');
-    // }
-   \Drupal::messenger()->addStatus(t("Example successfully udpated."));
-  }
+    /* sending email */
+$email_to = $user->getEmail();  // ✅ correct
 
+$config = \Drupal::config('textbook_companion.settings');
+$from = $config->get('textbook_companion_from_email') ?? \Drupal::config('system.site')->get('mail');
+$bcc = $config->get('textbook_companion_emails');
+$cc = $config->get('textbook_companion_cc_emails');
+
+$params = [];
+$params['example_id'] = $example_id;
+$params['user_id'] = $user->id();
+$params['cc'] = $cc;
+$params['bcc'] = $bcc;
+
+$langcode = $user->getPreferredLangcode() ?? \Drupal::languageManager()->getDefaultLanguage()->getId();
+
+if (!empty($email_to)) {
+  $result = \Drupal::service('plugin.manager.mail')->mail(
+    'textbook_companion',
+    'example_updated',
+    $email_to,
+    $langcode,
+    $params,
+    $from,
+    TRUE
+  );
+
+  if (empty($result['result'])) {
+    \Drupal::messenger()->addError('Error sending email message.');
+  }
+}
+
+/* success message */
+\Drupal::messenger()->addStatus(t("Example successfully updated."));
+
+}
 }
 ?>

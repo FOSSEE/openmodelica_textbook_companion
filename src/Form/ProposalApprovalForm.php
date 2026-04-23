@@ -21,6 +21,8 @@ use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\DependencyInjection\ContainerInterface;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Language\LanguageInterface;
+
 
 class ProposalApprovalForm extends FormBase {
 
@@ -39,15 +41,34 @@ class ProposalApprovalForm extends FormBase {
 $proposal_id = (int) $route_match->getParameter('id');
 //var_dump($proposal_id);die;
     /*$result = db_query("SELECT * FROM {textbook_companion_proposal} WHERE proposal_status = 0 and id = %d", $proposal_id);*/
-    $query = \Drupal::database()->select('textbook_companion_proposal');
-    $query->fields('textbook_companion_proposal');
-    $query->condition('proposal_status', 0);
-    $query->condition('id', $proposal_id);
-    $result = $query->execute();
-    if ($result) {
-      if ($row = $result->fetchObject()) {
-        /* everything ok */
-      }
+    // $query = \Drupal::database()->select('textbook_companion_proposal');
+    // $query->fields('textbook_companion_proposal');
+    // $query->condition('proposal_status', 0);
+    // $query->condition('id', $proposal_id);
+    // $result = $query->execute();
+    // if ($result) {
+    //   if ($row = $result->fetchObject()) {
+    //     /* everything ok */
+    //   }
+    $query = \Drupal::database()->select('textbook_companion_proposal', 'p');
+$query->fields('p');
+
+// ✅ Join users table
+$query->leftJoin('users_field_data', 'u', 'u.uid = p.uid');
+
+// ✅ Fetch email field
+$query->addField('u', 'mail', 'email');
+
+$query->condition('p.proposal_status', 0);
+$query->condition('p.id', $proposal_id);
+
+$result = $query->execute();
+
+if ($result) {
+  if ($row = $result->fetchObject()) {
+    // Now $row->email is available
+  }
+
       else {
         $msg = \Drupal::messenger()->addError(t('Invalid proposal selected. Please try again.'));
         $response = new RedirectResponse(Url::fromRoute('textbook_companion._proposal_pending')->toString());
@@ -71,12 +92,17 @@ $proposal_id = (int) $route_match->getParameter('id');
             '#title' => t('Contributor Name')
         );
 
-    $form['email'] = [
-      '#type' => 'item',
-      '#markup' => \Drupal::entityTypeManager()->getStorage('user')->load($row->uid)->getEmail(),
-      '#title' => t('Email'),
-    ];
-    $form['mobile'] = [
+    // $form['email'] = [
+    //   '#type' => 'item',
+    //   '#markup' => \Drupal::entityTypeManager()->getStorage('user')->load($row->uid)->getEmail(),
+    //   '#title' => t('Email'),
+    // ];
+$form['email_id'] = [
+  '#type' => 'item',
+  '#title' => $this->t('Email'),
+  '#markup' => $row->email ?? 'N/A',
+];
+$form['mobile'] = [
       '#type' => 'item',
       '#markup' => $row->mobile,
       '#title' => t('Mobile'),
@@ -313,25 +339,58 @@ $proposal_id = (int) $route_match->getParameter('id');
         $num_updated = $query->execute();*/
       /* sending email */
       // $book_user = \Drupal::entityTypeManager()->getStorage('user')->load($row->uid);
-      // $email_to = $book_user->mail;
-      // $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
-      // $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
-      // $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
-      // $param['proposal_disapproved']['proposal_id'] = $proposal_id;
-      // $param['proposal_disapproved']['user_id'] = $row->uid;
-      // $param['proposal_disapproved']['headers'] = [
-      //   'From' => $from,
-      //   'MIME-Version' => '1.0',
-      //   'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
-      //   'Content-Transfer-Encoding' => '8Bit',
-      //   'X-Mailer' => 'Drupal',
-      //   'Cc' => $cc,
-      //   'Bcc' => $bcc,
-      // ];
-      // if (!drupal_mail('textbook_companion', 'proposal_disapproved', $email_to, language_default(), $param, $from, TRUE)) {
-      //   \Drupal::messenger()->addError('Error sending email message.');
-      // }
-      $msg = \Drupal::messenger()->addError('Book proposal dis-approved. User has been notified of the dis-approval.');
+
+// Load user safely
+$user_storage = \Drupal::entityTypeManager()->getStorage('user');
+$book_user = $user_storage->load($row->uid);
+
+$email_to = $book_user ? $book_user->getEmail() : NULL;
+
+// Config values
+$config = \Drupal::config('textbook_companion.settings');
+$from = $config->get('textbook_companion_from_email') ?: \Drupal::config('system.site')->get('mail');
+$bcc = $config->get('textbook_companion_emails');
+$cc = $config->get('textbook_companion_cc_emails');
+
+// Params
+$params = [];
+$params['proposal_disapproved'] = [
+  'proposal_id' => $proposal_id,
+  'user_id' => $row->uid,
+  'headers' => [
+    'From' => $from,
+    'MIME-Version' => '1.0',
+    'Content-Type' => 'text/plain; charset=UTF-8',
+    'Content-Transfer-Encoding' => '8Bit',
+    'X-Mailer' => 'Drupal',
+    'Cc' => $cc,
+    'Bcc' => $bcc,
+  ],
+];
+
+// Send mail
+if (!empty($email_to)) {
+  $mailManager = \Drupal::service('plugin.manager.mail');
+
+  $result = $mailManager->mail(
+    'textbook_companion',               // module
+    'proposal_disapproved',             // key
+    $email_to,                          // to
+    \Drupal::currentUser()->getPreferredLangcode(),
+    $params,
+    $from,
+    TRUE
+  );
+
+  if (empty($result['result'])) {
+    \Drupal::messenger()->addMessage(' Sending email message.');
+  }
+}
+else {
+  \Drupal::messenger()->addError('User email not found.');
+}    
+
+$msg = \Drupal::messenger()->addError('Book proposal dis-approved. User has been notified of the dis-approval.');
       $response = new RedirectResponse(Url::fromRoute('textbook_companion._proposal_pending')->toString());
       $response->send();
       return $msg;
@@ -370,25 +429,58 @@ $proposal_id = (int) $route_match->getParameter('id');
     $query->condition('preference_id', '$preference_id', '<>');
     $num_updated = $query->execute();*/
     /* sending email */
-    // $book_user = \Drupal::entityTypeManager()->getStorage('user')->load($row->uid);
-    // $email_to = $book_user->mail;
-    // $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
-    // $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
-    // $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
-    // $param['proposal_approved']['proposal_id'] = $proposal_id;
-    // $param['proposal_approved']['user_id'] = $row->uid;
-    // $param['proposal_approved']['headers'] = [
-    //   'From' => $from,
-    //   'MIME-Version' => '1.0',
-    //   'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
-    //   'Content-Transfer-Encoding' => '8Bit',
-    //   'X-Mailer' => 'Drupal',
-    //   'Cc' => $cc,
-    //   'Bcc' => $bcc,
-    // ];
-    // if (!drupal_mail('textbook_companion', 'proposal_approved', $email_to, language_default(), $param, $from, TRUE)) {
-    //   \Drupal::messenger()->addError('Error sending email message.');
-    // }
+
+// Load user safely
+$user_storage = \Drupal::entityTypeManager()->getStorage('user');
+$book_user = $user_storage->load($row->uid);
+
+$email_to = $book_user ? $book_user->getEmail() : NULL;
+
+// Config values
+$config = \Drupal::config('textbook_companion.settings');
+$from = $config->get('textbook_companion_from_email') ?: \Drupal::config('system.site')->get('mail');
+$bcc = $config->get('textbook_companion_emails');
+$cc = $config->get('textbook_companion_cc_emails');
+
+// Params
+$params = [];
+$params['proposal_approved'] = [
+  'proposal_id' => $proposal_id,
+  'user_id' => $row->uid,
+  'headers' => [
+    'From' => $from,
+    'MIME-Version' => '1.0',
+    'Content-Type' => 'text/plain; charset=UTF-8',
+    'Content-Transfer-Encoding' => '8Bit',
+    'X-Mailer' => 'Drupal',
+    'Cc' => $cc,
+    'Bcc' => $bcc,
+  ],
+];
+
+// Send mail
+if (!empty($email_to)) {
+
+  $mailManager = \Drupal::service('plugin.manager.mail');
+
+  $result = $mailManager->mail(
+    'textbook_companion',               // module name
+    'proposal_approved',                // key
+    $email_to,                          // recipient
+    \Drupal::currentUser()->getPreferredLangcode(),
+    $params,
+    $from,
+    TRUE
+  );
+
+  if (empty($result['result'])) {
+    \Drupal::messenger()->addError('Error sending email message.');
+  }
+}
+else {
+  \Drupal::messenger()->addError('User email not found.');
+}
+
     $msg = \Drupal::messenger()->addStatus('Book proposal approved. User has been notified of the approval');
     $response = new RedirectResponse(Url::fromRoute('textbook_companion._proposal_pending')->toString());
       $response->send();

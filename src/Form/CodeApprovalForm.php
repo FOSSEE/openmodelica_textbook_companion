@@ -15,6 +15,8 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Url;
 use Drupal\Core\Link;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\user\Entity\User;
+
 
 
 class CodeApprovalForm extends FormBase {
@@ -187,66 +189,87 @@ class CodeApprovalForm extends FormBase {
         $query->condition('id', $ex_data['example_id']);
         $num_updated = $query->execute();
         /* sending email */
-        $email_to = $user_data->getEmail();
-        $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
-        $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
-        $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
-        $param['example_approved']['example_id'] = $ex_data['example_id'];
-        $param['example_approved']['user_id'] = $user_data->uid;
-        $param['example_approved']['headers'] = [
-          'From' => $from,
-          'MIME-Version' => '1.0',
-          'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
-          'Content-Transfer-Encoding' => '8Bit',
-          'X-Mailer' => 'Drupal',
-          'Cc' => $cc,
-          'Bcc' => $bcc,
-        ];
-        // if (!drupal_mail('textbook_companion', 'example_approved', $email_to, language_default(), $param, $from, TRUE)) {
-        //   \Drupal::messenger()->addError('Error sending email message.');
-        // }
-      }
-      else {
-        if ($ex_data['approved'] == "1") {
-          $service = \Drupal::service('textbook_companion_global');
-          if ($service->delete_example($ex_data['example_id'])) {
-            /* sending email */
-            $email_to = $user_data->getEmail();
-            $from = \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email');
-            $bcc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_emails');
-            $cc = \Drupal::config('textbook_companion.settings')->get('textbook_companion_cc_emails');
-            $param['example_disapproved']['preference_id'] = $chapter_data->preference_id;
-            $param['example_disapproved']['chapter_id'] = $example_data->chapter_id;
-            $param['example_disapproved']['example_number'] = $example_data->number;
-            $param['example_disapproved']['example_caption'] = $example_data->caption;
-            $param['example_disapproved']['user_id'] = $user_data->uid;
-            $param['example_disapproved']['message'] = $ex_data['message'];
-            $param['example_disapproved']['headers'] = [
-              'From' => $from,
-              'MIME-Version' => '1.0',
-              'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
-              'Content-Transfer-Encoding' => '8Bit',
-              'X-Mailer' => 'Drupal',
-              'Cc' => $cc,
-              'Bcc' => $bcc,
-            ];
-            // if (!drupal_mail('textbook_companion', 'example_disapproved', $email_to, language_default(), $param, $from, TRUE)) {
-            //   \Drupal::messenger()->addError('Error sending email message.');
-            // }
-          }
-          else {
-            \Drupal::messenger()->addError('Error disapproving and deleting example. Please contact administrator.');
-          }
-        }
-      }
-    }
-    $msg = \Drupal::messenger()->addStatus('Updated successfully.');
-    //drupal_goto('textbook-companion/code-approval');
-    $response = new RedirectResponse(Url::fromRoute('textbook_companion.code_approval')->toString());
+
+/* sending email */
+$email_to = $user_data->getEmail();   // ✅ FIXED
+
+$config = \Drupal::config('textbook_companion.settings');
+$from = $config->get('textbook_companion_from_email') ?? \Drupal::config('system.site')->get('mail');
+$bcc = $config->get('textbook_companion_emails');
+$cc = $config->get('textbook_companion_cc_emails');
+
+$params = [];
+$params['example_id'] = $ex_data['example_id'];
+$params['user_id'] = $user_data->id();   // safer than ->uid
+$params['cc'] = $cc;
+$params['bcc'] = $bcc;
+
+$langcode = \Drupal::languageManager()->getDefaultLanguage()->getId();
+
+$result = \Drupal::service('plugin.manager.mail')->mail(
+  'textbook_companion',
+  'example_approved',
+  $email_to,
+  $langcode,
+  $params,
+  $from,
+  TRUE
+);
+
+if (empty($result['result'])) {
+  \Drupal::messenger()->addError('Error sending email message.');
+}
+else if ($ex_data['approved'] == "1") {
+
+  if (delete_example($ex_data['example_id'])) {
+
+    /* sending email */
+$email_to = $user_data?->getEmail() ?? '';
+
+$config = \Drupal::config('textbook_companion.settings');
+$from = $config->get('textbook_companion_from_email') ?? \Drupal::config('system.site')->get('mail');
+$bcc = $config->get('textbook_companion_emails');
+$cc = $config->get('textbook_companion_cc_emails');
+
+$params = [];
+$params['preference_id'] = $chapter_data->preference_id;
+$params['chapter_id'] = $example_data->chapter_id;
+$params['example_number'] = $example_data->number;
+$params['example_caption'] = $example_data->caption;
+$params['user_id'] = $user_data?->id() ?? 0;
+$params['message'] = $ex_data['message'];
+$params['cc'] = $cc;
+$params['bcc'] = $bcc;
+
+if ($email_to !== '') {
+  $langcode = $user_data?->getPreferredLangcode() ?? \Drupal::languageManager()->getDefaultLanguage()->getId();
+
+  $result = \Drupal::service('plugin.manager.mail')->mail(
+    'textbook_companion',
+    'example_disapproved',
+    $email_to,
+    $langcode,
+    $params,
+    $from,
+    TRUE
+  );
+
+  // if (empty($result['result'])) {
+  //   \Drupal::logger('mail_debug')->error('Mail failed: <pre>@data</pre>', ['@data' => print_r($result, TRUE)]);
+  //   $this->messenger()->addError($this->t('Error sending email message.'));
+  // }
+
+    $this->messenger()->addStatus($this->t('Updated successfully.'));
+    // $form_state->setRedirect('textbook_companion.code_approval');
+  }
+
+}    
+$response = new RedirectResponse(Url::fromRoute('textbook_companion.code_approval')->toString());
   $response->send();
   return $msg;
 
-  }
-
+//   }
+    }
+      }}}
 }
 ?>

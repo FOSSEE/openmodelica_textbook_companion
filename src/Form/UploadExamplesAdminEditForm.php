@@ -430,15 +430,36 @@ $example_id = (int) $route_match->getParameter('example_id');
         \Drupal::messenger()->addError('Error uploading file : ' . $dest_path . '/' . $_FILES['files']['name']['sourcefile1']);
       }
     }
-    /* sending email */
-    $email_to = $user_data->mail;
-    $param['example_updated_admin']['example_id'] = $example_id;
-    $param['example_updated_admin']['user_id'] = $proposal_data->uid;
-    // if (!drupal_mail('textbook_companion', 'example_updated_admin', $email_to, language_default(), $param, \Drupal::config('textbook_companion.settings')->get('textbook_companion_from_email'), TRUE)) {
-    //   \Drupal::messenger()->addError('Error sending email message.');
-    // }
-    \Drupal::messenger()->addStatus(t("Example successfully udpated."));
-  }
+/* sending email */
+$email_to = $user_data->getEmail();  // ✅ FIX
 
+$config = \Drupal::config('textbook_companion.settings');
+$from = $config->get('textbook_companion_from_email') ?? \Drupal::config('system.site')->get('mail');
+
+$params = [];
+$params['example_id'] = $example_id;
+$params['user_id'] = $proposal_data->uid;  // assuming this is correct UID
+
+$langcode = $user_data->getPreferredLangcode() ?? \Drupal::languageManager()->getDefaultLanguage()->getId();
+
+if (!empty($email_to)) {
+  $result = \Drupal::service('plugin.manager.mail')->mail(
+    'textbook_companion',
+    'example_updated_admin',
+    $email_to,
+    $langcode,
+    $params,
+    $from,
+    TRUE
+  );
+
+  if (empty($result['result'])) {
+    \Drupal::messenger()->addError('Error sending email message.');
+  }
+}
+
+/* success message */
+\Drupal::messenger()->addStatus(t("Example successfully updated."));
+}
 }
 ?>

@@ -15,6 +15,15 @@ use Drupal\Core\Link;
 use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\Response;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Mail\MailManagerInterface;
+use Drupal\Core\DependencyInjection\ContainerInterface;
+use Drupal\Core\Session\AccountProxy;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Language\LanguageInterface;
+
+
 
 class ProposalEditForm extends FormBase {
 
@@ -61,6 +70,7 @@ $proposal_id = (int) $route_match->getParameter('id');
     $query->range(0, 1);
     $preference1_q = $query->execute();
     $preference1_data = $preference1_q->fetchObject();
+      
     /*************************************************************************/
     $form['full_name'] = [
       '#type' => 'textfield',
@@ -74,7 +84,7 @@ $proposal_id = (int) $route_match->getParameter('id');
       '#type' => 'textfield',
       '#title' => t('Email'),
       //'#size' => 30,
-      '#value' => $user_data->getEmail(),
+      '#value' => $user ? $user->getEmail() : '',
       '#disabled' => TRUE,
     ];
     $form['mobile'] = [
@@ -356,7 +366,7 @@ $proposal_id = (int) $route_match->getParameter('id');
     // l() expects a Url object, created from a route name or external URI.
     $form['cancel'] = array(
             '#type' => 'item',
-            '#markup' => Link::fromTextAndUrl('Cancel', Url::fromUri('internal:/textbook-companion/manage-proposal'))->toString()
+            '#markup' => Link::fromTextAndUrl('Cancel', Url::fromUri('internal:/textbook-companion/manage-proposal/all'))->toString()
         );
 
     return $form;
