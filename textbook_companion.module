@@ -1945,81 +1945,57 @@ if (!empty($params['bcc'])) {
 }
       break;
 
+case 'example_disapproved':
 
+  $data = $params['example_disapproved'] ?? [];
 
+  // Load user
+  $user = \Drupal\user\Entity\User::load($data['user_id'] ?? 0);
 
-		case 'example_disapproved':
-			
-			$user_data = \Drupal::entityTypeManager()->getStorage('user')->load($params['example_disapproved']['user_id']);
-			$preference_id = $params['example_disapproved']['preference_id'];
-			$chapter_id = $params['example_disapproved']['chapter_id'];
-			$query = \Drupal::database()->select('textbook_companion_chapter');
-			$query->fields('textbook_companion_chapter');
-			$query->condition('id', $chapter_id);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$chapter_data = $result->fetchObject();
-			$query = \Drupal::database()->select('textbook_companion_preference');
-			$query->fields('textbook_companion_preference');
-			$query->condition('id', $preference_id);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$preference_data = $result->fetchObject();
-			$query = \Drupal::database()->select('textbook_companion_proposal');
-			$query->fields('textbook_companion_proposal');
-			$query->condition('id', $preference_data->proposal_id);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$proposal_data = $result->fetchObject();
-			$message['headers'] = $params['example_disapproved']['headers'];
-			$recipient_name = $get_recipient_name($proposal_data, $user_data);
-			$subject = "[{$site_name}][Textbook Companion] Your uploaded example has been disapproved";
-			$body = "Dear {$recipient_name},\n\n"
-				. "Your following example has been disapproved:\n\n"
-				. "Title of the book: " . $get_field($preference_data, 'book', 'N/A') . "\n"
-				. "Title of the chapter: " . $get_field($chapter_data, 'name', 'N/A') . "\n"
-				. "Example number: " . (string) ($params['example_disapproved']['example_number'] ?? 'N/A') . "\n"
-				. "Caption: " . (string) ($params['example_disapproved']['example_caption'] ?? 'N/A') . "\n\n"
-				. "Reason for disapproval: " . (string) ($params['example_disapproved']['message'] ?? 'N/A') . "\n\n"
-				. $mail_signature;
-			$set_subject_body($message, $subject, $body);
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['subject'] = t('[!site_name][Textbook Companion] Your uploaded example has been disapproved for Textbook Companion', array(
-// 				'!site_name' => variable_get('site_name', '')
-// 			));
+  // Load chapter
+  $chapter_data = \Drupal::database()->select('textbook_companion_chapter', 'c')
+    ->fields('c')
+    ->condition('id', $data['chapter_id'] ?? 0)
+    ->execute()
+    ->fetchObject();
 
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $message['body'] = array(
-// 				'body' => t('
-// Dear ' . $proposal_data->full_name . ',
-// 
-// Your following example has been disapproved:
-// 
-// Title of the book: ' . $preference_data->book . '
-// Title of the chapter: ' . $chapter_data->name . '
-// Example number: ' . $params['example_disapproved']['example_number'] . '
-// Caption: ' . $params['example_disapproved']['example_caption'] . '
-// 
-// Reason for dis-approval: ' . $params['example_disapproved']['message'] . '
-// 
-// Best Wishes,
-// 
-// !site_name Team,
-// FOSSEE, IIT Bombay', array(
-// 					'!site_name' => variable_get('site_name', ''),
-// 					'!user_name' => $user_data->name
-// 				))
-// 			);
+  // Load preference
+  $preference_data = \Drupal::database()->select('textbook_companion_preference', 'p')
+    ->fields('p')
+    ->condition('id', $data['preference_id'] ?? 0)
+    ->execute()
+    ->fetchObject();
 
-			break;
+  // Safe proposal id
+  $proposal_id = !empty($preference_data) ? $preference_data->proposal_id : 0;
 
+  // Load proposal
+  $proposal_data = \Drupal::database()->select('textbook_companion_proposal', 'pr')
+    ->fields('pr')
+    ->condition('id', $proposal_id)
+    ->execute()
+    ->fetchObject();
 
+  $site_name = \Drupal::config('system.site')->get('name');
+
+  $recipient_name = !empty($proposal_data->full_name) ? $proposal_data->full_name : 'User';
+
+  // Subject
+  $message['subject'] = "[$site_name] Your uploaded example has been disapproved";
+
+  // Body
+  $message['body'][] = "Dear $recipient_name,\n";
+  $message['body'][] = "Your following example has been disapproved:\n";
+  $message['body'][] = "Title of the book: " . ($preference_data->book ?? 'N/A');
+  $message['body'][] = "Title of the chapter: " . ($chapter_data->name ?? 'N/A');
+  $message['body'][] = "Example number: " . ($data['example_number'] ?? 'N/A');
+  $message['body'][] = "Caption: " . ($data['example_caption'] ?? 'N/A');
+  $message['body'][] = "\nReason for disapproval: " . ($data['message'] ?? 'N/A');
+  $message['body'][] = "\nBest Wishes,";
+  $message['body'][] = "$site_name Team";
+  $message['body'][] = "FOSSEE, IIT Bombay";
+
+  break;  
 
 case 'example_deleted_user':
 
@@ -2395,6 +2371,8 @@ case 'standard':
 	
 
   break;
+
+  
 }
 }
 
@@ -2543,7 +2521,7 @@ WHERE  tcc.id = :chapter_id", array(
 		if (!file_exists($root_path . $chapter_data->directory_name . '/' . $examples_files_data->filepath))
 		{
 			$status = FALSE;
-			var_dump($root_path . $chapter_data->directory_name . '/' . $examples_files_data->filepath);
+			// var_dump($root_path . $chapter_data->directory_name . '/' . $examples_files_data->filepath);
 			die;
 			\Drupal::messenger()->addError(t('Error deleting !file. File does not exists.', array(
 				'!file' => $examples_files_data->filepath

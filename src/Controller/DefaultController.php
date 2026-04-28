@@ -375,248 +375,69 @@ $output = [
     return $output;
   }
 
-//   public function _failed_all($preference_id = 0, $confirm = "") {
-//     $page_content = "";
-//     if ($preference_id && $confirm == "yes") {
-//       /*$query = "
-//         SELECT *, pro.id as proposal_id FROM textbook_companion_proposal pro
-//         LEFT JOIN textbook_companion_preference pre ON pre.proposal_id = pro.id
-//         LEFT JOIN users usr ON usr.uid = pro.uid
-//         WHERE pre.id = {$preference_id}
-//         ";
-//         $result = db_query($query);
-//         $row = db_fetch_object($result);*/
-//       $query = \Drupal::database()->select('textbook_companion_proposal', 'pro');
-//       $query->fields('*', ['']);
-//       $query->fields('pro', ['id']);
-//       $query->leftJoin('textbook_companion_preference', 'pre', 'pre.proposal_id = pro.id');
-//       $query->leftJoin('users', 'usr', 'usr.uid = pro.uid');
-//       $query->condition('pre.id', '$preference_id');
-//       $result = $query->execute();
-//       $row = $result->fetchObject();
-//       /* increment failed_reminder */
-//       /*$query = "
-//         UPDATE textbook_companion_proposal
-//         SET failed_reminder = failed_reminder + 1
-//         WHERE id = {$row->proposal_id}
-//         ";
-//         db_query($query);*/
-//       $query = \Drupal::database()->update('textbook_companion_proposal');
-//       $query->fields(['failed_reminder' => 'failed_reminder + 1']);
-//       $query->condition('id', '$row->proposal_id');
-//       $num_updated = $query->execute();
-//       /* sending mail */
-//       $to = $row->mail;
-//       $subject = "Failed to upload the TBC codes on time";
-//       $body = "
-//     <p>
-//       Dear {$row->name},<br><br>
-//       This is to inform you that you have failed to upload the TBC codes on time.<br>
-//       Please note that the time you have taken is way past the deadline as well.<br>
-//       Kindly upload the TBC codes on the interface within 5 days from now.<br>
-//       Failure to submit the same will result in disapproval of your work and cancellation of your internship.<br><br>
-//       Regards,<br>
-//       OpenModelica TBC Team,<br>
-//       FOSSEE.
-//     </p>
-//     ";
-//       $message = [
-//         "to" => $to,
-//         "subject" => $subject,
-//         "body" => $body,
-//         "headers" => [
-//           "From" => "contact-openmodelica@fossee.in",
-//           "Bcc" => "contact-openmodelica@fossee.in",
-//           "Content-Type" => "text/html; charset=UTF-8; format=flowed",
-//         ],
-//       ];
-//       drupal_mail_send($message);
-//       \Drupal::messenger()->addMessage("Reminder sent successfully.");
-//       drupal_goto("textbook-companion/manage-proposal/failed");
-//     }
-//     else {
-//       if ($preference_id) {
-//         /*$query = "
-//         SELECT * FROM textbook_companion_preference pre
-//         LEFT JOIN textbook_companion_proposal pro ON pro.id = pre.proposal_id
-//         WHERE pre.id = {$preference_id}
-//         ";
-//         $result = db_query($query);
-//         $row = db_fetch_object($result);*/
-//         $query = \Drupal::database()->select('textbook_companion_preference', 'pre');
-//         $query->fields('pre');
-//         $query->leftJoin('textbook_companion_proposal', 'pro', 'pro.id = pre.proposal_id');
-//         $query->condition('pre.id', $preference_id);
-//         $result = $query->execute();
-//         $row = $result->fetchObject();
-//         $page_content .= "Are you sure you want to notify?<br><br>";
-//         $page_content .= "Book: <b>{$row->book}</b><br>";
-//         $page_content .= "Author: <b>{$row->author}</b><br>";
-//         $page_content .= "Contributor: <b>{$row->full_name}</b><br>";
-//         $page_content .= "Expected Completion Date: <b>" . date("d-m-Y", $row->completion_date) . "</b><br><br>";
-//         // @FIXME
-//         // l() expects a Url object, created from a route name or external URI.
-//         // $page_content .= l("Yes", "textbook-companion/manage-proposal/failed/{$preference_id}/yes") . " | ";
+public function tbc_books_in_progress_all() {
 
-//         // @FIXME
-//         // l() expects a Url object, created from a route name or external URI.
-//         // $page_content .= l("Cancel", "textbook-companion/manage-proposal/failed");
+  $result = \Drupal::database()->query("
+    SELECT 
+      pe.book,
+      pe.author,
+      po.full_name,
+      po.university AS institution
+    FROM textbook_companion_preference pe
+    INNER JOIN textbook_companion_proposal po ON pe.proposal_id = po.id
+    WHERE po.proposal_status IN (1, 4)
+      AND pe.approval_status = 1
+    ORDER BY po.creation_date DESC
+  ");
 
-//       }
-//       else {
-//         /*$query = "
-//         SELECT * FROM textbook_companion_proposal pro
-//         LEFT JOIN textbook_companion_preference pre ON pre.proposal_id = pro.id
-//         LEFT JOIN users usr ON usr.uid = pro.uid
-//         WHERE pro.proposal_status = 1 AND pre.approval_status = 1 AND pro.completion_date < %d
-//         ORDER BY failed_reminder
-//         ";
-//         $result = db_query($query, time());*/
-//         $query = \Drupal::database()->select('textbook_companion_proposal', 'pro');
-//         $query->fields('pro');
-//         $query->leftJoin('textbook_companion_preference', 'pre', 'pre.proposal_id = pro.id');
-//         $query->leftJoin('users', 'usr', 'usr.uid = pro.uid');
-//         $query->condition('pro.proposal_status', 1);
-//         $query->condition('pre.approval_status', 1);
-//         $query->condition('pro.completion_date', '%time()', '<');
-//         $query->orderBy('failed_reminder', 'ASC');
-//         $result = $query->execute();
-//         $headers = [
-//           "Date of Submission",
-//           "Book",
-//           "Contributor Name",
-//           "Expected Completion Date",
-//           "Remainders",
-//           "Action",
-//         ];
-//         $rows = [];
-//         while ($row = $result->fetchObject()) {
-//           // @FIXME
-// // l() expects a Url object, created from a route name or external URI.
-// // $item = array(
-// //                 date("d-m-Y", $row->creation_date),
-// //                 "{$row->book}<br><i>by</i> {$row->author}",
-// //                 $row->name,
-// //                 date("d-m-Y", $row->completion_date),
-// //                 $row->failed_reminder,
-// //                 l("Remind", "textbook-companion/manage-proposal/failed/{$row->id}")
-// //             );
-
-//           array_push($rows, $item);
-//         }
-//         // @FIXME
-//         // theme() has been renamed to _theme() and should NEVER be called directly.
-//         // Calling _theme() directly can alter the expected output and potentially
-//         // introduce security issues (see https://www.drupal.org/node/2195739). You
-//         // should use renderable arrays instead.
-//         // 
-//         // 
-//         // @see https://www.drupal.org/node/2195739
-//         // $page_content .= theme('table', array(
-//         //             'header' => $headers,
-//         //             'rows' => $rows
-//         //         ));
-
-//       }
-//     }
-//     return $page_content;
-//   }
-
-
-  public function tbc_books_in_progress_all() {
-  
-$result = \Drupal::database()->query("
-  SELECT 
-    pe.book,
-    pe.author,
-    pe.publisher,
-    pe.edition,
-    pe.isbn,
-    pe.year,
-    pe.id as pe_id,
-    po.full_name,
-po.university as institution 
-  FROM textbook_companion_preference pe
-  LEFT JOIN textbook_companion_proposal po ON pe.proposal_id = po.id
-  WHERE po.proposal_status IN (1, 4)
-    AND pe.approval_status = 1
-  ORDER BY po.creation_date DESC
-");
-  $rows = [];
-
-  // Fetch all ONCE, then loop.
   $records = $result->fetchAll();
-  $i = count($records);
 
-  $date_formatter = \Drupal::service('date.formatter');
+  $rows = [];
+  $i = 1;
+
   foreach ($records as $row) {
-    $proposal_date = $row->creation_date ? $date_formatter->format((int) $row->creation_date, 'custom', 'd-m-Y') : '';
-    $category = $row->category ?: $this->t('Not assigned');
-    $book_info = $this->t('@book<br><br>[ Author: @author, Publisher: @publisher, Year: @year, Edition: @edition, ISBN: @isbn ]', [
-      '@book' => $row->book ?? '',
-      '@author' => $row->author ?? '',
-      '@publisher' => $row->publisher ?? '',
-      '@year' => $row->year ?? '',
-      '@edition' => $row->edition ?? '',
-      '@isbn' => $row->isbn ?? '',
-    ]);
-
-   $rows = [];
-$records = $result->fetchAll();
-$i = 1;
-
-foreach ($records as $row) {
-
-  $book_info = $this->t(
-    '@book by @author',
-    [
-      '@book' => $row->book ?? '',
-      '@author' => $row->author ?? '',
-    ]
-  );
-
-  $rows[] = [
-    $i,
-    [
+    $rows[] = [
       'data' => [
-        '#markup' => $book_info,
+        $i,
+        $row->book . ' by ' . $row->author,
+        $row->full_name,
+        $row->institution,
       ],
-    ],
-    $row->full_name ?? '',
-    $row->institution ?? '',
-  ];
-
-  $i++;
-}
-
-  if (!$rows) {
+    ];
+    $i++;
+  }
+    if (!$rows) {
     $this->messenger()->addStatus($this->t('There are no books in progress.'));
     return ['#markup' => ''];
   }
 
-$header = [
-  'Sl No',
-  'Books in Progress',
-  'Contributor Name',
-  'Institution Name',
-];
+
+  $header = [
+    'Sl No',
+    'Books in Progress',
+    'Contributor Name',
+    'Institution Name',
+  ];
+
   return [
     '#type' => 'container',
-    'separator' => ['#markup' => '<hr>'],
+
+    'intro_text' => [
+      '#markup' => '<p><strong>Work is under progress for the following books under the Textbook Companion Project</strong></p>',
+    ],
+
+    'divider' => [
+      '#markup' => '<hr>',
+    ],
+
     'table' => [
       '#theme' => 'table',
       '#header' => $header,
       '#rows' => $rows,
-    ],
-    '#cache' => [
-      'tags' => ['textbook_companion:proposal_list', 'textbook_companion:preference_list', 'textbook_companion:category_list'],
-      'contexts' => ['user.permissions'],
-      'max-age' => Cache::PERMANENT,
+      '#empty' => 'No records found',
     ],
   ];
 }
-  }
-
 
 public function _failed_all($preference_id = 0, $confirm = "") {
 
@@ -1711,10 +1532,14 @@ $service = \Drupal::service('textbook_companion_global');
   public function textbook_companion_download_example() {
     $route_match = \Drupal::routeMatch();
     $example_id = (int) $route_match->getParameter('example_id');
-    //var_dump("hi");die;
+    // var_dump("hi");die;
+    // var_dump($example_id);die;
     $service = \Drupal::service('textbook_companion_global');
     $root_path = $service->textbook_companion_path();
+    // var_dump($root_path);die;
     $root_temp_path = $service->textbook_companion_temp_path();
+        // var_dump($root_temp_path);die;
+
     /* get example data */
     /*$example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE id = %d", $example_id);
     $example_data = db_fetch_object($example_q);*/
@@ -1723,6 +1548,8 @@ $service = \Drupal::service('textbook_companion_global');
     $query->condition('id', $example_id);
     $result = $query->execute();
     $example_data = $result->fetchObject();
+        // var_dump($example_data);die;
+
     /*$chapter_q = db_query("SELECT * FROM {textbook_companion_chapter} WHERE id = %d", $example_data->chapter_id);
     $chapter_data = db_fetch_object($chapter_q);*/
     $query = \Drupal::database()->select('textbook_companion_chapter');
@@ -1730,6 +1557,7 @@ $service = \Drupal::service('textbook_companion_global');
     $query->condition('id', $example_data->chapter_id);
     $result = $query->execute();
     $chapter_data = $result->fetchObject();
+    // var_dump($chapter_data);die;
     /*$example_files_q = db_query("SELECT * FROM {textbook_companion_example_files} WHERE example_id = %d", $example_id);*/
     /* $query = db_select('textbook_companion_example_files');
     $query->fields('textbook_companion_example_files');

@@ -24,7 +24,7 @@ class BulkApprovalForm extends FormBase {
     return 'bulk_approval_form';
   }
 
-  public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
+public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $options_first = $this->_bulk_list_of_books();
     $options_two = $this->_ajax_bulk_get_chapter_list();
     $selected = !$form_state->getValue(['book']) ? $form_state->getValue([
@@ -39,6 +39,7 @@ class BulkApprovalForm extends FormBase {
       '#options' => $this->_bulk_list_of_books(),
       '#default_value' => $selected,
       // '#tree' => TRUE,
+      $form['download_book']['chapter'],
       '#ajax' => [
         'callback' => '::ajax_bulk_chapter_list_callback',
         'wrapper' => 'ajax_selected_book'
@@ -91,7 +92,7 @@ class BulkApprovalForm extends FormBase {
         '#prefix' => '<div id="ajax_select_chapter_list">',
       '#suffix' => '</div>',
       '#validated' => TRUE,
-      // '#tree' => TRUE,
+      '#tree' => TRUE,
       '#ajax' => [
         'callback' => '::ajax_bulk_example_list_callback',
         'wrapper' => 'ajax_download_chapter'
@@ -158,7 +159,8 @@ class BulkApprovalForm extends FormBase {
         'wrapper' => 'ajax_download_selected_example'
         ],
     ];
-    $example_default_value = $form_state->getValue('example');
+    // $example_default_value = $form_state->getValue('example');
+    $example_default_value = $form_state->getValue('example') ?? $form_state->getTriggeringElement()['#value'];
     $form['download_example'] = [
       '#type' => 'container',
       '#attributes' => ['id' => 'ajax_download_selected_example'],
@@ -207,119 +209,79 @@ class BulkApprovalForm extends FormBase {
           ]
         ],
     ];
-//      $form['message'] = [
-//   '#type' => 'textarea',
-//   '#title' => $this->t('If Dis-Approved please specify reason for Dis-Approval'),
-//   '#states' => [
-//     'visible' => [
-//       [':input[name="book_actions"]' => ['value' => '3']],
-//       'or',
-//       [':input[name="chapter_actions"]' => ['value' => '3']],
-//       'or',
-//       [':input[name="example_actions"]' => ['value' => '3']],
-//       'or',
-//       [':input[name="book_actions"]' => ['value' => '4']],
-//     ],
-//     'required' => [
-//       [':input[name="book_actions"]' => ['value' => '3']],
-//       'or',
-//       [':input[name="chapter_actions"]' => ['value' => '3']],
-//       'or',
-//       [':input[name="example_actions"]' => ['value' => '3']],
-//       'or',
-//       [':input[name="book_actions"]' => ['value' => '4']],
-//     ],
-//   ],
-// ];
-
-    $form['message'] = [
+     $form['message'] = [
       '#type' => 'textarea',
-      '#title' => $this->t('If Dis-Approved please specify reason for Dis-Approval'),
+      '#title' => t('If Dis-Approved please specify reason for Dis-Approval'),
       '#states' => [
         'visible' => [
           [
             [
               ':input[name="book_actions"]' => [
-                'value' => 3,
+                'value' => 3
+                ]
               ],
-            ],
             'or',
             [':input[name="chapter_actions"]' => ['value' => 3]],
             'or',
             [
               ':input[name="example_actions"]' => [
-                'value' => 3,
+                'value' => 3
+                ]
               ],
-            ],
             'or',
             [':input[name="book_actions"]' => ['value' => 4]],
+          ]
           ],
-        ],
         'required' => [
           [
             [':input[name="book_actions"]' => ['value' => 3]],
             'or',
             [
               ':input[name="chapter_actions"]' => [
-                'value' => 3,
+                'value' => 3
+                ]
               ],
-            ],
             'or',
             [':input[name="example_actions"]' => ['value' => 3]],
             'or',
             [
               ':input[name="book_actions"]' => [
-                'value' => 4,
+                'value' => 4
+                ]
               ],
-            ],
+          ]
           ],
-        ],
       ],
     ];
-  //   $form['submit'] = [
-  //     '#type' => 'submit',
-  //     '#value' => $this->t('Submit'),
-  //     '#states' => [
-  //       'invisible' => [
-  //         ':input[name="book"]' => [
-  //           'value' => 0,
-  //         ],
-  //       ],
-  //     ],
-  //   ];
-
-  //   return $form;
-  // }
-
     $query = \Drupal::database()->select('textbook_companion_example_files');
         $query->fields('textbook_companion_example_files');
         $query->condition('example_id', $example_default_value);
         $example_list_q = $query->execute();
         if ($example_list_q) {
-            $example_files_rows = [];
-            while ($example_list_data = $example_list_q->fetchObject()) {
-                $example_file_type = '';
-                switch ($example_list_data->filetype) {
-                    case 'S':
-                        $example_file_type = 'Source or Main file';
-                        break;
-                    case 'R':
-                        $example_file_type = 'Result file';
-                        break;
-                    case 'X':
-                        $example_file_type = 'xcos file';
-                        break;
-                    default:
-                        $example_file_type = 'Unknown';
-                        break;
-                }
+$example_files_rows = [];
+
+while ($example_list_data = $example_list_q->fetchObject()) {
+
+  switch ($example_list_data->filetype) {
+    case 'S': $type = 'Source or Main file'; break;
+    case 'R': $type = 'Result file'; break;
+    case 'X': $type = 'xcos file'; break;
+    default: $type = 'Unknown';
+  }
+
+  $example_files_rows[] = [
+    Link::fromTextAndUrl(
+      $example_list_data->filename,
+      Url::fromUri('internal:/textbook-companion/download/file/' . $example_list_data->id)
+    )->toString(),
+    $type
+  ];
+}
                 $items[] = [
                   Link::fromTextAndUrl($example_list_data->filename, Url::fromUri('internal:/textbook-companion/download/file/' . $example_list_data->id))->toString(),
                     "{$example_file_type}"
                 ];
             }
-        }
-        // var_dump($example_list_data);die;
             array_push($example_files_rows, $items);
             //var_dump($example_files_rows);
             /* creating list of files table */
@@ -362,6 +324,8 @@ $form['download_example']['example_files']['table'] = $table;
     ];
     return $form;
   }
+
+
   
   function ajax_bulk_chapter_list_callback(array &$form, FormStateInterface $form_state){
     return $form['download_book'];
@@ -369,14 +333,18 @@ $form['download_example']['example_files']['table'] = $table;
   function ajax_bulk_example_list_callback(array &$form, FormStateInterface $form_state){
     return $form['download_chapter'];
   }
+  // function ajax_bulk_example_files_callback(array &$form, FormStateInterface $form_state){
+  //   // $example_default_value = $form_state->getValue('example');
+  //   // var_dump($example_default_value);
+  //   return $form['download_example'];
+  // }
   function ajax_bulk_example_files_callback(array &$form, FormStateInterface $form_state){
-    // $example_default_value = $form_state->getValue('example');
-    // var_dump($example_default_value);
-    return $form['download_example'];
-  }
+  $form_state->setRebuild(TRUE);   // 🔥 REQUIRED
+  return $form['download_example'];
+}
+
 function _bulk_list_of_books() {
   $book_titles = ['0' => t('Please select...')];
-
   // Create a database connection
   $database = Database::getConnection();
 

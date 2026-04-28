@@ -411,26 +411,28 @@ public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $f
         // Insert a new record into the textbook_companion_chapter table.
 // $connection = \Drupal::database();
 
-// if ($is_new_chapter) {
-//   $chapter_id = $connection->insert('textbook_companion_chapter')
-//     ->fields([
-//       'preference_id' => $preference_id,
-//       'number' => $form_state->getValue('number'),
-//       'name' => $form_state->getValue('name'),
-//     ])
-//     ->execute();
-// }
-// else {
-//   $chapter_id = $chapter_row->id;
+$chapter_id = \Drupal::database()->insert('textbook_companion_chapter')
+  ->fields([
+    'preference_id' => $preference_id,
+    'number' => $form_state->getValue('number'),
+    'name' => $form_state->getValue('name'),
+  ])
+  ->execute();
 
-//   $connection->update('textbook_companion_chapter')
-//     ->fields([
-//       'name' => $form_state->getValue('name'),
-//     ])
-//     ->condition('id', $chapter_id)
-//     ->execute();
-// } 
+      }
+    else
+      {
+        // Update the chapter name in the database.
+        //var_dump($chapter_row->id);die;
+$num_updated = \Drupal::database()
+  ->update('textbook_companion_chapter')
+  ->fields([
+    'name' => $form_state->getValue('name'),
+  ])
+  ->condition('id', $chapter_row->id)
+  ->execute();
 
+      }
 // /*  get example details - dont allow if already example present */
 //     /*$cur_example_q = db_query("SELECT * FROM {textbook_companion_example} WHERE chapter_id = %d AND number = '%s'", $chapter_id, $form_state->getValue('example_number']);*/
 //     $query = \Drupal::database()->select('textbook_companion_example', 'tce');
@@ -636,5 +638,5 @@ else {
         $this->messenger()->addStatus($this->t('Example uploaded successfully.'));
 }
 }
-}
+
 
