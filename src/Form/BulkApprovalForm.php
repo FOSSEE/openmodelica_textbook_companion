@@ -691,45 +691,46 @@ FOSSEE, IIT Bombay",
             $num_deleted = $query->execute();
             \Drupal::messenger()->addStatus(t('Deleted Book Proposal.'));
             /* email */
-            // @FIXME
-            // // @FIXME
-            // // This looks like another module's variable. You'll need to rewrite this call
-            // // to ensure that it uses the correct configuration object.
-            // $email_subject = t('[!site_name] Your uploaded Textbook Companion examples including the book proposal 					have been deleted', array(
-            //                         '!site_name' => variable_get('site_name', '')
-            //                     ));
+$config = \Drupal::config('system.site');
+$site_name = $config->get('name');
 
-            // @FIXME
-            // // @FIXME
-            // // This looks like another module's variable. You'll need to rewrite this call
-            // // to ensure that it uses the correct configuration object.
-            // $email_body = array(
-            //                         0 => t('
-            // 
-            // Dear !user_name,
-            // 
-            // We regret to inform you that all the uploaded examples including the book with following details have been deleted permanently.
-            // 
-            // 
-            // Title of the book : ' . $pref_data->book . '
-            // Author name : ' . $pref_data->author . '
-            // ISBN No. : ' . $pref_data->isbn . '
-            // Publisher and Place : ' . $pref_data->publisher . '
-            // Edition : ' . $pref_data->edition . '
-            // Year of publication : ' . $pref_data->year . '
-            // 
-            // Reason for deletion:' . $form_state['values']['message'] . '
-            // 
-            // 
-            // Best Wishes,
-            // 
-            // !site_name Team,
-            // FOSSEE,IIT Bombay', array(
-            //                             '!site_name' => variable_get('site_name', ''),
-            //                             '!user_name' => $user_data->name
-            //                         ))
-            //                     );
+// Email subject
+$email_subject = t('@site_name Your uploaded Textbook Companion examples including the book proposal have been deleted', [
+  '@site_name' => $site_name,
+]);
 
+// Email body
+$email_body = [
+  t('
+Dear @user_name,
+
+We regret to inform you that all the uploaded examples including the book with following details have been deleted permanently.
+
+Title of the book : @book
+Author name : @author
+ISBN No. : @isbn
+Publisher and Place : @publisher
+Edition : @edition
+Year of publication : @year
+
+Reason for deletion: @reason
+
+Best Wishes,
+
+@site_name Team,
+FOSSEE, IIT Bombay
+', [
+    '@site_name' => $site_name,
+    '@user_name' => $user_data->name,
+    '@book' => $pref_data->book,
+    '@author' => $pref_data->author,
+    '@isbn' => $pref_data->isbn,
+    '@publisher' => $pref_data->publisher,
+    '@edition' => $pref_data->edition,
+    '@year' => $pref_data->year,
+    '@reason' => $form_state->getValue('message'),
+  ])
+];
           }
           else {
             \Drupal::messenger()->addError(t('Error Dis-Approving and Deleting Entire Book.'));
@@ -758,37 +759,35 @@ FOSSEE, IIT Bombay",
           $num_updated = $query->execute();
           \Drupal::messenger()->addStatus(t('Approved Entire Chapter.'));
           /* email */
-          // @FIXME
-          // // @FIXME
-          // // This looks like another module's variable. You'll need to rewrite this call
-          // // to ensure that it uses the correct configuration object.
-          // $email_subject = t('[!site_name] Your uploaded Textbook Companion examples have been approved', array(
-          //                     '!site_name' => variable_get('site_name', '')
-          //                 ));
+$config = \Drupal::config('system.site');
+$site_name = $config->get('name');
 
-          // @FIXME
-          // // @FIXME
-          // // This looks like another module's variable. You'll need to rewrite this call
-          // // to ensure that it uses the correct configuration object.
-          // $email_body = array(
-          //                     0 => t('
-          // 
-          // Dear !user_name,
-          // 
-          // Your all the uploaded examples for the chapter have been approved.
-          // 
-          // Title of the book : ' . $pref_data->book . '
-          // Title of the chapter : ' . $chap_data->name . '
-          // 
-          // Best Wishes,
-          // 
-          // !site_name Team,
-          // FOSSEE,IIT Bombay', array(
-          //                         '!site_name' => variable_get('site_name', ''),
-          //                         '!user_name' => $user_data->name
-          //                     ))
-          //                 );
+// Email subject
+$email_subject = t('[@site_name] Your uploaded Textbook Companion examples have been approved', [
+  '@site_name' => $site_name,
+]);
 
+// Email body
+$email_body = [
+  t('
+Dear @user_name,
+
+Your all the uploaded examples for the chapter have been approved.
+
+Title of the book : @book
+Title of the chapter : @chapter
+
+Best Wishes,
+
+@site_name Team,
+FOSSEE, IIT Bombay
+', [
+    '@site_name' => $site_name,
+    '@user_name' => $user_data->name,
+    '@book' => $pref_data->book,
+    '@chapter' => $chap_data->name,
+  ])
+];
         }
         elseif (($form_state->getValue(['book_actions']) == 0) && ($form_state->getValue(['chapter_actions']) == 2) && ($form_state->getValue(['example_actions']) == 0)) {
           /*db_query("UPDATE {textbook_companion_example} SET approval_status = 0 WHERE chapter_id = %d", $form_state['values']['chapter']);*/
@@ -811,37 +810,36 @@ FOSSEE, IIT Bombay",
           \Drupal::messenger()->addStatus(t('Entire Chapter marked as Pending Review.'));
           /* email */
           // @FIXME
-          // // @FIXME
-          // // This looks like another module's variable. You'll need to rewrite this call
-          // // to ensure that it uses the correct configuration object.
-          // $email_subject = t('[!site_name] Your uploaded Textbook Companion examples have been marked as pending', array(
-          //                     '!site_name' => variable_get('site_name', '')
-          //                 ));
+$config = \Drupal::config('system.site');
+$site_name = $config->get('name');
 
-          // @FIXME
-          // // @FIXME
-          // // This looks like another module's variable. You'll need to rewrite this call
-          // // to ensure that it uses the correct configuration object.
-          // $email_body = array(
-          //                     0 => t('
-          // 
-          // Dear !user_name,
-          // 
-          // Your all the uploaded examples for the chapter have been marked as pending to be reviewed.
-          // 
-          // Title of the book : ' . $pref_data->book . '
-          // Title of the chapter : ' . $chap_data->name . '
-          // 
-          // Best Wishes,
-          // 
-          // !site_name Team,
-          // FOSSEE,IIT Bombay', array(
-          //                         '!site_name' => variable_get('site_name', ''),
-          //                         '!user_name' => $user_data->name
-          //                     ))
-          //                 );
+// Email subject
+$email_subject = t('[@site_name] Your uploaded Textbook Companion examples have been marked as pending', [
+  '@site_name' => $site_name,
+]);
 
-        }
+// Email body
+$email_body = [
+  t('
+Dear @user_name,
+
+Your all the uploaded examples for the chapter have been marked as pending to be reviewed.
+
+Title of the book : @book
+Title of the chapter : @chapter
+
+Best Wishes,
+
+@site_name Team,
+FOSSEE, IIT Bombay
+', [
+    '@site_name' => $site_name,
+    '@user_name' => $user_data->name,
+    '@book' => $pref_data->book,
+    '@chapter' => $chap_data->name,
+  ])
+];     
+   }
         elseif (($form_state->getValue(['book_actions']) == 0) && ($form_state->getValue(['chapter_actions']) == 3) && ($form_state->getValue(['example_actions']) == 0)) {
         $service = \Drupal::service('textbook_companion_global');  
         $query = \Drupal::database()->select('textbook_companion_preference');
@@ -872,41 +870,38 @@ FOSSEE, IIT Bombay",
             \Drupal::messenger()->addError(t('Error Dis-Approving and Deleting Entire Chapter.'));
           }
           /* email */
-          // @FIXME
-          // // @FIXME
-          // // This looks like another module's variable. You'll need to rewrite this call
-          // // to ensure that it uses the correct configuration object.
-          // $email_subject = t('[!site_name] Your uploaded Textbook Companion example have been marked as 					dis-approved', array(
-          //                     '!site_name' => variable_get('site_name', '')
-          //                 ));
+$config = \Drupal::config('system.site');
+$site_name = $config->get('name');
 
-          // @FIXME
-          // // @FIXME
-          // // This looks like another module's variable. You'll need to rewrite this call
-          // // to ensure that it uses the correct configuration object.
-          // $email_body = array(
-          //                     0 => t('
-          // 
-          // Dear !user_name,
-          // 
-          // Your uploaded example for the entire chapter have been marked as dis-approved.
-          // 
-          // Title of the book : ' . $pref_data->book . '
-          // Title of the chapter : ' . $chap_data->name . '
-          // 
-          // 
-          // Reason for dis-approval:' . $form_state['values']['message'] . '
-          // 
-          // Best Wishes,
-          // 
-          // !site_name Team,
-          // FOSSEE,IIT Bombay', array(
-          //                         '!site_name' => variable_get('site_name', ''),
-          //                         '!user_name' => $user_data->name
-          //                     ))
-          //                 );
+// Email subject
+$email_subject = t('[@site_name] Your uploaded Textbook Companion example has been marked as dis-approved', [
+  '@site_name' => $site_name,
+]);
 
-        }
+// Email body
+$email_body = [
+  t('
+Dear @user_name,
+
+Your uploaded example for the entire chapter has been marked as dis-approved.
+
+Title of the book : @book
+Title of the chapter : @chapter
+
+Reason for dis-approval: @reason
+
+Best Wishes,
+
+@site_name Team,
+FOSSEE, IIT Bombay
+', [
+    '@site_name' => $site_name,
+    '@user_name' => $user_data->name,
+    '@book' => $pref_data->book,
+    '@chapter' => $chap_data->name,
+    '@reason' => $form_state->getValue('message'),
+  ])
+];        }
         elseif (($form_state->getValue(['book_actions']) == 0) && ($form_state->getValue(['chapter_actions']) == 0) && ($form_state->getValue(['example_actions']) == 1)) {
           $query = \Drupal::database()->select('textbook_companion_preference');
           $query->fields('textbook_companion_preference');
@@ -991,39 +986,39 @@ FOSSEE, IIT Bombay",
           $num_updated = $query->execute();
           \Drupal::messenger()->addStatus(t('Example marked as Pending Review.'));
           /* email */
-          // @FIXME
-          // // @FIXME
-          // // This looks like another module's variable. You'll need to rewrite this call
-          // // to ensure that it uses the correct configuration object.
-          // $email_subject = t('[!site_name] Your uploaded Textbook Companion example has been marked as pending', array(
-          //                     '!site_name' => variable_get('site_name', '')
-          //                 ));
+$config = \Drupal::config('system.site');
+$site_name = $config->get('name');
 
-          // @FIXME
-          // // @FIXME
-          // // This looks like another module's variable. You'll need to rewrite this call
-          // // to ensure that it uses the correct configuration object.
-          // $email_body = array(
-          //                     0 => t('
-          // 
-          // Dear !user_name,
-          // 
-          // Your uploaded example for OpenModelica Textbook Companion with the following details has been marked as pending to be reviewed.
-          // 
-          // Title of the book : ' . $pref_data->book . '
-          // Title of the chapter : ' . $chap_data->name . '
-          // Example number : ' . $examp_data->number . '
-          // Caption : ' . $examp_data->caption . '
-          // 
-          // Best Wishes,
-          // 
-          // !site_name Team,
-          // FOSSEE,IIT Bombay', array(
-          //                         '!site_name' => variable_get('site_name', ''),
-          //                         '!user_name' => $user_data->name
-          //                     ))
-          //                 );
+// Email subject
+$email_subject = t('[@site_name] Your uploaded Textbook Companion example has been marked as pending', [
+  '@site_name' => $site_name,
+]);
 
+// Email body
+$email_body = [
+  t('
+Dear @user_name,
+
+Your uploaded example for OpenModelica Textbook Companion with the following details has been marked as pending to be reviewed.
+
+Title of the book : @book
+Title of the chapter : @chapter
+Example number : @example_number
+Caption : @caption
+
+Best Wishes,
+
+@site_name Team,
+FOSSEE, IIT Bombay
+', [
+    '@site_name' => $site_name,
+    '@user_name' => $user_data->name,
+    '@book' => $pref_data->book,
+    '@chapter' => $chap_data->name,
+    '@example_number' => $examp_data->number,
+    '@caption' => $examp_data->caption,
+  ])
+];
         }
         elseif (($form_state->getValue(['book_actions']) == 0) && ($form_state->getValue(['chapter_actions']) == 0) && ($form_state->getValue(['example_actions']) == 3)) {
           if (strlen(trim($form_state->getValue(['message']))) <= 30) {
@@ -1056,43 +1051,43 @@ FOSSEE, IIT Bombay",
             \Drupal::messenger()->addError(t('Error Dis-Approving and Deleting Example.'));
           }
           /* email */
-          // @FIXME
-          // // @FIXME
-          // // This looks like another module's variable. You'll need to rewrite this call
-          // // to ensure that it uses the correct configuration object.
-          // $email_subject = t('[!site_name] Your uploaded Textbook Companion example has been marked as
-          // 				dis-approved', array(
-          //                     '!site_name' => variable_get('site_name', '')
-          //                 ));
+$config = \Drupal::config('system.site');
+$site_name = $config->get('name');
 
-          // @FIXME
-          // // @FIXME
-          // // This looks like another module's variable. You'll need to rewrite this call
-          // // to ensure that it uses the correct configuration object.
-          // $email_body = array(
-          //                     0 => t('
-          // 
-          // Dear !user_name,
-          // 
-          // Your example for OpenModelica Textbook Companion has been marked as dis-approved and deleted.
-          // 
-          // Title of the book : ' . $pref_data->book . '
-          // Title of the chapter : ' . $chap_data->name . '
-          // Example number : ' . $examp_data->number . '
-          // Caption : ' . $examp_data->caption . '
-          // 
-          // Reason for dis-approval:' . $form_state['values']['message'] . '
-          // 
-          // Best Wishes,
-          // 
-          // !site_name Team,
-          // FOSSEE,IIT Bombay', array(
-          //                         '!site_name' => variable_get('site_name', ''),
-          //                         '!user_name' => $user_data->name
-          //                     ))
-          //                 );
+// Email subject
+$email_subject = t('[@site_name] Your uploaded Textbook Companion example has been marked as dis-approved', [
+  '@site_name' => $site_name,
+]);
 
-        }
+// Email body
+$email_body = [
+  t('
+Dear @user_name,
+
+Your example for OpenModelica Textbook Companion has been marked as dis-approved and deleted.
+
+Title of the book : @book
+Title of the chapter : @chapter
+Example number : @example_number
+Caption : @caption
+
+Reason for dis-approval: @reason
+
+Best Wishes,
+
+@site_name Team,
+FOSSEE, IIT Bombay
+', [
+    '@site_name' => $site_name,
+    '@user_name' => $user_data->name,
+    '@book' => $pref_data->book,
+    '@chapter' => $chap_data->name,
+    '@example_number' => $examp_data->number,
+    '@caption' => $examp_data->caption,
+    '@reason' => $form_state->getValue('message'),
+  ])
+];    
+    }
         else {
           \Drupal::messenger()->addError(t('Please select only one action at a time'));
           return;

@@ -1860,10 +1860,10 @@ FOSSEE, IIT Bombay",
 
   break;
 
-
-    case 'example_approved':
-
-      $connection = \Drupal::database();
+       
+		case 'example_approved':
+			
+$connection = \Drupal::database();
 
       // Example data
       $example_data = $connection->select('textbook_companion_example', 'e')
@@ -1945,57 +1945,78 @@ if (!empty($params['bcc'])) {
 }
       break;
 
+
 case 'example_disapproved':
 
-  $data = $params['example_disapproved'] ?? [];
+  $config = \Drupal::config('system.site');
+  $site_name = $config->get('name');
 
   // Load user
-  $user = \Drupal\user\Entity\User::load($data['user_id'] ?? 0);
+  $user_data = \Drupal\user\Entity\User::load($params['example_disapproved']['user_id']);
+
+  $preference_id = $params['example_disapproved']['preference_id'];
+  $chapter_id = $params['example_disapproved']['chapter_id'];
 
   // Load chapter
   $chapter_data = \Drupal::database()->select('textbook_companion_chapter', 'c')
     ->fields('c')
-    ->condition('id', $data['chapter_id'] ?? 0)
+    ->condition('id', $chapter_id)
+    ->range(0, 1)
     ->execute()
     ->fetchObject();
 
   // Load preference
   $preference_data = \Drupal::database()->select('textbook_companion_preference', 'p')
     ->fields('p')
-    ->condition('id', $data['preference_id'] ?? 0)
+    ->condition('id', $preference_id)
+    ->range(0, 1)
     ->execute()
     ->fetchObject();
-
-  // Safe proposal id
-  $proposal_id = !empty($preference_data) ? $preference_data->proposal_id : 0;
 
   // Load proposal
   $proposal_data = \Drupal::database()->select('textbook_companion_proposal', 'pr')
     ->fields('pr')
-    ->condition('id', $proposal_id)
+    ->condition('id', $preference_data->proposal_id)
+    ->range(0, 1)
     ->execute()
     ->fetchObject();
 
-  $site_name = \Drupal::config('system.site')->get('name');
-
-  $recipient_name = !empty($proposal_data->full_name) ? $proposal_data->full_name : 'User';
+  // Headers
+  $message['headers'] = $params['example_disapproved']['headers'];
 
   // Subject
-  $message['subject'] = "[$site_name] Your uploaded example has been disapproved";
+  $message['subject'] = t('[@site_name] Your uploaded example has been disapproved for Textbook Companion', [
+    '@site_name' => $site_name,
+  ]);
 
-  // Body
-  $message['body'][] = "Dear $recipient_name,\n";
-  $message['body'][] = "Your following example has been disapproved:\n";
-  $message['body'][] = "Title of the book: " . ($preference_data->book ?? 'N/A');
-  $message['body'][] = "Title of the chapter: " . ($chapter_data->name ?? 'N/A');
-  $message['body'][] = "Example number: " . ($data['example_number'] ?? 'N/A');
-  $message['body'][] = "Caption: " . ($data['example_caption'] ?? 'N/A');
-  $message['body'][] = "\nReason for disapproval: " . ($data['message'] ?? 'N/A');
-  $message['body'][] = "\nBest Wishes,";
-  $message['body'][] = "$site_name Team";
-  $message['body'][] = "FOSSEE, IIT Bombay";
+  // Body (FIXED STRUCTURE)
+  $message['body'][] = t('
+Dear @user_name,
 
-  break;  
+Your following example has been disapproved:
+
+Title of the book : @book
+Title of the chapter : @chapter
+Example number : @example_number
+Caption : @caption
+
+Reason for dis-approval : @reason
+
+Best Wishes,
+
+@site_name Team,
+FOSSEE, IIT Bombay
+', [
+    '@site_name' => $site_name,
+    '@user_name' => $proposal_data->full_name,
+    '@book' => $preference_data->book,
+    '@chapter' => $chapter_data->name,
+    '@example_number' => $params['example_disapproved']['example_number'],
+    '@caption' => $params['example_disapproved']['example_caption'],
+    '@reason' => $params['example_disapproved']['message'],
+  ]);
+
+break;
 
 case 'example_deleted_user':
 
@@ -2348,29 +2369,32 @@ FOSSEE,IIT Bombay',
 );
 			break;
 
-case 'standard':
+// case 'standard':
 
-  $message['subject'] = $params['subject'] ?? '';
+//   $message['subject'] = $params['subject'] ?? '';
 
-  // 🔥 CRITICAL FIX (prevents implode error)
-  if (!empty($params['body'])) {
-    $message['body'] = is_array($params['body'])
-      ? $params['body']
-      : [$params['body']];
-  }
-  else {
-    $message['body'] = [];
-  }
+//   // 🔥 CRITICAL FIX (prevents implode error)
+//   if (!empty($params['body'])) {
+//     $message['body'] = is_array($params['body'])
+//       ? $params['body']
+//       : [$params['body']];
+//   }
+//   else {
+//     $message['body'] = [];
+//   }
 
-  // Headers
-  if (!empty($params['headers']) && is_array($params['headers'])) {
-    foreach ($params['headers'] as $key => $value) {
-      $message['headers'][$key] = $value;
-    }
-  }
-	
-
-  break;
+//   // Headers
+//   if (!empty($params['headers']) && is_array($params['headers'])) {
+//     foreach ($params['headers'] as $key => $value) {
+//       $message['headers'][$key] = $value;
+//     }
+//   }
+			case 'standard':
+			// bcc to textbook_companion_emails
+			$message['headers'] = $params['standard']['headers'];
+			$message['subject'] = $params['standard']['subject'];
+			$message['body'] = $params['standard']['body'];
+			break;
 
   
 }
