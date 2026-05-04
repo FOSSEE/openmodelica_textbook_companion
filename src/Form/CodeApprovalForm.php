@@ -150,52 +150,56 @@ class CodeApprovalForm extends FormBase {
     }
   }
 
-  public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
-    $user = \Drupal::currentUser();
-    foreach ($form_state->getValue(['example_details']) as $ex_id => $ex_data) {
-      $query = \Drupal::database()->select('textbook_companion_example');
-      $query->fields('textbook_companion_example');
-      $query->condition('id', $ex_data['example_id']);
-      $query->range(0, 1);
-      $result = $query->execute();
-      $example_data = $result->fetchObject();
-      $query = \Drupal::database()->select('textbook_companion_chapter');
-      $query->fields('textbook_companion_chapter');
-      $query->condition('id', $example_data->chapter_id);
-      $query->range(0, 1);
-      $result = $query->execute();
-      $chapter_data = $result->fetchObject();
-      $query = \Drupal::database()->select('textbook_companion_preference');
-      $query->fields('textbook_companion_preference');
-      $query->condition('id', $chapter_data->preference_id);
-      $query->range(0, 1);
-      $result = $query->execute();
-      $preference_data = $result->fetchObject();
-      $query = \Drupal::database()->select('textbook_companion_proposal');
-      $query->fields('textbook_companion_proposal');
-      $query->condition('id', $preference_data->proposal_id);
-      $query->range(0, 1);
-      $result = $query->execute();
-      $proposal_data = $result->fetchObject();
-      $user_data = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid);
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    $user = $this->currentUser();
+    $connection = \Drupal::database();
+    $config = \Drupal::config('textbook_companion.settings');
+    $from = (string) $config->get('textbook_companion_from_email');
+    $bcc = (string) $config->get('textbook_companion_emails');
+    $cc = (string) $config->get('textbook_companion_cc_emails');
+
+    foreach ($form_state->getValue('example_details') as $ex_data) {
+      $example_data = $connection->select('textbook_companion_example')
+        ->fields('textbook_companion_example')
+        ->condition('id', $ex_data['example_id'])
+        ->range(0, 1)
+        ->execute()
+        ->fetchObject();
+
+      $chapter_data = $connection->select('textbook_companion_chapter')
+        ->fields('textbook_companion_chapter')
+        ->condition('id', $example_data->chapter_id)
+        ->range(0, 1)
+        ->execute()
+        ->fetchObject();
+
+      $preference_data = $connection->select('textbook_companion_preference')
+        ->fields('textbook_companion_preference')
+        ->condition('id', $chapter_data->preference_id)
+        ->range(0, 1)
+        ->execute()
+        ->fetchObject();
+
+      $proposal_data = $connection->select('textbook_companion_proposal')
+        ->fields('textbook_companion_proposal')
+        ->condition('id', $preference_data->proposal_id)
+        ->range(0, 1)
+        ->execute()
+        ->fetchObject();
+
+      $user_data = User::load($proposal_data->uid);
       del_book_pdf($preference_data->id);
 
-      
-      if ($ex_data['approved'] == "0") {
-
-  // APPROVE CASE
-  $query = \Drupal::database()->update('textbook_companion_example');
-  $query->fields([
-    'approval_status' => 1,
-    'approver_uid' => $user->id(),
-    'approval_date' => time(),
-  ]);
-  $query->condition('id', $ex_data['example_id']);
-  $query->execute();
-
-        /* sending email */
-
-/* sending email */
+      if ((string) $ex_data['approved'] === '0') {
+        $connection->update('textbook_companion_example')
+          ->fields([
+            'approval_status' => 1,
+            'approver_uid' => $user->id(),
+            'approval_date' => time(),
+          ])
+          ->condition('id', $ex_data['example_id'])
+          ->execute();
+// Sending mail for approved case
 $email_to = $user_data->getEmail();   // ✅ FIXED
 
 $config = \Drupal::config('textbook_companion.settings');
@@ -224,79 +228,43 @@ $result = \Drupal::service('plugin.manager.mail')->mail(
 if (empty($result['result'])) {
   \Drupal::messenger()->addError('Error sending email message.');
 }
-
-else if ($ex_data['approved'] == "1") {
-     $service = \Drupal::service('textbook_companion_global');
-
-       $query = \Drupal::database()->update('textbook_companion_example');
-  $query->fields([
-    'approval_status' => 1,
-    'approver_uid' => $user->id(),
-    'approval_date' => time(),
-  ]);
-  $query->condition('id', $ex_data['example_id']);
-  $query->execute();
-
-  if (delete_example($ex_data['example_id'])) {
-
-    /* sending email */
-    $email_to = $user_data->getEmail();
-
-    $config = \Drupal::config('textbook_companion.settings');
-    $from = $config->get('textbook_companion_from_email') ?? \Drupal::config('system.site')->get('mail');
-    $bcc = $config->get('textbook_companion_emails');
-    $cc = $config->get('textbook_companion_cc_emails');
-
-    $params = [];
-
-    $params['example_approved'] = [
-      'example_id' => $ex_data['example_id'],
-      'user_id' => $user_data->id(),
-      'chapter_id' => $ex_data['chapter_id'] ?? NULL,
-      'preference_id' => $ex_data['preference_id'] ?? NULL,
-      'example_number' => $ex_data['example_number'] ?? '',
-      'example_caption' => $ex_data['example_caption'] ?? '',
-      'message' => $ex_data['message'] ?? '',
-    ];
-
-    $params['cc'] = $cc;
-    $params['bcc'] = $bcc;
-
-    $langcode = \Drupal::languageManager()->getDefaultLanguage()->getId();
-
-    $result = \Drupal::service('plugin.manager.mail')->mail(
-      'textbook_companion',
-      'example_approved',
-      $email_to,
-      $langcode,
-      $params,
-      $from,
-      TRUE
-    );
-
-    
-    if (empty($result['result'])) {
-      \Drupal::messenger()->addError('Error sending email message.');
-    }
-
-  }
-  else {
-    // ✅ NOW correctly tied to delete_example()
-    $this->messenger()->addError($this->t('Error disapproving and deleting example.'));
-  }
-}       
       }
-    
+      elseif ((string) $ex_data['approved'] === '1') {
+        if (delete_example($ex_data['example_id'])) {
+          // Sending email for disapproved case
+          $email_to = $user_data?->getEmail() ?? '';
+          $param['example_disapproved']['preference_id'] = $chapter_data->preference_id;
+          $param['example_disapproved']['chapter_id'] = $example_data->chapter_id;
+          $param['example_disapproved']['example_number'] = $example_data->number;
+          $param['example_disapproved']['example_caption'] = $example_data->caption;
+          $param['example_disapproved']['user_id'] = $user_data?->id() ?? 0;
+          $param['example_disapproved']['message'] = $ex_data['message'];
+          $param['example_disapproved']['headers'] = [
+            'From' => $from,
+            'MIME-Version' => '1.0',
+            'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
+            'Content-Transfer-Encoding' => '8Bit',
+            'X-Mailer' => 'Drupal',
+            'Cc' => $cc,
+            'Bcc' => $bcc,
+          ];
+          if ($email_to !== '') {
+            $langcode = $user_data?->getPreferredLangcode() ?? \Drupal::languageManager()->getDefaultLanguage()->getId();
+            $result = \Drupal::service('plugin.manager.mail')->mail('textbook_companion', 'example_disapproved', $email_to, $langcode, $param, $from, TRUE);
+            if (empty($result['result'])) {
+              $this->messenger()->addError($this->t('Error sending email message.'));
+            }
+          }
+        }
+        else {
+          $this->messenger()->addError($this->t('Error disapproving and deleting example. Please contact administrator.'));
+        }
+      }
+    }
 
     $this->messenger()->addStatus($this->t('Updated successfully.'));
-    }
-  
     $form_state->setRedirect('textbook_companion.code_approval');
+  }
 
-    
-      }
-    }
-  
-
-
+}
 ?>
