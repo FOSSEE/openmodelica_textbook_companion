@@ -1330,49 +1330,67 @@ FOSSEE, IIT Bombay",
 break;
 
 case 'proposal_completed':
-			
-			/*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d LIMIT 1", $params['proposal_completed']['proposal_id']);
-			$proposal_data = db_fetch_object($proposal_q);*/
-			$query = \Drupal::database()->select('textbook_companion_proposal');
-			$query->fields('textbook_companion_proposal');
-			$query->condition('id', $params['proposal_completed']['proposal_id']);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$proposal_data = $result->fetchObject();
-			/*$approved_preference_q = db_query("SELECT * FROM {textbook_companion_preference} WHERE proposal_id = %d AND approval_status = 1 LIMIT 1", $params['proposal_completed']['proposal_id']);
-			$approved_preference_data = db_fetch_object($approved_preference_q);*/
-			$query = \Drupal::database()->select('textbook_companion_preference');
-			$query->fields('textbook_companion_preference');
-			$query->condition('proposal_id', $params['proposal_completed']['proposal_id']);
-			$query->condition('approval_status', 1);
-			$query->range(0, 1);
-			$result = $query->execute();
-			$approved_preference_data = $result->fetchObject();
-			$user_data = \Drupal::entityTypeManager()->getStorage('user')->load($params['proposal_completed']['user_id']);
-			$message['headers'] = $params['proposal_completed']['headers'];
-			// @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// Get site name
-$site_name = \Drupal::config('system.site')->get('name');
 
-// Safe user email
-$email = $user_data ? $user_data->getEmail() : '';
+  // Fetch proposal data
+  $proposal_data = \Drupal::database()
+    ->select('textbook_companion_proposal', 'p')
+    ->fields('p')
+    ->condition('id', $params['proposal_id'])
+    ->range(0, 1)
+    ->execute()
+    ->fetchObject();
 
-// Subject
-$message['subject'] = t(
-  '[@site] Congratulations on the completion of the Textbook Companion',
-  ['@site' => $site_name]
-);
+  // Fetch approved preference
+  $approved_preference_data = \Drupal::database()
+    ->select('textbook_companion_preference', 'tp')
+    ->fields('tp')
+    ->condition('proposal_id', $params['proposal_id'])
+    ->condition('approval_status', 1)
+    ->range(0, 1)
+    ->execute()
+    ->fetchObject();
 
-// Build download link
-$download_link = !empty($approved_preference_data->id)
-  ? 'http://om.fossee.in/textbook-companion/textbook-run/' . $approved_preference_data->id
-  : '';
+  // Load user
+  $user_data = \Drupal::entityTypeManager()
+    ->getStorage('user')
+    ->load($params['user_id']);
 
-// Body
-$message['body'][] = t(
+  // Logging (for debugging if needed)
+  if (!$proposal_data) {
+    \Drupal::logger('textbook_companion')->error('Proposal not found: @id', [
+      '@id' => $params['proposal_id'],
+    ]);
+  }
+
+  if (!$approved_preference_data) {
+    \Drupal::logger('textbook_companion')->warning('Preference not found for proposal: @id', [
+      '@id' => $params['proposal_id'],
+    ]);
+  }
+
+  // Site name
+  $site_name = \Drupal::config('system.site')->get('name');
+
+  // Email
+  $email = $user_data ? $user_data->getEmail() : '';
+
+  // Subject
+  $message['subject'] = t(
+    '[@site] Congratulations on the completion of the Textbook Companion',
+    ['@site' => $site_name]
+  );
+
+  // Headers (CC/BCC)
+  $message['headers']['Cc'] = $params['cc'] ?? [];
+  $message['headers']['Bcc'] = $params['bcc'] ?? [];
+
+  // Download link
+  $download_link = (!empty($approved_preference_data) && !empty($approved_preference_data->id))
+    ? 'http://om.fossee.in/textbook-companion/textbook-run/' . $approved_preference_data->id
+    : '';
+
+  // Body
+  $message['body'][] = t(
 "Dear @name,
 
 The textbook companion on the following book has been completed successfully by you:
@@ -1403,30 +1421,31 @@ Best Wishes,
 
 @site Team
 FOSSEE, IIT Bombay",
-[
-  '@name' => $proposal_data->full_name ?? '',
-  '@full_name' => $proposal_data->full_name ?? '',
-  '@email' => $email,
-  '@mobile' => $proposal_data->mobile ?? '',
-  '@course' => $proposal_data->course ?? '',
-  '@branch' => $proposal_data->branch ?? '',
-  '@university' => $proposal_data->university ?? '',
-  '@faculty' => $proposal_data->faculty ?? '',
-  '@reviewer' => $proposal_data->reviewer ?? '',
-  '@completion_date' => !empty($proposal_data->completion_date)
-    ? date('d-m-Y', $proposal_data->completion_date)
-    : '',
-  '@book' => $approved_preference_data->book ?? '',
-  '@author' => $approved_preference_data->author ?? '',
-  '@isbn' => $approved_preference_data->isbn ?? '',
-  '@publisher' => $approved_preference_data->publisher ?? '',
-  '@edition' => $approved_preference_data->edition ?? '',
-  '@year' => $approved_preference_data->year ?? '',
-  '@download_link' => $download_link,
-  '@site' => $site_name,
-]
+  [
+    '@name' => $proposal_data->full_name ?? '',
+    '@full_name' => $proposal_data->full_name ?? '',
+    '@email' => $email,
+    '@mobile' => $proposal_data->mobile ?? '',
+    '@course' => $proposal_data->course ?? '',
+    '@branch' => $proposal_data->branch ?? '',
+    '@university' => $proposal_data->university ?? '',
+    '@faculty' => $proposal_data->faculty ?? '',
+    '@reviewer' => $proposal_data->reviewer ?? '',
+    '@completion_date' => !empty($proposal_data->completion_date)
+      ? date('d-m-Y', $proposal_data->completion_date)
+      : '',
+    '@book' => $approved_preference_data->book ?? '',
+    '@author' => $approved_preference_data->author ?? '',
+    '@isbn' => $approved_preference_data->isbn ?? '',
+    '@publisher' => $approved_preference_data->publisher ?? '',
+    '@edition' => $approved_preference_data->edition ?? '',
+    '@year' => $approved_preference_data->year ?? '',
+    '@download_link' => $download_link,
+    '@site' => $site_name,
+  ]
 );
-			break;
+
+break;
 		/***********************************************************************************************/
 		case 'all_code_submitted':
 			/*$proposal_q = db_query("SELECT * FROM {textbook_companion_proposal} WHERE id = %d LIMIT 1", $params['proposal_completed']['proposal_id']);
@@ -2369,36 +2388,30 @@ FOSSEE,IIT Bombay',
 );
 			break;
 
-// case 'standard':
+case 'standard':
 
-//   $message['subject'] = $params['subject'] ?? '';
+  $message['subject'] = $params['subject'] ?? '';
 
-//   // 🔥 CRITICAL FIX (prevents implode error)
-//   if (!empty($params['body'])) {
-//     $message['body'] = is_array($params['body'])
-//       ? $params['body']
-//       : [$params['body']];
-//   }
-//   else {
-//     $message['body'] = [];
-//   }
+  // 🔥 CRITICAL FIX (prevents implode error)
+  if (!empty($params['body'])) {
+    $message['body'] = is_array($params['body'])
+      ? $params['body']
+      : [$params['body']];
+  }
+  else {
+    $message['body'] = [];
+  }
 
-//   // Headers
-//   if (!empty($params['headers']) && is_array($params['headers'])) {
-//     foreach ($params['headers'] as $key => $value) {
-//       $message['headers'][$key] = $value;
-//     }
-//   }
-			case 'standard':
-			// bcc to textbook_companion_emails
-			$message['headers'] = $params['standard']['headers'];
-			$message['subject'] = $params['standard']['subject'];
-			$message['body'] = $params['standard']['body'];
-			break;
+  // Headers
+  if (!empty($params['headers']) && is_array($params['headers'])) {
+    foreach ($params['headers'] as $key => $value) {
+      $message['headers'][$key] = $value;
+	}
+  }
+  break;
+	}
+  }
 
-  
-}
-}
 
   /* AJAX CALLS */
 function textbook_companion_ajax()

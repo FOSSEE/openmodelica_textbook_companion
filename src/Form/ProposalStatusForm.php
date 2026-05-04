@@ -358,6 +358,8 @@ if (!empty($email_to)) {
         $book_user = \Drupal::entityTypeManager()->getStorage('user')->load($proposal_data->uid);
 
 /* sending email */
+
+/* sending email */
 $email_to = $book_user->getEmail();
 
 $config = \Drupal::config('textbook_companion.settings');

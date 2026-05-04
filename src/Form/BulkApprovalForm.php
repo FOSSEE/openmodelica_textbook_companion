@@ -39,7 +39,7 @@ public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $for
       '#options' => $this->_bulk_list_of_books(),
       '#default_value' => $selected,
       // '#tree' => TRUE,
-      $form['download_book']['chapter'],
+     // $form['download_book']['chapter'],
       '#ajax' => [
         'callback' => '::ajax_bulk_chapter_list_callback',
         'wrapper' => 'ajax_selected_book'
@@ -104,11 +104,11 @@ public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $for
         ],
     ];
     $chapter_default_value = $form_state->getValue('chapter');
-    $form['download_chapter'] = [
+    $form['download_book']['download_chapter'] = [
       '#type' => 'container',
       '#attributes' => ['id' => 'ajax_download_chapter'],
     ];
-    $form['download_chapter']['selected_chapter_download'] = [
+    $form['download_book']['download_chapter']['selected_chapter_download'] = [
       '#type' => 'markup',
       '#markup' => Link::fromTextAndUrl(
         $this->t('Download Chapter'),
@@ -123,7 +123,7 @@ public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $for
         ],
 
       ];
-    $form['download_chapter']['chapter_actions'] = [
+    $form['download_book']['download_chapter']['chapter_actions'] = [
       '#type' => 'select',
       '#title' => t('Please select action for selected chapter'),
       '#options' => $this->_bulk_list_chapter_actions(),
@@ -139,7 +139,8 @@ public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $for
         ],
       //'#ajax' => ['callback' => 'ajax_bulk_chapter_actions_callback'],
     ];
-    $form['download_chapter']['example'] = [
+   // var_dump(($chapter_default_value));
+    $form['download_book']['download_chapter']['example'] = [
       '#type' => 'select',
       '#title' => t('Example No. (Caption)'),
       '#options' => $this->_ajax_bulk_get_examples($chapter_default_value),
@@ -161,11 +162,11 @@ public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $for
     ];
     // $example_default_value = $form_state->getValue('example');
     $example_default_value = $form_state->getValue('example') ?? $form_state->getTriggeringElement()['#value'];
-    $form['download_example'] = [
+    $form['download_book']['download_chapter']['download_example'] = [
       '#type' => 'container',
       '#attributes' => ['id' => 'ajax_download_selected_example'],
     ];
-  $form['download_example']['selected_example_download'] = [
+  $form['download_book']['download_chapter']['download_example']['selected_example_download'] = [
       '#type' => 'markup',
       '#markup' => Link::fromTextAndUrl(
         $this->t('Download Example'),
@@ -180,7 +181,7 @@ public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $for
         ],
 
       ];
-    $form['download_example']['edit_example'] = [
+    $form['download_book']['download_chapter']['download_example']['edit_example'] = [
       '#type' => 'markup',
       '#markup' => Link::fromTextAndUrl(
         $this->t('Edit Example'),
@@ -194,7 +195,7 @@ public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $for
           ]
         ],
     ];
-    $form['download_example']['example_actions'] = [
+    $form['download_book']['download_chapter']['download_example']['example_actions'] = [
       '#type' => 'select',
       '#title' => t('Please select action for selected example'),
       '#options' => $this->_bulk_list_example_actions(),
@@ -209,106 +210,86 @@ public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $for
           ]
         ],
     ];
-     $form['message'] = [
-      '#type' => 'textarea',
-      '#title' => t('If Dis-Approved please specify reason for Dis-Approval'),
-      '#states' => [
-        'visible' => [
-          [
-            [
-              ':input[name="book_actions"]' => [
-                'value' => 3
-                ]
-              ],
-            'or',
-            [':input[name="chapter_actions"]' => ['value' => 3]],
-            'or',
-            [
-              ':input[name="example_actions"]' => [
-                'value' => 3
-                ]
-              ],
-            'or',
-            [':input[name="book_actions"]' => ['value' => 4]],
-          ]
-          ],
-        'required' => [
-          [
-            [':input[name="book_actions"]' => ['value' => 3]],
-            'or',
-            [
-              ':input[name="chapter_actions"]' => [
-                'value' => 3
-                ]
-              ],
-            'or',
-            [':input[name="example_actions"]' => ['value' => 3]],
-            'or',
-            [
-              ':input[name="book_actions"]' => [
-                'value' => 4
-                ]
-              ],
-          ]
-          ],
-      ],
-    ];
-    $query = \Drupal::database()->select('textbook_companion_example_files');
-        $query->fields('textbook_companion_example_files');
-        $query->condition('example_id', $example_default_value);
-        $example_list_q = $query->execute();
-        if ($example_list_q) {
-$example_files_rows = [];
+    $form['download_book']['download_chapter']['download_example']['message'] = [
+  '#type' => 'textarea',
+  '#title' => $this->t('If Dis-Approved, please specify reason for Dis-Approval'),
+  '#states' => [
+    'visible' => [
+      // Show if book_actions is 3 or 4
+      [':input[name="book_actions"]' => ['value' => 3]],
+      [':input[name="book_actions"]' => ['value' => 4]],
+      // OR if chapter_actions is 3
+      [':input[name="chapter_actions"]' => ['value' => 3]],
+      // OR if example_actions is 3
+      [':input[name="example_actions"]' => ['value' => 3]],
+    ],
+    'required' => [
+      // Required if book_actions is 3 or 4
+      [':input[name="book_actions"]' => ['value' => 3]],
+      [':input[name="book_actions"]' => ['value' => 4]],
+      // OR if chapter_actions is 3
+      [':input[name="chapter_actions"]' => ['value' => 3]],
+      // OR if example_actions is 3
+      [':input[name="example_actions"]' => ['value' => 3]],
+    ],
+  ],
+];
+//         $query = \Drupal::database()->select('textbook_companion_example_files');
+//         $query->fields('textbook_companion_example_files');
+//         $query->condition('example_id', $example_default_value);
+//         $example_list_q = $query->execute();
+//         if ($example_list_q) {
+// $example_files_rows = [];
 
-while ($example_list_data = $example_list_q->fetchObject()) {
+// while ($example_list_data = $example_list_q->fetchObject()) {
 
-  switch ($example_list_data->filetype) {
-    case 'S': $type = 'Source or Main file'; break;
-    case 'R': $type = 'Result file'; break;
-    case 'X': $type = 'xcos file'; break;
-    default: $type = 'Unknown';
-  }
+//   switch ($example_list_data->filetype) {
+//     case 'S': $type = 'Source or Main file'; break;
+//     case 'R': $type = 'Result file'; break;
+//     case 'X': $type = 'xcos file'; break;
+//     default: $type = 'Unknown';
+//   }
 
-  $example_files_rows[] = [
-    Link::fromTextAndUrl(
-      $example_list_data->filename,
-      Url::fromUri('internal:/textbook-companion/download/file/' . $example_list_data->id)
-    )->toString(),
-    $type
-  ];
-}
-                $items[] = [
-                  Link::fromTextAndUrl($example_list_data->filename, Url::fromUri('internal:/textbook-companion/download/file/' . $example_list_data->id))->toString(),
-                    "{$example_file_type}"
-                ];
-            }
-            array_push($example_files_rows, $items);
-            //var_dump($example_files_rows);
-            /* creating list of files table */
-           $form['download_example']['example_files'] = [
-        '#type' => 'fieldset',
-        '#title' => t('List of example files'),
-      ];
-      $example_files_header = ['Filename', 'Type']; // Table headers
+//   $example_files_rows[] = [
+//     Link::fromTextAndUrl(
+//       $example_list_data->filename,
+//       Url::fromUri('internal:/textbook-companion/download/file/' . $example_list_data->id)
+//     )->toString(),
+//     $type
+//   ];
+// }
+//                 $items[] = [
+//                   Link::fromTextAndUrl($example_list_data->filename, Url::fromUri('internal:/textbook-companion/download/file/' . $example_list_data->id))->toString(),
+//                     "{$example_file_type}"
+//                 ];
+//             }
+//             array_push($example_files_rows, $items);
+//             //var_dump($example_files_rows);
+//             /* creating list of files table */
+//            $form['download_example']['example_files'] = [
+//         '#type' => 'fieldset',
+//         '#title' => t('List of example files'),
+//       ];
+//       $example_files_header = ['Filename', 'Type']; // Table headers
 
-      $table = [
-        '#type' => 'table',
-        '#header' => $example_files_header,
-        '#rows' => $example_files_rows,
+//       $table = [
+//         '#type' => 'table',
+//         '#header' => $example_files_header,
+//         '#rows' => $example_files_rows,
       
-      '#attributes' => [
-        'style' => 'width: 100%;',
+//       '#attributes' => [
+//         'style' => 'width: 100%;',
         
-      ],
-    ];
-          // Add the table to the fieldset
-$form['download_example']['example_files']['table'] = $table;
-    $form['download_example']['example_files'] = [
-      '#type' => 'item',
-      '#markup' => '',
-      '#prefix' => '<div id="ajax_example_files_list">',
-      '#suffix' => '</div>',
-    ];
+//       ],
+//     ];
+//           // Add the table to the fieldset
+// $form['download_example']['example_files']['table'] = $table;
+//     $form['download_example']['example_files'] = [
+//       '#type' => 'item',
+//       '#markup' => '',
+//       '#prefix' => '<div id="ajax_example_files_list">',
+//       '#suffix' => '</div>',
+//     ];
     
    
     $form['submit'] = [
@@ -331,7 +312,7 @@ $form['download_example']['example_files']['table'] = $table;
     return $form['download_book'];
   }
   function ajax_bulk_example_list_callback(array &$form, FormStateInterface $form_state){
-    return $form['download_chapter'];
+    return $form['download_book']['download_chapter'];
   }
   // function ajax_bulk_example_files_callback(array &$form, FormStateInterface $form_state){
   //   // $example_default_value = $form_state->getValue('example');
@@ -340,7 +321,7 @@ $form['download_example']['example_files']['table'] = $table;
   // }
   function ajax_bulk_example_files_callback(array &$form, FormStateInterface $form_state){
   $form_state->setRebuild(TRUE);   // 🔥 REQUIRED
-  return $form['download_example'];
+  return $form['download_book']['download_chapter']['download_example'];
 }
 
 function _bulk_list_of_books() {
@@ -399,18 +380,19 @@ function _ajax_bulk_get_chapter_list($preference_id = 0) {
 
   return $book_chapters;
 }
-function _ajax_bulk_get_examples($chapter_id = 0) {
+function _ajax_bulk_get_examples($chapter_id) {
+  //var_dump($chapter_id);
   $book_examples = ['0' => t('Please select...')];
-
+//$book_examples = [];
   try {
     $query = Database::getConnection()->select('textbook_companion_example', 'tce');
     $query->fields('tce');
     $query->condition('chapter_id', $chapter_id);
-    $query->condition('approval_status', 0);
+    // $query->condition('approval_status', 0);
     $book_examples_q = $query->execute();
-
+    
     foreach ($book_examples_q as $book_examples_data) {
-      $book_examples[$book_examples_data->id] = $book_examples_data->number . ' (' . $book_examples_data->caption . ')';
+      $book_examples[$book_examples_data->id] = $book_examples_data->number . '. ' . $book_examples_data->caption;
     }
   } catch (\Exception $e) {
     \Drupal::logger('textbook_companion')->error('Error fetching examples: @error', ['@error' => $e->getMessage()]);
@@ -893,15 +875,17 @@ Reason for dis-approval: @reason
 Best Wishes,
 
 @site_name Team,
-FOSSEE, IIT Bombay
-', [
+FOSSEE, IIT Bombay', 
+[
     '@site_name' => $site_name,
-    '@user_name' => $user_data->name,
-    '@book' => $pref_data->book,
-    '@chapter' => $chap_data->name,
-    '@reason' => $form_state->getValue('message'),
+    '@user_name' => $user_data->getDisplayName(),
+    '@book' => isset($pref_data->book) ? (string) $pref_data->book : '',
+    '@chapter' => isset($chap_data->name) ? (string) $chap_data->name : '',
+    '@reason' => (string) $form_state->getValue('message'),
   ])
-];        }
+];    
+    }
+    
         elseif (($form_state->getValue(['book_actions']) == 0) && ($form_state->getValue(['chapter_actions']) == 0) && ($form_state->getValue(['example_actions']) == 1)) {
           $query = \Drupal::database()->select('textbook_companion_preference');
           $query->fields('textbook_companion_preference');
@@ -1079,12 +1063,23 @@ Best Wishes,
 FOSSEE, IIT Bombay
 ', [
     '@site_name' => $site_name,
-    '@user_name' => $user_data->name,
-    '@book' => $pref_data->book,
-    '@chapter' => $chap_data->name,
-    '@example_number' => $examp_data->number,
-    '@caption' => $examp_data->caption,
-    '@reason' => $form_state->getValue('message'),
+    // '@user_name' => $user_data->name,
+    // '@book' => $pref_data->book,
+    // '@chapter' => $chap_data->name,
+    // '@example_number' => $examp_data->number,
+    // '@caption' => $examp_data->caption,
+    // '@reason' => $form_state->getValue('message'),
+    '@user_name' => $user_data->getDisplayName(),
+
+'@book' => is_object($pref_data->book) ? $pref_data->book->value : $pref_data->book,
+
+'@chapter' => is_object($chap_data->name) ? $chap_data->name->value : $chap_data->name,
+
+'@example_number' => is_object($examp_data->number) ? $examp_data->number->value : $examp_data->number,
+
+'@caption' => is_object($examp_data->caption) ? $examp_data->caption->value : $examp_data->caption,
+
+'@reason' => (string) $form_state->getValue('message'),
   ])
 ];    
     }
@@ -1092,6 +1087,7 @@ FOSSEE, IIT Bombay
           \Drupal::messenger()->addError(t('Please select only one action at a time'));
           return;
         }
+
         /****** sending email when everything done ******/
        if ($email_subject) {
 
@@ -1138,7 +1134,9 @@ FOSSEE, IIT Bombay
 else {
   \Drupal::messenger()->addError($this->t('You do not have permission to bulk manage code.'));
 }
+
     }
+
   }
 }
 
